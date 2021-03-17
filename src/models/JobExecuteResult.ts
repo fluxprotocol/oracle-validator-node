@@ -1,7 +1,9 @@
 export enum JobExecuteError {
-    ResponseNotJson,
-    ResponseNotOk,
-    Unknown,
+    ResponseNotJson = 'response_not_json',
+    ResponseNotOk = 'response_not_ok',
+    Unknown = 'unknown',
+    ValueDoesNotExist = 'value_does_not_exist',
+    ValueNotInOutcomes = 'value_not_in_outcomes',
 }
 
 export enum JobResultType {
