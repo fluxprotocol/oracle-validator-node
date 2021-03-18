@@ -4,12 +4,12 @@
 // Check if we can listen to logs and act on those
 
 import yargs from "yargs";
-import dotenv from 'dotenv';
 
 import { start } from "./commands/start";
+import { validateConfig } from "./config";
 
 async function main() {
-    dotenv.config();
+    validateConfig();
 
     yargs
         .strict()
