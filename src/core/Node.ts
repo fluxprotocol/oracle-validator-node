@@ -1,6 +1,6 @@
-import { BotOptions } from "../models/BotOptions";
+import { NodeOptions } from "../models/NodeOptions";
 import { isJobSuccesful } from "../models/JobExecuteResult";
-import logger, { logBalances, logBotOptions } from "../services/LoggerService";
+import logger, { logBalances, logNodeOptions } from "../services/LoggerService";
 import { connectToNear } from "../services/NearService";
 import JobQueue, { ProcessedRequest } from "./JobQueue";
 import { listenForJobs } from "./JobSearcher";
@@ -10,16 +10,16 @@ import { getAccount } from "../services/NearService";
 import { BALANCE_REFRESH_INTERVAL } from "../config";
 
 
-export async function startBot(options: BotOptions) {
-    logger.info(`🤖 Starting oracle bot on ${options.net}..`);
-    logBotOptions(options);
+export async function startNode(options: NodeOptions) {
+    logger.info(`🤖 Starting oracle node on ${options.net}..`);
+    logNodeOptions(options);
 
     const nearConnection = await connectToNear(options.net, options.credentialsStorePath);
-    const botAccount = await getAccount(nearConnection, options.accountId);
+    const nodeAccount = await getAccount(nearConnection, options.accountId);
     const queue = new JobQueue();
 
-    // Used to keep track of how much the bot can spend
-    const availableStake = new AvailableStake(options, botAccount, nearConnection);
+    // Used to keep track of how much the node can spend
+    const availableStake = new AvailableStake(options, nodeAccount, nearConnection);
     await availableStake.refreshBalances(true);
     availableStake.startClaimingProcess();
 

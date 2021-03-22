@@ -1,14 +1,14 @@
 import Big from 'big.js';
 import { Argv, CommandModule } from 'yargs';
 import { TOKEN_DENOM } from '../config';
-import { startBot } from '../core/Bot';
+import { startNode } from '../core/Node';
 import { NetworkType } from '../models/NearNetworkConfig';
 import { toToken } from '../utils/tokenUtils';
 import { credentialOptions } from './options/credentialOptions';
 
 export const start: CommandModule = {
     command: 'start',
-    describe: 'Starts the oracle bot',
+    describe: 'Starts the oracle node',
     builder: (yargs: Argv) => credentialOptions(yargs)
         .option('net', {
             describe: 'The net (main or test) you want to run',
@@ -18,13 +18,13 @@ export const start: CommandModule = {
             choices: [NetworkType.Testnet, NetworkType.Mainnet]
         })
         .option('maximumChallengeRound', {
-            describe: 'The maximum challenge round the bot wants to commit to',
+            describe: 'The maximum challenge round the node wants to commit to',
             type: 'number',
             demandOption: false,
             default: 0,
         })
         .option('stakePerRequest', {
-            describe: 'The maximum amount the bot is allowed to stake per request (in whole FLX)',
+            describe: 'The maximum amount the node is allowed to stake per request (in whole FLX)',
             type: 'number',
             demandOption: false,
             default: 2.5,
@@ -34,7 +34,7 @@ export const start: CommandModule = {
         const stakePerRequest = args.stakePerRequest as number;
         const stakePerRequestDenom = toToken(stakePerRequest.toString(), TOKEN_DENOM);
 
-        startBot({
+        startNode({
             net: args.net as NetworkType,
             accountId: args.accountId as string,
             credentialsStorePath: args.credentialsStore as string,

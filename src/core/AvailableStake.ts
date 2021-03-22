@@ -3,7 +3,7 @@ import { Account, Near } from "near-api-js";
 import { CLAIM_CHECK_INTERVAL } from "../config";
 import { getTokenBalance } from "../contracts/FluxTokenContract";
 import { dataRequestFinalizeClaim, getDataRequestById } from "../contracts/OracleContract";
-import { BotOptions } from "../models/BotOptions";
+import { NodeOptions } from "../models/NodeOptions";
 import { DataRequestViewModel } from "../models/DataRequest";
 
 
@@ -13,8 +13,8 @@ interface ActiveStaking {
 }
 
 export default class AvailableStake {
-    botOptions: BotOptions;
-    botAccount: Account;
+    nodeOptions: NodeOptions;
+    nodeAccount: Account;
     nearConnection: Near;
     startingBalance: Big = new Big(0);
     balance: Big = new Big(0);
@@ -24,14 +24,14 @@ export default class AvailableStake {
     /** Used for not spamming the RPC with balance requests */
     private balanceFetch?: Promise<Big>;
 
-    constructor(botOptions: BotOptions, botAccount: Account, nearConnection: Near) {
-        this.botOptions = botOptions;
-        this.botAccount = botAccount;
+    constructor(nodeOptions: NodeOptions, nodeAccount: Account, nearConnection: Near) {
+        this.nodeOptions = nodeOptions;
+        this.nodeAccount = nodeAccount;
         this.nearConnection = nearConnection;
     }
 
     /**
-     * Refreshes the FLX balances of the bot
+     * Refreshes the FLX balances of the node
      *
      * @param {boolean} [isStartingBalance=false]
      * @return {Promise<void>}
@@ -44,7 +44,7 @@ export default class AvailableStake {
             return;
         }
 
-        this.balanceFetch = getTokenBalance(this.botAccount);
+        this.balanceFetch = getTokenBalance(this.nodeAccount);
         this.balance = await this.balanceFetch;
         this.balanceFetch = undefined;
 
@@ -60,18 +60,18 @@ export default class AvailableStake {
      * @memberof AvailableStake
      */
     withdrawBalanceToStake(): Big {
-        if (this.botOptions.stakePerRequest.gt(this.balance)) {
+        if (this.nodeOptions.stakePerRequest.gt(this.balance)) {
             return new Big(0);
         }
 
-        this.balance = this.balance.sub(this.botOptions.stakePerRequest);
+        this.balance = this.balance.sub(this.nodeOptions.stakePerRequest);
 
-        return this.botOptions.stakePerRequest;
+        return this.nodeOptions.stakePerRequest;
     }
 
     /**
      * Adds a request that we are actively staking
-     * This will allow the bot to later claim the rewards auto
+     * This will allow the node to later claim the rewards automagicly
      *
      * @param {DataRequestViewModel} request
      * @param {Big} stakingAmount

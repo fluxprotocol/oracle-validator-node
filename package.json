@@ -1,5 +1,5 @@
 {
-    "name": "oracle-bot",
+    "name": "oracle-validator-node",
     "version": "1.0.0",
     "description": "Resolving data requests on the Flux Oracle",
     "main": "index.js",
