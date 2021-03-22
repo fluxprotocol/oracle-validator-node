@@ -3,11 +3,11 @@ import { isJobSuccesful } from "../models/JobExecuteResult";
 import logger, { logBalances, logNodeOptions } from "../services/LoggerService";
 import { connectToNear } from "../services/NearService";
 import JobPool, { ProcessedRequest } from "./JobPool";
-import { listenForJobs } from "./JobSearcher";
+import { loadJobs } from "./JobSearcher";
 import { submitJobToOracle } from "./Oracle";
 import AvailableStake from "./AvailableStake";
 import { getAccount } from "../services/NearService";
-import { BALANCE_REFRESH_INTERVAL } from "../config";
+import { BALANCE_REFRESH_INTERVAL, JOB_SEARCH_INTERVAL } from "../config";
 
 
 export async function startNode(options: NodeOptions) {
@@ -47,28 +47,18 @@ export async function startNode(options: NodeOptions) {
         });
     }
 
-    listenForJobs(nearConnection, (requests) => {
-        const currentJobsAmount = jobPool.length;
-
-        requests.forEach((request) => {
-            const currentRound = request.rounds.length - 1;
-
-            if (currentRound > options.maximumChallengeRound) {
-                return;
-            }
-
-            // Contract ids that are not whitelisted should not be handled
-            if (options.contractIds.length !== 0 && !options.contractIds.includes(request.contractId)) {
-                return;
-            }
-
-            jobPool.addRequest(request);
+    setInterval(async () => {
+        const requests = await loadJobs({
+            near: nearConnection,
+            nodeOptions: options,
         });
 
-        const deltaJobs = jobPool.length - currentJobsAmount;
+        requests.forEach((item) => jobPool.addRequest(item));
 
-        if (deltaJobs > 0) {
-            jobPool.process((item) => onItemProcessed(item));
+        if (!availableStake.hasEnoughBalanceForStaking()) {
+            return;
         }
-    });
+
+        jobPool.process((item) => onItemProcessed(item));
+    }, JOB_SEARCH_INTERVAL);
 }

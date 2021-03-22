@@ -54,13 +54,27 @@ export default class AvailableStake {
     }
 
     /**
+     * Checks if the node has enough balance to stake
+     *
+     * @return {boolean}
+     * @memberof AvailableStake
+     */
+    hasEnoughBalanceForStaking(): boolean {
+        if (this.nodeOptions.stakePerRequest.gt(this.balance)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Withdraws FLX from balance in order to stake
      *
-     * @return {Big}
+     * @return {Big} amount of stake withdrawn
      * @memberof AvailableStake
      */
     withdrawBalanceToStake(): Big {
-        if (this.nodeOptions.stakePerRequest.gt(this.balance)) {
+        if (!this.hasEnoughBalanceForStaking()) {
             return new Big(0);
         }
 
