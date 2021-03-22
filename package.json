@@ -7,7 +7,7 @@
         "start": "npm run build && node 'dist/src/main.js'",
         "test": "jest",
         "build": "tsc -p .",
-        "dev": "npm run build && node 'dist/src/main.js' start --accountId franklinwaller2.testnet"
+        "dev": "npm run build && node 'dist/src/main.js' start --accountId franklinwaller2.testnet --maximumChallengeRound 2"
     },
     "devDependencies": {
         "@types/big.js": "^6.0.2",
@@ -31,6 +31,7 @@
     },
     "homepage": "https://github.com/fluxprotocol/oracle-bot#readme",
     "dependencies": {
+        "big.js": "^6.0.3",
         "dotenv": "^8.2.0",
         "lodash.at": "^4.6.0",
         "near-api-js": "^0.38.0",

@@ -9,7 +9,7 @@ describe('JobExecuter', () => {
                 source: 'https://pokeapi.co/api/v2/pokemon/ditto',
                 sourcePath: 'abilities[0].ability.name',
                 outcomes: ['limber', 'forest'],
-                challengeRound: 0,
+                rounds: [],
             });
 
             expect(isJobSuccesful(result)).toBe(true);

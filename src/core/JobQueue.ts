@@ -1,4 +1,3 @@
-import { BotOptions } from "../models/BotOptions";
 import { DataRequestViewModel } from "../models/DataRequest";
 import { JobExecuteResult } from "../models/JobExecuteResult";
 import UniqueQueue from "../services/UniqueQueue";
