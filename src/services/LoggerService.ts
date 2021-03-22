@@ -1,7 +1,7 @@
 import winston, { format } from 'winston';
 import { TOKEN_DENOM } from '../config';
 import AvailableStake from '../core/AvailableStake';
-import JobQueue from '../core/JobQueue';
+import JobPool from '../core/JobPool';
 import { NodeOptions } from '../models/NodeOptions';
 import { formatToken } from '../utils/tokenUtils';
 
@@ -24,13 +24,13 @@ const logger = winston.createLogger({
 
 export default logger;
 
-export function logBalances(availableStake: AvailableStake, queue: JobQueue) {
+export function logBalances(availableStake: AvailableStake, pool: JobPool) {
     const profit = availableStake.startingBalance.add(availableStake.totalStaked).sub(availableStake.balance);
     const profitFormatted = formatToken(profit.toString(), TOKEN_DENOM);
     const balanceFormatted = formatToken(availableStake.balance.toString(), TOKEN_DENOM);
     const totalStakedFormatted = formatToken(availableStake.totalStaked.toString(), TOKEN_DENOM);
 
-    logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs executed: ${queue.processedRequests.size}, Jobs actively staking: ${availableStake.activeStaking.size}`);
+    logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs executed: ${pool.processedRequests.size}, Jobs actively staking: ${availableStake.activeStaking.size}`);
 }
 
 export function logNodeOptions(nodeOptions: NodeOptions) {

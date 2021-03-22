@@ -1,6 +1,5 @@
 import { DataRequestViewModel } from "../models/DataRequest";
 import { JobExecuteResult } from "../models/JobExecuteResult";
-import UniqueQueue from "../services/UniqueQueue";
 import { executeJob } from "./JobExecuter";
 
 export interface ProcessedRequest {
@@ -8,17 +7,17 @@ export interface ProcessedRequest {
     result: JobExecuteResult<string>;
 }
 
-export default class JobQueue {
-    queue: UniqueQueue<string, DataRequestViewModel> = new UniqueQueue();
+export default class JobPool {
+    public requests: DataRequestViewModel[] = [];
     /** Currently processing request ids */
-    processing: string[] = [];
-    processedRequests: Map<string, ProcessedRequest> = new Map();
+    public processing: string[] = [];
+    public processedRequests: Map<string, ProcessedRequest> = new Map();
 
     get length() {
-        return this.queue.length;
+        return this.requests.length;
     }
 
-    enqueue(item: DataRequestViewModel): void {
+    addRequest(item: DataRequestViewModel): void {
         // Items we already processed should not be processed again
         if (this.processedRequests.has(item.id)) {
             return;
@@ -29,11 +28,16 @@ export default class JobQueue {
             return;
         }
 
-        this.queue.enqueue(item.id, item);
+        // No duplicates
+        if (this.requests.some(i => i.id === item.id)) {
+            return;
+        }
+
+        this.requests.push(item);
     }
 
-    dequeue(): DataRequestViewModel | null {
-        return this.queue.dequeue();
+    shiftRequest(): DataRequestViewModel | undefined {
+        return this.requests.shift();
     }
 
     /**
@@ -44,8 +48,8 @@ export default class JobQueue {
      * @memberof JobQueue
      */
     async process(onItemProcessed: (item: ProcessedRequest) => void): Promise<void> {
-        while(this.queue.length > 0) {
-            const request = this.queue.dequeue();
+        const promises = this.requests.map(async () => {
+            const request = this.shiftRequest();
             if (!request) return;
 
             this.processing.push(request.id);
@@ -61,6 +65,8 @@ export default class JobQueue {
             this.processing.splice(indexProcessing, 1);
 
             onItemProcessed(item);
-        }
+        });
+
+        await Promise.all(promises);
     }
 }
