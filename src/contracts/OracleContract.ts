@@ -1,7 +1,7 @@
 import Big from "big.js";
 import { Near } from "near-api-js";
 import { ORACLE_CONTRACT_ID } from "../config";
-import { DataRequestViewModel } from "../models/DataRequest";
+import { createMockRequest, DataRequestViewModel } from "../models/DataRequest";
 import { getAccount } from "../services/NearService";
 
 interface DataRequestStakeResponse {
@@ -33,7 +33,7 @@ export async function dataRequestFinalizeClaim(connection: Near, request: DataRe
 export async function getDataRequestById(connection: Near, dataRequestId: string): Promise<DataRequestViewModel> {
     const oracleAccount = await getAccount(connection, ORACLE_CONTRACT_ID);
 
-    return {
+    return createMockRequest({
         id: dataRequestId,
         source: 'ads',
         sourcePath: 'dsa',
@@ -45,7 +45,7 @@ export async function getDataRequestById(connection: Near, dataRequestId: string
                 round: 0,
             }
         ],
-    };
+    });
 }
 
 function getRandomInt(max: number) {
@@ -56,11 +56,12 @@ export async function getDataRequests(connection: Near): Promise<DataRequestView
     const oracleAccount = await getAccount(connection, ORACLE_CONTRACT_ID);
     const max = 25;
     const request: DataRequestViewModel[] = [
-        {
+        createMockRequest({
             id: getRandomInt(max).toString(),
             source: 'https://pokeapi.co/api/v2/pokemon/ditto',
             sourcePath: 'abilities[0].ability.name',
             outcomes: ['limber', 'forest'],
+            contractId: 'tralala.near',
             fees: new Big(0),
             rounds: [
                 {
@@ -69,8 +70,8 @@ export async function getDataRequests(connection: Near): Promise<DataRequestView
                     round: 0,
                 }
             ],
-        },
-        {
+        }),
+        createMockRequest({
             id: getRandomInt(max).toString(),
             source: 'https://jsonplaceholder.typicode.com/todos/1',
             sourcePath: 'completed',
@@ -83,8 +84,8 @@ export async function getDataRequests(connection: Near): Promise<DataRequestView
                     round: 0,
                 }
             ],
-        },
-        {
+        }),
+        createMockRequest({
             id: getRandomInt(max).toString(),
             source: 'https://api.coingecko.com/api/v3/coins/near?localization=false',
             sourcePath: 'id',
@@ -96,7 +97,7 @@ export async function getDataRequests(connection: Near): Promise<DataRequestView
                     round: 0,
                 }
             ],
-        }
+        }),
     ];
 
     return request;

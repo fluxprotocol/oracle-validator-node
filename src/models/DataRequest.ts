@@ -12,6 +12,20 @@ export interface DataRequestViewModel {
     source: string;
     fees: Big;
     sourcePath: string;
+    contractId: string;
     outcomes?: string[];
     rounds: DataRequestRound[];
+}
+
+export function createMockRequest(request: Partial<DataRequestViewModel> = {}): DataRequestViewModel {
+    return {
+        contractId: 'san.near',
+        fees: new Big(1),
+        id: '1',
+        outcomes: [],
+        rounds: [],
+        source: '',
+        sourcePath: '',
+        ...request,
+    };
 }

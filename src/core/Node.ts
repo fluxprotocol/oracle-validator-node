@@ -52,7 +52,13 @@ export async function startNode(options: NodeOptions) {
 
         requests.forEach((request) => {
             const currentRound = request.rounds.length - 1;
+
             if (currentRound > options.maximumChallengeRound) {
+                return;
+            }
+
+            // Contract ids that are not whitelisted should not be handled
+            if (options.contractIds.length !== 0 && !options.contractIds.includes(request.contractId)) {
                 return;
             }
 

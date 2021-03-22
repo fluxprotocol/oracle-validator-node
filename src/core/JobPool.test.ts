@@ -1,4 +1,5 @@
 import Big from "big.js";
+import { createMockRequest } from "../models/DataRequest";
 import { JobResultType } from "../models/JobExecuteResult";
 import * as JobExecuter from './JobExecuter';
 import JobPool from "./JobPool";
@@ -7,13 +8,13 @@ describe('JobPool', () => {
     describe('addRequest', () => {
         it('should be able to add a request to the pool', () => {
             const pool = new JobPool();
-            const item = {
+            const item = createMockRequest({
                 id: '1',
                 rounds: [],
                 source: '',
                 sourcePath: '',
                 fees: new Big(100),
-            };
+            });
 
             expect(pool.length).toBe(0);
 
@@ -25,13 +26,13 @@ describe('JobPool', () => {
 
         it('should not be able to add duplicates', () => {
             const pool = new JobPool();
-            const item = {
+            const item = createMockRequest({
                 id: '1',
                 rounds: [],
                 source: '',
                 sourcePath: '',
                 fees: new Big(100),
-            };
+            });
 
             expect(pool.length).toBe(0);
 
@@ -45,13 +46,13 @@ describe('JobPool', () => {
 
         it('should not add when the request is already being processed', () => {
             const pool = new JobPool();
-            const item = {
+            const item = createMockRequest({
                 id: '1',
                 rounds: [],
                 source: '',
                 sourcePath: '',
                 fees: new Big(100),
-            };
+            });
 
             pool.processing.push('1');
             expect(pool.length).toBe(0);
@@ -63,13 +64,13 @@ describe('JobPool', () => {
 
         it('should not add when the request already was processed', () => {
             const pool = new JobPool();
-            const item = {
+            const item = createMockRequest({
                 id: '1',
                 rounds: [],
                 source: '',
                 sourcePath: '',
                 fees: new Big(100),
-            };
+            });
 
             pool.processedRequests.set('1', {
                 request: item,
@@ -91,13 +92,13 @@ describe('JobPool', () => {
     describe('shiftRequest', () => {
         it('should get the last item and remove it from the request stack', () => {
             const pool = new JobPool();
-            const item = {
+            const item = createMockRequest({
                 id: '1',
                 rounds: [],
                 source: '',
                 sourcePath: '',
                 fees: new Big(100),
-            };
+            });
 
             pool.addRequest(item);
             expect(pool.length).toBe(1);
@@ -109,13 +110,13 @@ describe('JobPool', () => {
 
         it('should return undefined when there are no more items on the stack', () => {
             const pool = new JobPool();
-            const item = {
+            const item = createMockRequest({
                 id: '1',
                 rounds: [],
                 source: '',
                 sourcePath: '',
                 fees: new Big(100),
-            };
+            });
 
             pool.addRequest(item);
             expect(pool.length).toBe(1);
@@ -141,13 +142,13 @@ describe('JobPool', () => {
 
         it('should add the request to the processing', async () => {
             const pool = new JobPool();
-            const item = {
+            const item = createMockRequest({
                 id: '1',
                 rounds: [],
                 source: '',
                 sourcePath: '',
                 fees: new Big(100),
-            };
+            });
 
             mockExecuteJob.mockReturnValue({
                 status: 200,

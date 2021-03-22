@@ -11,4 +11,7 @@ export interface NodeOptions {
 
     /** The maximum amount the node is allowed to stake per a request */
     stakePerRequest: Big;
+
+    /** Tells the node to only resolve these contract ids */
+    contractIds: string[];
 }

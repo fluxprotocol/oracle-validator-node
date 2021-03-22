@@ -29,6 +29,12 @@ export const start: CommandModule = {
             demandOption: false,
             default: 2.5,
         })
+        .option('contractIds', {
+            describe: 'Tells the node to only resolve these contract ids',
+            type: 'array',
+            demandOption: false,
+            default: [],
+        })
     ,
     handler: (args) => {
         const stakePerRequest = args.stakePerRequest as number;
@@ -40,6 +46,7 @@ export const start: CommandModule = {
             credentialsStorePath: args.credentialsStore as string,
             maximumChallengeRound: args.maximumChallengeRound as number,
             stakePerRequest: new Big(stakePerRequestDenom),
+            contractIds: args.contractIds as string[],
         });
     }
 };
