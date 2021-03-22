@@ -1,3 +1,4 @@
+import Big from "big.js";
 import { Near } from "near-api-js";
 import { ORACLE_CONTRACT_ID } from "../config";
 import { DataRequestViewModel } from "../models/DataRequest";
@@ -36,6 +37,7 @@ export async function getDataRequestById(connection: Near, dataRequestId: string
         id: dataRequestId,
         source: 'ads',
         sourcePath: 'dsa',
+        fees: new Big(0),
         rounds: [
             {
                 outcomeStakes: new Map(),
@@ -59,6 +61,7 @@ export async function getDataRequests(connection: Near): Promise<DataRequestView
             source: 'https://pokeapi.co/api/v2/pokemon/ditto',
             sourcePath: 'abilities[0].ability.name',
             outcomes: ['limber', 'forest'],
+            fees: new Big(0),
             rounds: [
                 {
                     outcomeStakes: new Map(),
@@ -72,6 +75,7 @@ export async function getDataRequests(connection: Near): Promise<DataRequestView
             source: 'https://jsonplaceholder.typicode.com/todos/1',
             sourcePath: 'completed',
             outcomes: ['false', 'true'],
+            fees: new Big(0),
             rounds: [
                 {
                     outcomeStakes: new Map(),
@@ -84,6 +88,7 @@ export async function getDataRequests(connection: Near): Promise<DataRequestView
             id: getRandomInt(max).toString(),
             source: 'https://api.coingecko.com/api/v3/coins/near?localization=false',
             sourcePath: 'id',
+            fees: new Big(0),
             rounds: [
                 {
                     outcomeStakes: new Map(),

@@ -10,6 +10,7 @@ export interface DataRequestRound {
 export interface DataRequestViewModel {
     id: string;
     source: string;
+    fees: Big;
     sourcePath: string;
     outcomes?: string[];
     rounds: DataRequestRound[];

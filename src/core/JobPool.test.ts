@@ -1,3 +1,4 @@
+import Big from "big.js";
 import { JobResultType } from "../models/JobExecuteResult";
 import * as JobExecuter from './JobExecuter';
 import JobPool from "./JobPool";
@@ -11,6 +12,7 @@ describe('JobPool', () => {
                 rounds: [],
                 source: '',
                 sourcePath: '',
+                fees: new Big(100),
             };
 
             expect(pool.length).toBe(0);
@@ -28,6 +30,7 @@ describe('JobPool', () => {
                 rounds: [],
                 source: '',
                 sourcePath: '',
+                fees: new Big(100),
             };
 
             expect(pool.length).toBe(0);
@@ -47,6 +50,7 @@ describe('JobPool', () => {
                 rounds: [],
                 source: '',
                 sourcePath: '',
+                fees: new Big(100),
             };
 
             pool.processing.push('1');
@@ -64,6 +68,7 @@ describe('JobPool', () => {
                 rounds: [],
                 source: '',
                 sourcePath: '',
+                fees: new Big(100),
             };
 
             pool.processedRequests.set('1', {
@@ -91,6 +96,7 @@ describe('JobPool', () => {
                 rounds: [],
                 source: '',
                 sourcePath: '',
+                fees: new Big(100),
             };
 
             pool.addRequest(item);
@@ -108,6 +114,7 @@ describe('JobPool', () => {
                 rounds: [],
                 source: '',
                 sourcePath: '',
+                fees: new Big(100),
             };
 
             pool.addRequest(item);
@@ -139,15 +146,13 @@ describe('JobPool', () => {
                 rounds: [],
                 source: '',
                 sourcePath: '',
+                fees: new Big(100),
             };
 
             mockExecuteJob.mockReturnValue({
-                request: item,
-                result: {
-                    status: 200,
-                    type: 'success',
-                    data: 'test',
-                }
+                status: 200,
+                type: 'success',
+                data: 'test',
             });
 
             pool.addRequest(item);
@@ -160,19 +165,32 @@ describe('JobPool', () => {
             expect(pool.requests.length).toBe(0);
 
             expect(mockExecuteJob).toHaveBeenCalledTimes(1);
+            expect(mockExecuteJob).toHaveBeenCalledWith(item);
             expect(onItemProcessed).toHaveBeenCalledTimes(1);
+            expect(onItemProcessed).toHaveBeenCalledWith({
+                request: item,
+                result: {
+                    status: 200,
+                    type: 'success',
+                    data: 'test',
+                }
+            });
         });
 
 
         it('should do nothing when no requests are available', async () => {
             const pool = new JobPool();
 
-            await pool.process(() => { });
+            const onItemProcessed = jest.fn();
+            await pool.process(onItemProcessed);
 
             expect(pool.processedRequests.size).toBe(0);
             expect(pool.processing.length).toBe(0);
             expect(pool.requests.length).toBe(0);
             expect(mockExecuteJob).toHaveBeenCalledTimes(0);
+            expect(onItemProcessed).toHaveBeenCalledTimes(0);
         });
+
+
     })
 });

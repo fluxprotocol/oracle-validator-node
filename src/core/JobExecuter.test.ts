@@ -1,3 +1,4 @@
+import Big from "big.js";
 import { isJobSuccesful } from "../models/JobExecuteResult";
 import { executeJob } from "./JobExecuter";
 
@@ -9,6 +10,7 @@ describe('JobExecuter', () => {
                 source: 'https://pokeapi.co/api/v2/pokemon/ditto',
                 sourcePath: 'abilities[0].ability.name',
                 outcomes: ['limber', 'forest'],
+                fees: new Big(0),
                 rounds: [],
             });
 

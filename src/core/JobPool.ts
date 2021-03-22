@@ -1,5 +1,6 @@
 import { DataRequestViewModel } from "../models/DataRequest";
 import { JobExecuteResult } from "../models/JobExecuteResult";
+import { sortDataRequestOnFees } from "../services/DataRequestService";
 import { executeJob } from "./JobExecuter";
 
 export interface ProcessedRequest {
@@ -48,6 +49,7 @@ export default class JobPool {
      * @memberof JobQueue
      */
     async process(onItemProcessed: (item: ProcessedRequest) => void): Promise<void> {
+        this.requests = sortDataRequestOnFees(this.requests);
         const promises = this.requests.map(async () => {
             const request = this.shiftRequest();
             if (!request) return;
