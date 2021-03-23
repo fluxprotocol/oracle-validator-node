@@ -16,15 +16,19 @@ describe('JobPool', () => {
                 fees: new Big(100),
             });
 
+            const item2 = createMockRequest({ id: '2' });
+
             expect(pool.length).toBe(0);
 
             pool.addRequest(item);
+            pool.addRequest(item2);
 
-            expect(pool.length).toBe(1);
+            expect(pool.length).toBe(2);
             expect(pool.requests[0]).toStrictEqual(item);
+            expect(pool.requests[1]).toStrictEqual(item2);
         });
 
-        it('should not be able to add duplicates', () => {
+        it('should not grow the length when duplicates are present', () => {
             const pool = new JobPool();
             const item = createMockRequest({
                 id: '1',
@@ -41,6 +45,28 @@ describe('JobPool', () => {
             pool.addRequest(item);
             pool.addRequest(item);
 
+            expect(pool.length).toBe(1);
+        });
+
+        it('should replace duplicates', () => {
+            const pool = new JobPool();
+            const item = createMockRequest({
+                id: '1',
+                source: 'blah',
+            });
+
+            const item2 = createMockRequest({
+                id: '1',
+                source: 'test',
+            });
+
+            pool.addRequest(item);
+
+            expect(pool.requests[0].source).toBe('blah');
+
+            pool.addRequest(item2);
+
+            expect(pool.requests[0].source).toBe('test');
             expect(pool.length).toBe(1);
         });
 

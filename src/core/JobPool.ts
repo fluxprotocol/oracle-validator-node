@@ -1,6 +1,5 @@
 import { DataRequestViewModel } from "../models/DataRequest";
 import { JobExecuteResult } from "../models/JobExecuteResult";
-import { sortDataRequestOnFees } from "../services/DataRequestService";
 import { executeJob } from "./JobExecuter";
 
 export interface ProcessedRequest {
@@ -29,14 +28,23 @@ export default class JobPool {
             return;
         }
 
-        // No duplicates
-        if (this.requests.some(i => i.id === item.id)) {
+        // Replace duplicates at the same index
+        const requestIndex = this.requests.findIndex(r => r.id === item.id);
+
+        if (requestIndex !== -1) {
+            this.requests[requestIndex] = item;
             return;
         }
 
         this.requests.push(item);
     }
 
+    /**
+     * Deletes and returns the next item on the stack
+     *
+     * @return {(DataRequestViewModel | undefined)}
+     * @memberof JobPool
+     */
     shiftRequest(): DataRequestViewModel | undefined {
         return this.requests.shift();
     }
@@ -49,7 +57,6 @@ export default class JobPool {
      * @memberof JobQueue
      */
     async process(onItemProcessed: (item: ProcessedRequest) => void): Promise<void> {
-        this.requests = sortDataRequestOnFees(this.requests);
         const promises = this.requests.map(async () => {
             const request = this.shiftRequest();
             if (!request) return;
