@@ -1,60 +1,54 @@
-import Big from 'big.js';
+import fs from 'fs/promises';
 import { Argv, CommandModule } from 'yargs';
-import { TOKEN_DENOM } from '../config';
 import { startNode } from '../core/Node';
-import { NetworkType } from '../models/NearNetworkConfig';
-import { NodeOptions } from '../models/NodeOptions';
+import { getProviderOptions, parseNodeOptions } from '../models/NodeOptions';
 import NearProvider from '../providers/Near/NearProvider';
+import { Provider } from '../providers/Provider';
 import ProviderRegistry from '../providers/ProviderRegistry';
-import { toToken } from '../utils/tokenUtils';
-import { credentialOptions } from './options/credentialOptions';
+import logger from '../services/LoggerService';
 
 export const start: CommandModule = {
     command: 'start',
     describe: 'Starts the oracle node',
-    builder: (yargs: Argv) => credentialOptions(yargs)
-        .option('net', {
-            describe: 'The net (main or test) you want to run',
+    builder: (yargs: Argv) => yargs
+        .option('config', {
+            describe: 'Path to the config.json',
             type: 'string',
             demandOption: false,
-            default: NetworkType.Testnet,
-            choices: [NetworkType.Testnet, NetworkType.Mainnet]
-        })
-        .option('maximumChallengeRound', {
-            describe: 'The maximum challenge round the node wants to commit to',
-            type: 'number',
-            demandOption: false,
-            default: 0,
-        })
-        .option('stakePerRequest', {
-            describe: 'The maximum amount the node is allowed to stake per request (in whole FLX)',
-            type: 'number',
-            demandOption: false,
-            default: 2.5,
-        })
-        .option('contractIds', {
-            describe: 'Tells the node to only resolve these contract ids',
-            type: 'array',
-            demandOption: false,
-            default: [],
+            default: './config.json',
         })
     ,
-    handler: (args) => {
-        const stakePerRequest = args.stakePerRequest as number;
-        const stakePerRequestDenom = toToken(stakePerRequest.toString(), TOKEN_DENOM);
-        const nodeOptions: NodeOptions = {
-            net: args.net as NetworkType,
-            accountId: args.accountId as string,
-            credentialsStorePath: args.credentialsStore as string,
-            maximumChallengeRound: args.maximumChallengeRound as number,
-            stakePerRequest: new Big(stakePerRequestDenom),
-            contractIds: args.contractIds as string[],
+    handler: async (args) => {
+        const file = await fs.readFile(args.config as string, {
+            encoding: 'utf-8',
+        });
+
+        const nodeOptions = parseNodeOptions(JSON.parse(file));
+        const providers: Provider[] = [];
+
+        nodeOptions.providersConfig.forEach((providerConfig) => {
+            if (providerConfig.id === NearProvider.id) {
+                providers.push(new NearProvider());
+            }
+        });
+
+        if (!providers.length) {
+            logger.error('No providers configured..');
+            process.exit(1);
+            return;
         }
 
-        const providerRegistry = new ProviderRegistry(nodeOptions, [
-            new NearProvider(),
-        ]);
+        providers.forEach((provider) => {
+            const errors = provider.validateOptions(nodeOptions, getProviderOptions(provider.id, nodeOptions));
 
+            if (errors.length) {
+                logger.error(errors.join('\n'));
+                process.exit(1);
+                return;
+            }
+        });
+
+        const providerRegistry = new ProviderRegistry(nodeOptions, providers);
         startNode(providerRegistry, nodeOptions);
     }
 };

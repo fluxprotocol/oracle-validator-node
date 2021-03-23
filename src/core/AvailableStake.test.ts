@@ -7,11 +7,9 @@ describe('AvailableStake', () => {
         it('should return false when node has not enough balance for staking', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(100),
-                accountId: '',
                 contractIds: [],
-                credentialsStorePath: '',
                 maximumChallengeRound: 1,
-                net: NetworkType.Testnet,
+                providersConfig: [],
             }, {} as any);
 
             stake.balances = new Map();
@@ -23,11 +21,9 @@ describe('AvailableStake', () => {
         it('should return false when node has not enough balance for staking', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(100),
-                accountId: '',
                 contractIds: [],
-                credentialsStorePath: '',
                 maximumChallengeRound: 1,
-                net: NetworkType.Testnet,
+                providersConfig: [],
             }, {} as any);
 
             stake.balances = new Map();
@@ -41,11 +37,9 @@ describe('AvailableStake', () => {
         it('should return 0 when there is not enough balance to stake', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(200),
-                accountId: '',
                 contractIds: [],
-                credentialsStorePath: '',
                 maximumChallengeRound: 1,
-                net: NetworkType.Testnet,
+                providersConfig: [],
             }, {} as any);
 
             stake.balances = new Map();
@@ -59,11 +53,9 @@ describe('AvailableStake', () => {
         it('should return the stake amount and reduce the balance', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(200),
-                accountId: '',
                 contractIds: [],
-                credentialsStorePath: '',
                 maximumChallengeRound: 1,
-                net: NetworkType.Testnet,
+                providersConfig: [],
             }, {} as any);
 
             stake.balances = new Map();

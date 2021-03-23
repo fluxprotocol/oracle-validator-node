@@ -27,7 +27,7 @@ export function createMockRequest(request: Partial<DataRequestViewModel> = {}): 
         rounds: [],
         source: '',
         sourcePath: '',
-        providerId: 'near-blockchain',
+        providerId: 'near',
         ...request,
     };
 }

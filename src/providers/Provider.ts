@@ -15,6 +15,7 @@ export interface Provider {
     providerName: string;
     id: string;
 
+    validateOptions(options: NodeOptions, providerConfig: any): string[];
     init(options: NodeOptions): Promise<void>;
 
     getTokenBalance(): Promise<Big>;
