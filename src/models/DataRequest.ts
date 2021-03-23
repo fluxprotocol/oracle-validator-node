@@ -9,6 +9,7 @@ export interface DataRequestRound {
 
 export interface DataRequestViewModel {
     id: string;
+    providerId: string;
     source: string;
     fees: Big;
     sourcePath: string;
@@ -26,6 +27,7 @@ export function createMockRequest(request: Partial<DataRequestViewModel> = {}): 
         rounds: [],
         source: '',
         sourcePath: '',
+        providerId: 'near-blockchain',
         ...request,
     };
 }

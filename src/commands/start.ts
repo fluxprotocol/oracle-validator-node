@@ -3,6 +3,9 @@ import { Argv, CommandModule } from 'yargs';
 import { TOKEN_DENOM } from '../config';
 import { startNode } from '../core/Node';
 import { NetworkType } from '../models/NearNetworkConfig';
+import { NodeOptions } from '../models/NodeOptions';
+import NearProvider from '../providers/Near/NearProvider';
+import ProviderRegistry from '../providers/ProviderRegistry';
 import { toToken } from '../utils/tokenUtils';
 import { credentialOptions } from './options/credentialOptions';
 
@@ -39,14 +42,19 @@ export const start: CommandModule = {
     handler: (args) => {
         const stakePerRequest = args.stakePerRequest as number;
         const stakePerRequestDenom = toToken(stakePerRequest.toString(), TOKEN_DENOM);
-
-        startNode({
+        const nodeOptions: NodeOptions = {
             net: args.net as NetworkType,
             accountId: args.accountId as string,
             credentialsStorePath: args.credentialsStore as string,
             maximumChallengeRound: args.maximumChallengeRound as number,
             stakePerRequest: new Big(stakePerRequestDenom),
             contractIds: args.contractIds as string[],
-        });
+        }
+
+        const providerRegistry = new ProviderRegistry(nodeOptions, [
+            new NearProvider(),
+        ]);
+
+        startNode(providerRegistry, nodeOptions);
     }
 };

@@ -12,11 +12,12 @@ describe('AvailableStake', () => {
                 credentialsStorePath: '',
                 maximumChallengeRound: 1,
                 net: NetworkType.Testnet,
-            }, {} as any, {} as any);
+            }, {} as any);
 
-            stake.balance = new Big(50);
+            stake.balances = new Map();
+            stake.balances.set('test', new Big(50));
 
-            expect(stake.hasEnoughBalanceForStaking()).toBe(false);
+            expect(stake.hasEnoughBalanceForStaking('test')).toBe(false);
         });
 
         it('should return false when node has not enough balance for staking', () => {
@@ -27,11 +28,12 @@ describe('AvailableStake', () => {
                 credentialsStorePath: '',
                 maximumChallengeRound: 1,
                 net: NetworkType.Testnet,
-            }, {} as any, {} as any);
+            }, {} as any);
 
-            stake.balance = new Big(150);
+            stake.balances = new Map();
+            stake.balances.set('test', new Big(150));
 
-            expect(stake.hasEnoughBalanceForStaking()).toBe(true);
+            expect(stake.hasEnoughBalanceForStaking('test')).toBe(true);
         });
     });
 
@@ -44,13 +46,14 @@ describe('AvailableStake', () => {
                 credentialsStorePath: '',
                 maximumChallengeRound: 1,
                 net: NetworkType.Testnet,
-            }, {} as any, {} as any);
+            }, {} as any);
 
-            stake.balance = new Big(150);
-            const withdrawn = stake.withdrawBalanceToStake();
+            stake.balances = new Map();
+            stake.balances.set('test', new Big(150));
+            const withdrawn = stake.withdrawBalanceToStake('test');
 
             expect(withdrawn.toString()).toBe('0');
-            expect(stake.balance.toString()).toBe('150');
+            expect(stake.balances.get('test')?.toString()).toBe('150');
         });
 
         it('should return the stake amount and reduce the balance', () => {
@@ -61,13 +64,15 @@ describe('AvailableStake', () => {
                 credentialsStorePath: '',
                 maximumChallengeRound: 1,
                 net: NetworkType.Testnet,
-            }, {} as any, {} as any);
+            }, {} as any);
 
-            stake.balance = new Big(1000);
-            const withdrawn = stake.withdrawBalanceToStake();
+            stake.balances = new Map();
+            stake.balances.set('test', new Big(1000));
+
+            const withdrawn = stake.withdrawBalanceToStake('test');
 
             expect(withdrawn.toString()).toBe('200');
-            expect(stake.balance.toString()).toBe('800');
+            expect(stake.balances.get('test')?.toString()).toBe('800');
         });
 
     });
