@@ -6,11 +6,8 @@
 import yargs from "yargs";
 
 import { start } from "./commands/start";
-import { validateConfig } from "./config";
 
 async function main() {
-    validateConfig();
-
     yargs
         .strict()
         .command(start)
