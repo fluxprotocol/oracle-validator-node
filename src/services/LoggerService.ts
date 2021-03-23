@@ -44,5 +44,10 @@ export function logNodeOptions(providerRegistry: ProviderRegistry, nodeOptions: 
 
     logger.info(`🤖 Starting oracle node v${packageJson.version} for ${providerRegistry.providers.map(p => p.providerName)}..`);
     logger.info(`🛠  Staking per request ${formatToken(stakePerRequest, TOKEN_DENOM)} FLX`);
-    logger.info(`🛠  Maxmimum round to stake on ${nodeOptions.maximumChallengeRound}`);
+
+    if (nodeOptions.contractIds.length) {
+        logger.info(`🛠  Listening to: ${nodeOptions.contractIds}`);
+    } else {
+        logger.info(`🛠  Listening to all contracts`);
+    }
 }

@@ -11,12 +11,6 @@ export function loadJobs(
         const eligibleRequests: DataRequestViewModel[] = [];
 
         requests.forEach((request) => {
-            const currentRound = request.rounds.length - 1;
-
-            if (currentRound > nodeOptions.maximumChallengeRound) {
-                return;
-            }
-
             // Contract ids that are not whitelisted should not be handled
             if (nodeOptions.contractIds.length !== 0 && !nodeOptions.contractIds.includes(request.contractId)) {
                 return;

@@ -2,7 +2,7 @@ import Big from "big.js";
 import { DataRequestViewModel } from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
 
-export interface DataRequestStakeResponse {
+export interface StakeResponse {
     amountBack: Big;
     success: boolean;
 }
@@ -21,6 +21,8 @@ export interface Provider {
     getTokenBalance(): Promise<Big>;
     getDataRequestById(requestId: string): Promise<DataRequestViewModel | null>;
     getDataRequests(): Promise<DataRequestViewModel[]>;
-    stake(): Promise<DataRequestStakeResponse>;
+
+    stake(requestId: string, roundId: number, answer?: string): Promise<StakeResponse>;
     claim(requestId: string): Promise<DataRequestFinalizeClaimResponse>;
+    challenge(requestId: string, answer: string): Promise<StakeResponse>
 }

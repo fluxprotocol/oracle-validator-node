@@ -3,7 +3,6 @@ import { TOKEN_DENOM } from "../config";
 import { toToken } from "../utils/tokenUtils";
 
 export interface RawNodeConfig {
-    maximumChallengeRound?: number;
     stakePerRequest?: string;
     contractIds?: string[];
     providers?: {
@@ -13,9 +12,6 @@ export interface RawNodeConfig {
 }
 
 export interface NodeOptions {
-    /** The maximum challenge round the node wants to commit to */
-    maximumChallengeRound: number;
-
     /** The maximum amount the node is allowed to stake per a request */
     stakePerRequest: Big;
 
@@ -32,16 +28,11 @@ export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
     const result: NodeOptions = {
         contractIds: [],
         stakePerRequest: new Big(toToken('2.5', TOKEN_DENOM)),
-        maximumChallengeRound: 2,
         providersConfig: [],
     };
 
     if (options.contractIds && Array.isArray(options.contractIds)) {
         result.contractIds = options.contractIds;
-    }
-
-    if (typeof options.maximumChallengeRound === 'number') {
-        result.maximumChallengeRound = options.maximumChallengeRound;
     }
 
     if (typeof options.stakePerRequest === 'string') {

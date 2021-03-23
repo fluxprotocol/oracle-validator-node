@@ -4,6 +4,7 @@ import { SuccessfulJobResult } from "../models/JobExecuteResult";
 import logger from "../services/LoggerService";
 import AvailableStake from "./AvailableStake";
 import ProviderRegistry from "../providers/ProviderRegistry";
+import { StakeResponse } from "../providers/Provider";
 
 const FIRST_CHALLENGE_ROUND = 0;
 
@@ -13,11 +14,12 @@ interface SubmitJobToOracleParams {
     availableStake: AvailableStake;
 }
 
-enum SubmitJobToOracleError {
-    MaxChallengeRoundExceeded,
-    ChallengeHasWrongOutcome,
-    NotEnoughBalance,
-    Unknown,
+export enum SubmitJobToOracleError {
+    MaxChallengeRoundExceeded = 'MaxChallengeRoundExceeded',
+    ChallengeHasWrongOutcome = 'ChallengeHasWrongOutcome',
+    NotEnoughBalance = 'NotEnoughBalance',
+    Unknown = 'Unknown',
+    RequestNotFound = 'RequestNotFound',
 }
 
 interface SubmitJobToOracleResult {
@@ -26,38 +28,18 @@ interface SubmitJobToOracleResult {
 }
 
 export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry, params: SubmitJobToOracleParams): Promise<SubmitJobToOracleResult> {
-    const currentRequestStatus = await providerRegistry.getDataRequestById(params.request.providerId, params.request.id);
-    if (!currentRequestStatus) {
-        logger.error(`Request id ${params.request.id} on ${params.request.providerId} does not exist`);
+    const { request, result, availableStake } = params;
+    const latestRequestData = await providerRegistry.getDataRequestById(request.providerId, request.id);
+
+    if (!latestRequestData) {
         return {
             success: false,
-            error: SubmitJobToOracleError.Unknown,
-        };
-    }
-
-    const currentChallengeRound = currentRequestStatus.rounds[currentRequestStatus.rounds.length - 1];
-
-    if (currentChallengeRound.round > nodeOptions.maximumChallengeRound) {
-        logger.info(`Skipping ${currentRequestStatus.id}, max challenge round is ${nodeOptions.maximumChallengeRound} but request is at ${currentChallengeRound.round}`);
-        return {
-            success: false,
-            error: SubmitJobToOracleError.MaxChallengeRoundExceeded,
-        };
-    }
-
-    // The outcome is being challenged, we should skip the commitment
-    // when the challenge outcome is not the same as ours
-    if (currentChallengeRound.round > FIRST_CHALLENGE_ROUND) {
-        if (params.result.data !== currentChallengeRound.winningOutcome) {
-            logger.info(`Skipping commitment of ${currentRequestStatus.id}, challenge outcome did not match fetched outcome`);
-            return {
-                success: false,
-                error: SubmitJobToOracleError.ChallengeHasWrongOutcome,
-            };
+            error: SubmitJobToOracleError.RequestNotFound,
         }
     }
 
-    const stake = params.availableStake.withdrawBalanceToStake(currentRequestStatus.providerId);
+    const currentChallengeRound = latestRequestData.rounds[latestRequestData.rounds.length - 1];
+    const stake = params.availableStake.withdrawBalanceToStake(request.providerId);
 
     if (stake.lte(0)) {
         logger.error(`❌💰 Not enough balance to stake.`);
@@ -67,13 +49,30 @@ export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegist
         };
     }
 
-    // We can safely commit to the challenge
-    // We should check how much the user wants to stake per data request
-    // Also check whether the balance of the token is enough to stake
-    const stakingResponse = await providerRegistry.stake(currentRequestStatus.providerId);
+    let stakingResponse: StakeResponse | undefined;
 
-    if (!stakingResponse.success) {
-        logger.error(`Staking failed for id ${currentRequestStatus.id} on ${currentRequestStatus.providerId}`);
+    // The outcome is being challenged
+    if (currentChallengeRound.round > FIRST_CHALLENGE_ROUND) {
+        // The winning outcome for the challange was not correct. We should invalidate the challenge
+        if (result.data !== currentChallengeRound.winningOutcome) {
+            logger.info(`🦠 Malicious challenge found for ${request.id} at ${request.providerId}`);
+
+            stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, undefined);
+        } else {
+            // The winning outcome is correct we can add our stake
+            stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, result.data);
+        }
+    } else {
+        // We can safely commit to the challenge
+        // We should check how much the user wants to stake per data request
+        // Also check whether the balance of the token is enough to stake
+        stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, result.data);
+    }
+
+
+    if (!stakingResponse?.success) {
+        logger.error(`Staking failed for id ${request.id} on ${request.providerId}`);
+
         return {
             success: false,
             error: SubmitJobToOracleError.Unknown,
@@ -81,7 +80,7 @@ export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegist
     }
 
     const actualStaking = nodeOptions.stakePerRequest.sub(stakingResponse.amountBack);
-    params.availableStake.addRequestToActiveStaking(currentRequestStatus, actualStaking);
+    availableStake.addRequestToActiveStaking(request, actualStaking);
 
     return {
         success: true,

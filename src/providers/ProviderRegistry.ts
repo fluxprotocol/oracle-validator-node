@@ -1,7 +1,7 @@
 import Big from "big.js";
 import { DataRequestViewModel } from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
-import { DataRequestStakeResponse, DataRequestFinalizeClaimResponse, Provider } from "./Provider";
+import { StakeResponse, DataRequestFinalizeClaimResponse, Provider } from "./Provider";
 
 export default class ProviderRegistry {
     providers: Provider[];
@@ -46,7 +46,7 @@ export default class ProviderRegistry {
         return provider.getDataRequestById(requestId);
     }
 
-    async stake(providerId: string): Promise<DataRequestStakeResponse> {
+    async stake(providerId: string, requestId: string, roundId: number, answer?: string): Promise<StakeResponse> {
         const provider = this.getProviderById(providerId);
         if (!provider) {
             return {
@@ -55,7 +55,7 @@ export default class ProviderRegistry {
             }
         }
 
-        return provider.stake();
+        return provider.stake(requestId, roundId, answer);
     }
 
     async claim(providerId: string, requestId: string): Promise<DataRequestFinalizeClaimResponse> {

@@ -8,7 +8,6 @@ describe('AvailableStake', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(100),
                 contractIds: [],
-                maximumChallengeRound: 1,
                 providersConfig: [],
             }, {} as any);
 
@@ -22,7 +21,6 @@ describe('AvailableStake', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(100),
                 contractIds: [],
-                maximumChallengeRound: 1,
                 providersConfig: [],
             }, {} as any);
 
@@ -38,7 +36,6 @@ describe('AvailableStake', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(200),
                 contractIds: [],
-                maximumChallengeRound: 1,
                 providersConfig: [],
             }, {} as any);
 
@@ -54,7 +51,6 @@ describe('AvailableStake', () => {
             const stake = new AvailableStake({
                 stakePerRequest: new Big(200),
                 contractIds: [],
-                maximumChallengeRound: 1,
                 providersConfig: [],
             }, {} as any);
 

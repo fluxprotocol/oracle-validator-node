@@ -3,7 +3,7 @@ import { Account, Near } from "near-api-js";
 import { createMockRequest, DataRequestViewModel } from "../../models/DataRequest";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
-import { DataRequestFinalizeClaimResponse, DataRequestStakeResponse, Provider } from "../Provider";
+import { DataRequestFinalizeClaimResponse, Provider, StakeResponse } from "../Provider";
 import { connectToNear, getAccount } from "./NearService";
 
 function getRandomInt(max: number) {
@@ -60,13 +60,6 @@ export default class NearProvider implements Provider {
         this.nearOptions = nearOptions;
         this.nearConnection = await connectToNear(nearOptions.net as NetworkType, nearOptions.credentialsStorePath);
         this.nodeAccount = await getAccount(this.nearConnection, nearOptions.accountId);
-    }
-
-    async stake(): Promise<DataRequestStakeResponse> {
-        return {
-            amountBack: new Big(10),
-            success: true,
-        };
     }
 
     async getTokenBalance(): Promise<Big> {
@@ -153,5 +146,19 @@ export default class NearProvider implements Provider {
         return {
             received: '1000000000000000000',
         };
+    }
+
+    async stake(): Promise<StakeResponse> {
+        return {
+            amountBack: new Big(10),
+            success: true,
+        };
+    }
+
+    async challenge(): Promise<StakeResponse> {
+        return {
+            amountBack: new Big(10),
+            success: true,
+        }
     }
 }
