@@ -32,7 +32,6 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
     function onItemProcessed(item: ProcessedRequest) {
         const result = item.result;
 
-        // We should not stake any requests
         if (!isJobSuccesful(result)) {
             logger.info(`❌ Request ${item.request.id} errored with: ${result.error}`);
             return;

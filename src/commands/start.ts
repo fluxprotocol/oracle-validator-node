@@ -23,6 +23,12 @@ export const start: CommandModule = {
             encoding: 'utf-8',
         });
 
+        if (!file) {
+            logger.error(`Config file could not be found at ${args.config}`);
+            process.exit(1);
+            return;
+        }
+
         const nodeOptions = parseNodeOptions(JSON.parse(file));
         const providers: Provider[] = [];
 
@@ -38,6 +44,7 @@ export const start: CommandModule = {
             return;
         }
 
+        // Validate each provider config options
         providers.forEach((provider) => {
             const errors = provider.validateOptions(nodeOptions, getProviderOptions(provider.id, nodeOptions));
 
