@@ -1,10 +1,9 @@
-import { Near } from "near-api-js";
 import { NodeOptions } from "../models/NodeOptions";
 import { DataRequestViewModel } from "../models/DataRequest";
 import { SuccessfulJobResult } from "../models/JobExecuteResult";
 import logger from "../services/LoggerService";
-import { dataRequestStake, getDataRequestById } from "../contracts/OracleContract";
 import AvailableStake from "./AvailableStake";
+import ProviderRegistry from "../providers/ProviderRegistry";
 
 const FIRST_CHALLENGE_ROUND = 0;
 
@@ -26,8 +25,16 @@ interface SubmitJobToOracleResult {
     success: boolean;
 }
 
-export async function submitJobToOracle(nodeOptions: NodeOptions, connection: Near, params: SubmitJobToOracleParams): Promise<SubmitJobToOracleResult> {
-    const currentRequestStatus = await getDataRequestById(connection, params.request.id);
+export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry, params: SubmitJobToOracleParams): Promise<SubmitJobToOracleResult> {
+    const currentRequestStatus = await providerRegistry.getDataRequestById(params.request.providerId, params.request.id);
+    if (!currentRequestStatus) {
+        logger.error(`Request id ${params.request.id} on ${params.request.providerId} does not exist`);
+        return {
+            success: false,
+            error: SubmitJobToOracleError.Unknown,
+        };
+    }
+
     const currentChallengeRound = currentRequestStatus.rounds[currentRequestStatus.rounds.length - 1];
 
     if (currentChallengeRound.round > nodeOptions.maximumChallengeRound) {
@@ -50,7 +57,7 @@ export async function submitJobToOracle(nodeOptions: NodeOptions, connection: Ne
         }
     }
 
-    const stake = params.availableStake.withdrawBalanceToStake();
+    const stake = params.availableStake.withdrawBalanceToStake(currentRequestStatus.providerId);
 
     if (stake.lte(0)) {
         logger.error(`❌💰 Not enough balance to stake.`);
@@ -63,10 +70,10 @@ export async function submitJobToOracle(nodeOptions: NodeOptions, connection: Ne
     // We can safely commit to the challenge
     // We should check how much the user wants to stake per data request
     // Also check whether the balance of the token is enough to stake
-    const stakingResponse = await dataRequestStake(connection);
+    const stakingResponse = await providerRegistry.stake(currentRequestStatus.providerId);
 
     if (!stakingResponse.success) {
-        logger.error('Staking failed.');
+        logger.error(`Staking failed for id ${currentRequestStatus.id} on ${currentRequestStatus.providerId}`);
         return {
             success: false,
             error: SubmitJobToOracleError.Unknown,

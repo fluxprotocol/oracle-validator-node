@@ -2,7 +2,7 @@ import Big from "big.js";
 import { Near } from "near-api-js";
 import { ORACLE_CONTRACT_ID } from "../config";
 import { createMockRequest, DataRequestViewModel } from "../models/DataRequest";
-import { getAccount } from "../services/NearService";
+import { getAccount } from "../providers/Near/NearService";
 
 interface DataRequestStakeResponse {
     amountBack: string;
@@ -28,24 +28,6 @@ export async function dataRequestFinalizeClaim(connection: Near, request: DataRe
     return {
         received: '1000000000000000000',
     }
-}
-
-export async function getDataRequestById(connection: Near, dataRequestId: string): Promise<DataRequestViewModel> {
-    const oracleAccount = await getAccount(connection, ORACLE_CONTRACT_ID);
-
-    return createMockRequest({
-        id: dataRequestId,
-        source: 'ads',
-        sourcePath: 'dsa',
-        fees: new Big(0),
-        rounds: [
-            {
-                outcomeStakes: new Map(),
-                quoromDate: new Date(),
-                round: 0,
-            }
-        ],
-    });
 }
 
 function getRandomInt(max: number) {

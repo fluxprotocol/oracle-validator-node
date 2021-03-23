@@ -1,10 +1,9 @@
 import Big from "big.js";
-import { Account, Near } from "near-api-js";
 import { CLAIM_CHECK_INTERVAL } from "../config";
-import { getTokenBalance } from "../contracts/FluxTokenContract";
-import { dataRequestFinalizeClaim, getDataRequestById } from "../contracts/OracleContract";
 import { NodeOptions } from "../models/NodeOptions";
 import { DataRequestViewModel } from "../models/DataRequest";
+import ProviderRegistry from "../providers/ProviderRegistry";
+import { sumBig } from "../utils/bigUtils";
 
 
 interface ActiveStaking {
@@ -14,20 +13,18 @@ interface ActiveStaking {
 
 export default class AvailableStake {
     nodeOptions: NodeOptions;
-    nodeAccount: Account;
-    nearConnection: Near;
     startingBalance: Big = new Big(0);
-    balance: Big = new Big(0);
+    balances: Map<string, Big> = new Map();
     totalStaked: Big = new Big(0);
     activeStaking: Map<string, ActiveStaking> = new Map();
 
     /** Used for not spamming the RPC with balance requests */
-    private balanceFetch?: Promise<Big>;
+    private balanceFetch?: Promise<Big[]>;
+    private providerRegistry: ProviderRegistry;
 
-    constructor(nodeOptions: NodeOptions, nodeAccount: Account, nearConnection: Near) {
+    constructor(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry) {
         this.nodeOptions = nodeOptions;
-        this.nodeAccount = nodeAccount;
-        this.nearConnection = nearConnection;
+        this.providerRegistry = providerRegistry;
     }
 
     /**
@@ -44,12 +41,22 @@ export default class AvailableStake {
             return;
         }
 
-        this.balanceFetch = getTokenBalance(this.nodeAccount);
-        this.balance = await this.balanceFetch;
+        const providerIds = this.providerRegistry.activeProviders;
+        const balanceFetches = providerIds.map((id) => {
+            return this.providerRegistry.getTokenBalance(id);
+        });
+
+        this.balanceFetch = Promise.all(balanceFetches);
+        const balances = await this.balanceFetch;
+
+        providerIds.forEach((providerId, index) => {
+            this.balances.set(providerId, balances[index]);
+        });
+
         this.balanceFetch = undefined;
 
         if (isStartingBalance) {
-            this.startingBalance = this.balance;
+            this.startingBalance = sumBig(balances);
         }
     }
 
@@ -59,8 +66,14 @@ export default class AvailableStake {
      * @return {boolean}
      * @memberof AvailableStake
      */
-    hasEnoughBalanceForStaking(): boolean {
-        if (this.nodeOptions.stakePerRequest.gt(this.balance)) {
+    hasEnoughBalanceForStaking(providerId: string): boolean {
+        const providerBalance = this.balances.get(providerId);
+
+        if (!providerBalance) {
+            return false;
+        }
+
+        if (this.nodeOptions.stakePerRequest.gt(providerBalance)) {
             return false;
         }
 
@@ -73,12 +86,15 @@ export default class AvailableStake {
      * @return {Big} amount of stake withdrawn
      * @memberof AvailableStake
      */
-    withdrawBalanceToStake(): Big {
-        if (!this.hasEnoughBalanceForStaking()) {
+    withdrawBalanceToStake(providerId: string): Big {
+        const providerBalance = this.balances.get(providerId);
+
+        if (!providerBalance || !this.hasEnoughBalanceForStaking(providerId)) {
             return new Big(0);
         }
 
-        this.balance = this.balance.sub(this.nodeOptions.stakePerRequest);
+        const newBalance = providerBalance.sub(this.nodeOptions.stakePerRequest);
+        this.balances.set(providerId, newBalance);
 
         return this.nodeOptions.stakePerRequest;
     }
@@ -111,19 +127,26 @@ export default class AvailableStake {
         setInterval(() => {
             const activelyStakingKeys = Array.from(this.activeStaking.keys());
 
-            activelyStakingKeys.forEach(async (key) => {
-                const activelyStakingData = this.activeStaking.get(key) as ActiveStaking;
-                const dataRequest = await getDataRequestById(this.nearConnection, key);
+            activelyStakingKeys.forEach(async (requestId) => {
+                const activelyStakingData = this.activeStaking.get(requestId) as ActiveStaking;
+                const dataRequest = await this.providerRegistry.getDataRequestById(activelyStakingData.request.providerId, requestId);
+
+                if (!dataRequest) {
+                    return;
+                }
+
                 const currentChallengeRound = dataRequest.rounds[dataRequest.rounds.length - 1];
                 const now = new Date();
 
                 // The last challange has ended so we are ready to finalize/claim
                 if (now.getTime() > currentChallengeRound.quoromDate.getTime()) {
-                    const claimResponse = await dataRequestFinalizeClaim(this.nearConnection, dataRequest);
+                    const claimResponse = await this.providerRegistry.claim(dataRequest.providerId, dataRequest.id);
 
                     this.totalStaked = this.totalStaked.sub(activelyStakingData.stakingAmount);
                     this.activeStaking.delete(dataRequest.id);
-                    this.balance = this.balance.add(claimResponse.received);
+
+                    const currentProviderBalance = this.balances.get(dataRequest.providerId) ?? new Big(0);
+                    this.balances.set(dataRequest.providerId, currentProviderBalance.add(claimResponse.received));
                 }
             });
         }, CLAIM_CHECK_INTERVAL);
