@@ -34,7 +34,16 @@ export const start: CommandModule = {
 
         nodeOptions.providersConfig.forEach((providerConfig) => {
             if (providerConfig.id === NearProvider.id) {
-                providers.push(new NearProvider());
+                const provider = new NearProvider();
+                const errors = provider.validateOptions(nodeOptions, providerConfig.options);
+
+                if (errors.length) {
+                    logger.error(errors.join('\n'));
+                    process.exit(1);
+                    return;
+                }
+
+                providers.push(provider);
             }
         });
 
@@ -43,17 +52,6 @@ export const start: CommandModule = {
             process.exit(1);
             return;
         }
-
-        // Validate each provider config options
-        providers.forEach((provider) => {
-            const errors = provider.validateOptions(nodeOptions, getProviderOptions(provider.id, nodeOptions));
-
-            if (errors.length) {
-                logger.error(errors.join('\n'));
-                process.exit(1);
-                return;
-            }
-        });
 
         const providerRegistry = new ProviderRegistry(nodeOptions, providers);
         startNode(providerRegistry, nodeOptions);

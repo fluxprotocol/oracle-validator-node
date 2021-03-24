@@ -4,11 +4,13 @@ import { NodeOptions } from "../models/NodeOptions";
 import { DataRequestViewModel } from "../models/DataRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { sumBig } from "../utils/bigUtils";
+import { SuccessfulJobResult } from "../models/JobExecuteResult";
 
 
 interface ActiveStaking {
     stakingAmount: Big;
     request: DataRequestViewModel;
+    result: SuccessfulJobResult<string>,
 }
 
 export default class AvailableStake {
@@ -107,12 +109,13 @@ export default class AvailableStake {
      * @param {Big} stakingAmount
      * @memberof AvailableStake
      */
-    addRequestToActiveStaking(request: DataRequestViewModel, stakingAmount: Big) {
+    addRequestToActiveStaking(request: DataRequestViewModel, result: SuccessfulJobResult<string>, stakingAmount: Big) {
         this.totalStaked = this.totalStaked.add(stakingAmount);
 
         this.activeStaking.set(request.id, {
             request,
             stakingAmount,
+            result,
         });
     }
 
@@ -125,21 +128,17 @@ export default class AvailableStake {
      */
     startClaimingProcess() {
         setInterval(() => {
-            const activelyStakingKeys = Array.from(this.activeStaking.keys());
+            const activelyStakingKeys = Array.from(this.activeStaking.values());
 
-            activelyStakingKeys.forEach(async (requestId) => {
-                const activelyStakingData = this.activeStaking.get(requestId) as ActiveStaking;
-                const dataRequest = await this.providerRegistry.getDataRequestById(activelyStakingData.request.providerId, requestId);
-
-                if (!dataRequest) {
-                    return;
-                }
+            activelyStakingKeys.forEach(async (activelyStakingData) => {
+                const dataRequest = await this.providerRegistry.getDataRequestById(activelyStakingData.request.providerId, activelyStakingData.request.id);
+                if (!dataRequest) return;
 
                 const currentChallengeRound = dataRequest.rounds[dataRequest.rounds.length - 1];
                 const now = new Date();
 
                 // The last challange has ended so we are ready to finalize/claim
-                if (now.getTime() > currentChallengeRound.quoromDate.getTime()) {
+                if (now.getTime() >= currentChallengeRound.quoromDate.getTime()) {
                     const claimResponse = await this.providerRegistry.claim(dataRequest.providerId, dataRequest.id);
 
                     this.totalStaked = this.totalStaked.sub(activelyStakingData.stakingAmount);

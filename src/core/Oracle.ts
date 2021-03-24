@@ -69,7 +69,6 @@ export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegist
         stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, result.data);
     }
 
-
     if (!stakingResponse?.success) {
         logger.error(`Staking failed for id ${request.id} on ${request.providerId}`);
 
@@ -80,7 +79,7 @@ export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegist
     }
 
     const actualStaking = nodeOptions.stakePerRequest.sub(stakingResponse.amountBack);
-    availableStake.addRequestToActiveStaking(request, actualStaking);
+    availableStake.addRequestToActiveStaking(request, result, actualStaking);
 
     return {
         success: true,
