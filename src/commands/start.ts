@@ -1,10 +1,11 @@
 import fs from 'fs/promises';
 import { Argv, CommandModule } from 'yargs';
 import { startNode } from '../core/Node';
-import { getProviderOptions, parseNodeOptions } from '../models/NodeOptions';
+import { parseNodeOptions } from '../models/NodeOptions';
 import NearProvider from '../providers/Near/NearProvider';
 import { Provider } from '../providers/Provider';
 import ProviderRegistry from '../providers/ProviderRegistry';
+import { startDatabase } from '../services/DatabaseService';
 import logger from '../services/LoggerService';
 
 export const start: CommandModule = {
@@ -19,6 +20,7 @@ export const start: CommandModule = {
         })
     ,
     handler: async (args) => {
+        await startDatabase();
         const file = await fs.readFile(args.config as string, {
             encoding: 'utf-8',
         });

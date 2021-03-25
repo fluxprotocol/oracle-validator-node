@@ -15,6 +15,7 @@
         "@types/lodash.at": "^4.6.6",
         "@types/node": "^14.14.14",
         "@types/node-fetch": "^2.5.8",
+        "@types/pouchdb": "^6.4.0",
         "jest": "^26.6.3",
         "nodemon": "^2.0.6",
         "ts-jest": "^26.5.3",
@@ -33,10 +34,11 @@
     "homepage": "https://github.com/fluxprotocol/oracle-bot#readme",
     "dependencies": {
         "big.js": "^6.0.3",
-        "dotenv": "^8.2.0",
         "lodash.at": "^4.6.0",
         "near-api-js": "^0.38.0",
         "node-fetch": "^2.6.1",
+        "pouchdb": "^7.2.2",
+        "pouchdb-find": "^7.2.2",
         "winston": "^3.3.3",
         "yargs": "^16.2.0"
     }

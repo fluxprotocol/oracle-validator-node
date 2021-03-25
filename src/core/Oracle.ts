@@ -2,7 +2,7 @@ import { NodeOptions } from "../models/NodeOptions";
 import { DataRequestViewModel } from "../models/DataRequest";
 import { SuccessfulJobResult } from "../models/JobExecuteResult";
 import logger from "../services/LoggerService";
-import AvailableStake from "./AvailableStake";
+import AvailableStake from "./NodeBalance";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { StakeResponse } from "../providers/Provider";
 
@@ -57,6 +57,7 @@ export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegist
         if (result.data !== currentChallengeRound.winningOutcome) {
             logger.info(`🦠 Malicious challenge found for ${request.id} at ${request.providerId}`);
 
+            // TODO: NEW CHALLENGE ROUND
             stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, undefined);
         } else {
             // The winning outcome is correct we can add our stake

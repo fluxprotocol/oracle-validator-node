@@ -1,6 +1,6 @@
 import Big from "big.js";
 import { Account, Near } from "near-api-js";
-import { createMockRequest, DataRequestViewModel } from "../../models/DataRequest";
+import DataRequest, { createMockRequest } from "../../models/DataRequest";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
 import { DataRequestFinalizeClaimResponse, Provider, StakeResponse } from "../Provider";
@@ -76,8 +76,8 @@ export default class NearProvider implements Provider {
         }
     }
 
-    async getDataRequestById(requestId: string) {
-        return createMockRequest({
+    async getDataRequestById(requestId: string): Promise<DataRequest> {
+        return DataRequest.fromString(JSON.stringify(createMockRequest({
             id: requestId,
             source: 'ads',
             sourcePath: 'dsa',
@@ -89,13 +89,13 @@ export default class NearProvider implements Provider {
                     round: 0,
                 }
             ],
-        });
+        })));
     }
 
-    async getDataRequests(): Promise<DataRequestViewModel[]> {
+    async getDataRequests(): Promise<DataRequest[]> {
         const max = 25;
-        const request: DataRequestViewModel[] = [
-            createMockRequest({
+        const request: DataRequest[] = [
+            DataRequest.fromString(JSON.stringify(createMockRequest({
                 id: getRandomInt(max).toString(),
                 source: 'https://pokeapi.co/api/v2/pokemon/ditto',
                 sourcePath: 'abilities[0].ability.name',
@@ -109,12 +109,13 @@ export default class NearProvider implements Provider {
                         round: 0,
                     }
                 ],
-            }),
-            createMockRequest({
+            }))),
+            DataRequest.fromString(JSON.stringify(createMockRequest({
                 id: getRandomInt(max).toString(),
-                source: 'https://jsonplaceholder.typicode.com/todos/1',
-                sourcePath: 'completed',
-                outcomes: ['false', 'true'],
+                source: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                sourcePath: 'abilities[0].ability.name',
+                outcomes: ['limber', 'forest'],
+                contractId: 'tralala.near',
                 fees: new Big(0),
                 rounds: [
                     {
@@ -123,11 +124,13 @@ export default class NearProvider implements Provider {
                         round: 0,
                     }
                 ],
-            }),
-            createMockRequest({
+            }))),
+            DataRequest.fromString(JSON.stringify(createMockRequest({
                 id: getRandomInt(max).toString(),
-                source: 'https://api.coingecko.com/api/v3/coins/near?localization=false',
-                sourcePath: 'id',
+                source: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                sourcePath: 'abilities[0].ability.name',
+                outcomes: ['limber', 'forest'],
+                contractId: 'tralala.near',
                 fees: new Big(0),
                 rounds: [
                     {
@@ -136,7 +139,7 @@ export default class NearProvider implements Provider {
                         round: 0,
                     }
                 ],
-            }),
+            }))),
         ];
 
         return request;

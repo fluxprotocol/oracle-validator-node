@@ -2,7 +2,7 @@ import winston, { format } from 'winston';
 import packageJson from '../../package.json';
 
 import { TOKEN_DENOM } from '../config';
-import AvailableStake from '../core/AvailableStake';
+import AvailableStake from '../core/NodeBalance';
 import JobPool from '../core/JobPool';
 import { NodeOptions } from '../models/NodeOptions';
 import ProviderRegistry from '../providers/ProviderRegistry';

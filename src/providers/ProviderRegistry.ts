@@ -1,5 +1,5 @@
 import Big from "big.js";
-import { DataRequestViewModel } from "../models/DataRequest";
+import DataRequest from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
 import { StakeResponse, DataRequestFinalizeClaimResponse, Provider } from "./Provider";
 
@@ -31,7 +31,7 @@ export default class ProviderRegistry {
         return provider.getTokenBalance();
     }
 
-    async getDataRequests(onRequests: (reqeusts: DataRequestViewModel[], providerId: string) => void) {
+    async getDataRequests(onRequests: (requests: DataRequest[], providerId: string) => void) {
         this.providers.forEach(async (provider) => {
             const requests = await provider.getDataRequests();
 
@@ -39,7 +39,7 @@ export default class ProviderRegistry {
         });
     }
 
-    async getDataRequestById(providerId: string, requestId: string): Promise<DataRequestViewModel | null> {
+    async getDataRequestById(providerId: string, requestId: string): Promise<DataRequest | null> {
         const provider = this.getProviderById(providerId);
         if (!provider) return null;
 

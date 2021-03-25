@@ -1,12 +1,11 @@
 import { NodeOptions } from "../models/NodeOptions";
-import { isJobSuccesful } from "../models/JobExecuteResult";
-import logger, { logBalances, logNodeOptions } from "../services/LoggerService";
-import JobPool, { ProcessedRequest } from "./JobPool";
-import { loadJobs } from "./JobSearcher";
-import { submitJobToOracle } from "./Oracle";
-import AvailableStake from "./AvailableStake";
-import { BALANCE_REFRESH_INTERVAL, JOB_SEARCH_INTERVAL } from "../config";
+import { logNodeOptions } from "../services/LoggerService";
+import JobSearcher from "./JobSearcher";
+import { BALANCE_REFRESH_INTERVAL } from "../config";
+import NodeBalance from './NodeBalance';
 import ProviderRegistry from "../providers/ProviderRegistry";
+import { getAllDataRequests } from "../services/DataRequestService";
+import JobWalker from "./JobWalker";
 
 
 export async function startNode(providerRegistry: ProviderRegistry, options: NodeOptions) {
@@ -14,47 +13,23 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
 
     await providerRegistry.init();
 
-    const jobPool = new JobPool();
+    // Restore our current validator state
+    const dataRequests = await getAllDataRequests();
+    const jobSearcher = new JobSearcher(providerRegistry, options, dataRequests);
+    const jobWalker = new JobWalker(dataRequests);
+    const nodeBalance = new NodeBalance(options, providerRegistry);
 
     // Used to keep track of how much the node can spend
-    const availableStake = new AvailableStake(options, providerRegistry);
-    await availableStake.refreshBalances(true);
-    availableStake.startClaimingProcess();
-
-    logBalances(availableStake, jobPool);
+    await nodeBalance.refreshBalances(true);
 
     // For checking the balances and preventing a lockup of 0 balance in case of a fail
     setInterval(async () => {
-        await availableStake.refreshBalances();
-        logBalances(availableStake, jobPool);
+        await nodeBalance.refreshBalances();
     }, BALANCE_REFRESH_INTERVAL);
 
-    function onItemProcessed(item: ProcessedRequest) {
-        const result = item.result;
+    jobSearcher.startSearch((requests) => {
+        requests.forEach(r => jobWalker.addNewDataRequest(r));
+    });
 
-        if (!isJobSuccesful(result)) {
-            logger.info(`❌ Request ${item.request.id} errored with: ${result.error}`);
-            return;
-        }
-
-        submitJobToOracle(options, providerRegistry, {
-            result,
-            request: item.request,
-            availableStake,
-        });
-    }
-
-    setInterval(async () => {
-        loadJobs(providerRegistry, options, (requests, providerId) => {
-            if (!requests.length) return;
-
-            requests.forEach((item) => jobPool.addRequest(item));
-
-            if (!availableStake.hasEnoughBalanceForStaking(providerId)) {
-                return;
-            }
-
-            jobPool.process((item) => onItemProcessed(item));
-        });
-    }, JOB_SEARCH_INTERVAL);
+    jobWalker.startWalker();
 }

@@ -1,5 +1,5 @@
 import Big from "big.js";
-import { DataRequestViewModel } from "../models/DataRequest";
+import DataRequest from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
 
 export interface StakeResponse {
@@ -19,8 +19,8 @@ export interface Provider {
     init(options: NodeOptions): Promise<void>;
 
     getTokenBalance(): Promise<Big>;
-    getDataRequestById(requestId: string): Promise<DataRequestViewModel | null>;
-    getDataRequests(): Promise<DataRequestViewModel[]>;
+    getDataRequestById(requestId: string): Promise<DataRequest | null>;
+    getDataRequests(): Promise<DataRequest[]>;
 
     stake(requestId: string, roundId: number, answer?: string): Promise<StakeResponse>;
     claim(requestId: string): Promise<DataRequestFinalizeClaimResponse>;

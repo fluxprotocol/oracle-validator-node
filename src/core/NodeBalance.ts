@@ -13,7 +13,7 @@ interface ActiveStaking {
     result: SuccessfulJobResult<string>,
 }
 
-export default class AvailableStake {
+export default class NodeBalance {
     nodeOptions: NodeOptions;
     startingBalance: Big = new Big(0);
     balances: Map<string, Big> = new Map();
@@ -99,55 +99,5 @@ export default class AvailableStake {
         this.balances.set(providerId, newBalance);
 
         return this.nodeOptions.stakePerRequest;
-    }
-
-    /**
-     * Adds a request that we are actively staking
-     * This will allow the node to later claim the rewards automagicly
-     *
-     * @param {DataRequestViewModel} request
-     * @param {Big} stakingAmount
-     * @memberof AvailableStake
-     */
-    addRequestToActiveStaking(request: DataRequestViewModel, result: SuccessfulJobResult<string>, stakingAmount: Big) {
-        this.totalStaked = this.totalStaked.add(stakingAmount);
-
-        this.activeStaking.set(request.id, {
-            request,
-            stakingAmount,
-            result,
-        });
-    }
-
-    /**
-     * Start claiming process
-     * Checks each x seconds if something can be claimed
-     * If something is claimable it will try to claim it and update the balances accordingly
-     *
-     * @memberof AvailableStake
-     */
-    startClaimingProcess() {
-        setInterval(() => {
-            const activelyStakingKeys = Array.from(this.activeStaking.values());
-
-            activelyStakingKeys.forEach(async (activelyStakingData) => {
-                const dataRequest = await this.providerRegistry.getDataRequestById(activelyStakingData.request.providerId, activelyStakingData.request.id);
-                if (!dataRequest) return;
-
-                const currentChallengeRound = dataRequest.rounds[dataRequest.rounds.length - 1];
-                const now = new Date();
-
-                // The last challange has ended so we are ready to finalize/claim
-                if (now.getTime() >= currentChallengeRound.quoromDate.getTime()) {
-                    const claimResponse = await this.providerRegistry.claim(dataRequest.providerId, dataRequest.id);
-
-                    this.totalStaked = this.totalStaked.sub(activelyStakingData.stakingAmount);
-                    this.activeStaking.delete(dataRequest.id);
-
-                    const currentProviderBalance = this.balances.get(dataRequest.providerId) ?? new Big(0);
-                    this.balances.set(dataRequest.providerId, currentProviderBalance.add(claimResponse.received));
-                }
-            });
-        }, CLAIM_CHECK_INTERVAL);
     }
 }

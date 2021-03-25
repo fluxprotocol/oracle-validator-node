@@ -1,11 +1,11 @@
 import Big from 'big.js';
 import { NetworkType } from '../models/NearNetworkConfig';
-import AvailableStake from './AvailableStake';
+import NodeBalance from './NodeBalance';
 
-describe('AvailableStake', () => {
+describe('NodeBalance', () => {
     describe('hasEnoughBalanceForStaking', () => {
         it('should return false when node has not enough balance for staking', () => {
-            const stake = new AvailableStake({
+            const stake = new NodeBalance({
                 stakePerRequest: new Big(100),
                 contractIds: [],
                 providersConfig: [],
@@ -18,7 +18,7 @@ describe('AvailableStake', () => {
         });
 
         it('should return false when node has not enough balance for staking', () => {
-            const stake = new AvailableStake({
+            const stake = new NodeBalance({
                 stakePerRequest: new Big(100),
                 contractIds: [],
                 providersConfig: [],
@@ -33,7 +33,7 @@ describe('AvailableStake', () => {
 
     describe('withdrawBalanceToStake', () => {
         it('should return 0 when there is not enough balance to stake', () => {
-            const stake = new AvailableStake({
+            const stake = new NodeBalance({
                 stakePerRequest: new Big(200),
                 contractIds: [],
                 providersConfig: [],
@@ -48,7 +48,7 @@ describe('AvailableStake', () => {
         });
 
         it('should return the stake amount and reduce the balance', () => {
-            const stake = new AvailableStake({
+            const stake = new NodeBalance({
                 stakePerRequest: new Big(200),
                 contractIds: [],
                 providersConfig: [],
