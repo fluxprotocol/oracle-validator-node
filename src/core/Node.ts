@@ -25,7 +25,7 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
 
     // For checking the balances and preventing a lockup of 0 balance in case of a fail
     setInterval(() => {
-        // nodeBalance.refreshBalances();
+        nodeBalance.refreshBalances();
         logBalances(nodeBalance, jobWalker);
     }, BALANCE_REFRESH_INTERVAL);
 

@@ -44,7 +44,6 @@ export default class JobWalker {
         request.update(newStatus);
 
         if (request.isClaimable()) {
-            // Claim the earnings and
             const isClaimSuccesful = await request.claim(this.providerRegistry);
 
             if (isClaimSuccesful) {
@@ -52,6 +51,18 @@ export default class JobWalker {
                 this.requests.splice(index, 1);
                 this.nodeBalance.deposit(request.providerId, new Big(request.claimedAmount ?? 0));
             }
+        }
+
+        if (!request.staking.length) {
+            if (!request.executeResults.length) {
+                await request.execute();
+            }
+
+            await request.stakeOrChallenge(
+                this.nodeOptions,
+                this.providerRegistry,
+                this.nodeBalance
+            );
         }
 
         // Check status of request

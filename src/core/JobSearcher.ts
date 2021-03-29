@@ -6,10 +6,9 @@ import { storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
 
 export default class JobSearcher {
-
-    private visitedDataRequestIds: string[];
-    private providerRegistry: ProviderRegistry;
-    private nodeOptions: NodeOptions;
+    visitedDataRequestIds: string[];
+    providerRegistry: ProviderRegistry;
+    nodeOptions: NodeOptions;
 
     constructor(providerRegistry: ProviderRegistry, nodeOptions: NodeOptions, dataRequests: DataRequest[]) {
         this.providerRegistry = providerRegistry;
@@ -17,7 +16,7 @@ export default class JobSearcher {
         this.visitedDataRequestIds = dataRequests.map(r => r.internalId);
     }
 
-    private search(onRequests: (dataRequests: DataRequest[]) => void) {
+    search(onRequests: (dataRequests: DataRequest[]) => void) {
         this.providerRegistry.getDataRequests(async (requests) => {
             try {
                 const eligibleRequests: DataRequest[] = [];

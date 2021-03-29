@@ -1,9 +1,7 @@
-import Big from "big.js";
 import { executeJob } from "../core/JobExecuter";
 import NodeBalance from "../core/NodeBalance";
 import { stakeOrChallengeDataRequest } from "../core/Oracle";
 import ProviderRegistry from "../providers/ProviderRegistry";
-import { storeDataRequest } from "../services/DataRequestService";
 import { JobExecuteResult } from "./JobExecuteResult";
 import { NodeOptions } from "./NodeOptions";
 import { isStakeResultSuccesful, SuccessfulStakeResult } from "./StakingResult";

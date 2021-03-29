@@ -1,5 +1,4 @@
 import Big from 'big.js';
-import { NetworkType } from '../models/NearNetworkConfig';
 import NodeBalance from './NodeBalance';
 
 describe('NodeBalance', () => {
