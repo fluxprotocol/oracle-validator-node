@@ -19,15 +19,11 @@ export async function startDatabase(): Promise<PouchDB.Database> {
 }
 
 export async function createDocument(id: string, obj: object) {
-    try {
-        let doc = {
-            _id: id,
-        };
+    let doc = {
+        _id: id,
+    };
 
-        database.put(doc);
-    } catch (error) {
-        logger.error(`[createDocument] ${error}`);
-    }
+    await database.put(doc);
 }
 
 export async function findDocumentById<T>(id: string): Promise<T | null> {

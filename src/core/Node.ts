@@ -1,5 +1,5 @@
 import { NodeOptions } from "../models/NodeOptions";
-import { logNodeOptions } from "../services/LoggerService";
+import logger, { logNodeOptions, logBalances } from "../services/LoggerService";
 import JobSearcher from "./JobSearcher";
 import { BALANCE_REFRESH_INTERVAL } from "../config";
 import NodeBalance from './NodeBalance';
@@ -16,15 +16,17 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
     // Restore our current validator state
     const dataRequests = await getAllDataRequests();
     const jobSearcher = new JobSearcher(providerRegistry, options, dataRequests);
-    const jobWalker = new JobWalker(dataRequests);
     const nodeBalance = new NodeBalance(options, providerRegistry);
+    const jobWalker = new JobWalker(options, providerRegistry, nodeBalance, dataRequests);
 
     // Used to keep track of how much the node can spend
     await nodeBalance.refreshBalances(true);
+    logBalances(nodeBalance, jobWalker);
 
     // For checking the balances and preventing a lockup of 0 balance in case of a fail
-    setInterval(async () => {
-        await nodeBalance.refreshBalances();
+    setInterval(() => {
+        // nodeBalance.refreshBalances();
+        logBalances(nodeBalance, jobWalker);
     }, BALANCE_REFRESH_INTERVAL);
 
     jobSearcher.startSearch((requests) => {

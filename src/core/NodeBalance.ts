@@ -1,28 +1,17 @@
 import Big from "big.js";
-import { CLAIM_CHECK_INTERVAL } from "../config";
 import { NodeOptions } from "../models/NodeOptions";
-import { DataRequestViewModel } from "../models/DataRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
+import logger from "../services/LoggerService";
 import { sumBig } from "../utils/bigUtils";
-import { SuccessfulJobResult } from "../models/JobExecuteResult";
-
-
-interface ActiveStaking {
-    stakingAmount: Big;
-    request: DataRequestViewModel;
-    result: SuccessfulJobResult<string>,
-}
 
 export default class NodeBalance {
     nodeOptions: NodeOptions;
     startingBalance: Big = new Big(0);
     balances: Map<string, Big> = new Map();
-    totalStaked: Big = new Big(0);
-    activeStaking: Map<string, ActiveStaking> = new Map();
+    providerRegistry: ProviderRegistry;
 
     /** Used for not spamming the RPC with balance requests */
-    private balanceFetch?: Promise<Big[]>;
-    private providerRegistry: ProviderRegistry;
+    balanceFetch?: Promise<Big[]>;
 
     constructor(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry) {
         this.nodeOptions = nodeOptions;
@@ -37,28 +26,32 @@ export default class NodeBalance {
      * @memberof AvailableStake
      */
     async refreshBalances(isStartingBalance: boolean = false): Promise<void> {
-        // short circuit if the request is already ongoing
-        if (this.balanceFetch) {
-            await this.balanceFetch;
-            return;
-        }
+        try {
+            // short circuit if the request is already ongoing
+            if (this.balanceFetch) {
+                await this.balanceFetch;
+                return;
+            }
 
-        const providerIds = this.providerRegistry.activeProviders;
-        const balanceFetches = providerIds.map((id) => {
-            return this.providerRegistry.getTokenBalance(id);
-        });
+            const providerIds = this.providerRegistry.activeProviders;
+            const balanceFetches = providerIds.map((id) => {
+                return this.providerRegistry.getTokenBalance(id);
+            });
 
-        this.balanceFetch = Promise.all(balanceFetches);
-        const balances = await this.balanceFetch;
+            this.balanceFetch = Promise.all(balanceFetches);
+            const balances = await this.balanceFetch;
 
-        providerIds.forEach((providerId, index) => {
-            this.balances.set(providerId, balances[index]);
-        });
+            providerIds.forEach((providerId, index) => {
+                this.balances.set(providerId, balances[index]);
+            });
 
-        this.balanceFetch = undefined;
+            this.balanceFetch = undefined;
 
-        if (isStartingBalance) {
-            this.startingBalance = sumBig(balances);
+            if (isStartingBalance) {
+                this.startingBalance = sumBig(balances);
+            }
+        } catch (error) {
+            logger.error(`[NodeBalance.refreshBalances] ${error}`);
         }
     }
 
@@ -99,5 +92,22 @@ export default class NodeBalance {
         this.balances.set(providerId, newBalance);
 
         return this.nodeOptions.stakePerRequest;
+    }
+
+    /**
+     * Deposit FLX back to the balances
+     * Only used when staking/challenging gives back tokens
+     *
+     * @param {Big} amount
+     * @memberof NodeBalance
+     */
+    deposit(providerId: string, amount: Big): void {
+        const balance = this.balances.get(providerId);
+
+        if (!balance) {
+            return;
+        }
+
+        this.balances.set(providerId, balance.add(amount));
     }
 }

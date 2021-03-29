@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { DataRequestViewModel } from "../models/DataRequest";
+import DataRequest, { RequestInfo } from "../models/DataRequest";
 import { isJobSuccesful, JobExecuteError, JobExecuteResult, JobResultType } from '../models/JobExecuteResult';
 import logger from "../services/LoggerService";
 import { parseJson, pathToValue } from '../utils/jsonUtils';
@@ -7,12 +7,12 @@ import { parseJson, pathToValue } from '../utils/jsonUtils';
 /**
  * Fetches the JSON data from the given API
  *
- * @param {DataRequestViewModel} request
+ * @param {RequestInfo} requestInfo
  * @return {Promise<JobExecuteResult<string>>}
  */
-async function fetchJobData(request: DataRequestViewModel): Promise<JobExecuteResult<object>> {
+async function fetchJobData(requestInfo: RequestInfo): Promise<JobExecuteResult<object>> {
     try {
-        const response = await fetch(request.source);
+        const response = await fetch(requestInfo.end_point);
 
         if (!response.ok) {
             return {
@@ -39,7 +39,7 @@ async function fetchJobData(request: DataRequestViewModel): Promise<JobExecuteRe
             type: JobResultType.Success,
         }
     } catch (error) {
-        logger.error(error);
+        logger.error(`[fetchJobData] ${error}`);
 
         return {
             status: 500,
@@ -49,8 +49,8 @@ async function fetchJobData(request: DataRequestViewModel): Promise<JobExecuteRe
     }
 }
 
-function resolveJobData(request: DataRequestViewModel, parsedBody: object): JobExecuteResult<string> {
-    const value = pathToValue(request.sourcePath, parsedBody);
+function resolveJobData(request: DataRequest, requestInfo: RequestInfo, parsedBody: object): JobExecuteResult<string> {
+    const value = pathToValue(requestInfo.source_path, parsedBody);
 
     if (value === null) {
         return {
@@ -78,23 +78,28 @@ function resolveJobData(request: DataRequestViewModel, parsedBody: object): JobE
     };
 }
 
-export async function executeJob(request: DataRequestViewModel): Promise<JobExecuteResult<string>> {
+export async function executeJob(request: DataRequest): Promise<JobExecuteResult<string>[]> {
     try {
-        const fetchResult = await fetchJobData(request);
+        const promises = request.sources.map(async (requestInfo) => {
+            const fetchResult = await fetchJobData(requestInfo);
 
-        // No need to process an fetch result that is not valid
-        if (!isJobSuccesful(fetchResult)) {
-            return fetchResult;
-        }
+            // No need to process an fetch result that is not valid
+            if (!isJobSuccesful(fetchResult)) {
+                return fetchResult;
+            }
 
-        return resolveJobData(request, fetchResult.data);
+            return resolveJobData(request, requestInfo, fetchResult.data);
+        });
+
+        const result = await Promise.all(promises);
+        return result;
     } catch (error) {
-        logger.error(error);
+        logger.error(`[executeJob] ${error}`);
 
-        return {
+        return [{
             status: 500,
             error: JobExecuteError.Unknown,
             type: JobResultType.Error,
-        }
+        }]
     }
 }

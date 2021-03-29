@@ -1,88 +1,64 @@
 import { NodeOptions } from "../models/NodeOptions";
-import { DataRequestViewModel } from "../models/DataRequest";
-import { SuccessfulJobResult } from "../models/JobExecuteResult";
+import DataRequest from "../models/DataRequest";
 import logger from "../services/LoggerService";
-import AvailableStake from "./NodeBalance";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { StakeResponse } from "../providers/Provider";
+import NodeBalance from "./NodeBalance";
+import { getDataRequestAnswer } from "../services/DataRequestService";
+import { StakeError, StakeResult, StakeResultType } from "../models/StakingResult";
 
 const FIRST_CHALLENGE_ROUND = 0;
 
-interface SubmitJobToOracleParams {
-    request: DataRequestViewModel;
-    result: SuccessfulJobResult<string>;
-    availableStake: AvailableStake;
-}
-
-export enum SubmitJobToOracleError {
-    MaxChallengeRoundExceeded = 'MaxChallengeRoundExceeded',
-    ChallengeHasWrongOutcome = 'ChallengeHasWrongOutcome',
-    NotEnoughBalance = 'NotEnoughBalance',
-    Unknown = 'Unknown',
-    RequestNotFound = 'RequestNotFound',
-}
-
-interface SubmitJobToOracleResult {
-    error?: SubmitJobToOracleError;
-    success: boolean;
-}
-
-export async function submitJobToOracle(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry, params: SubmitJobToOracleParams): Promise<SubmitJobToOracleResult> {
-    const { request, result, availableStake } = params;
-    const latestRequestData = await providerRegistry.getDataRequestById(request.providerId, request.id);
-
-    if (!latestRequestData) {
-        return {
-            success: false,
-            error: SubmitJobToOracleError.RequestNotFound,
-        }
-    }
-
-    const currentChallengeRound = latestRequestData.rounds[latestRequestData.rounds.length - 1];
-    const stake = params.availableStake.withdrawBalanceToStake(request.providerId);
+export async function stakeOrChallengeDataRequest(
+    nodeOptions: NodeOptions,
+    providerRegistry: ProviderRegistry,
+    nodeBalance: NodeBalance,
+    dataRequest: DataRequest,
+): Promise<StakeResult> {
+    const currentChallengeRound = dataRequest.rounds[dataRequest.rounds.length - 1];
+    const stake = nodeBalance.withdrawBalanceToStake(dataRequest.providerId);
 
     if (stake.lte(0)) {
         logger.error(`❌💰 Not enough balance to stake.`);
         return {
-            success: false,
-            error: SubmitJobToOracleError.NotEnoughBalance,
+            error: StakeError.NotEnoughBalance,
+            type: StakeResultType.Error,
         };
     }
 
-    let stakingResponse: StakeResponse | undefined;
+    let stakingResponse: StakeResponse;
+    let roundIdStakingOn = currentChallengeRound.round;
+    const dataRequestAnswer = getDataRequestAnswer(dataRequest);
 
     // The outcome is being challenged
-    if (currentChallengeRound.round > FIRST_CHALLENGE_ROUND) {
-        // The winning outcome for the challange was not correct. We should invalidate the challenge
-        if (result.data !== currentChallengeRound.winningOutcome) {
-            logger.info(`🦠 Malicious challenge found for ${request.id} at ${request.providerId}`);
-
-            // TODO: NEW CHALLENGE ROUND
-            stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, undefined);
-        } else {
-            // The winning outcome is correct we can add our stake
-            stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, result.data);
-        }
+    if (currentChallengeRound.round > FIRST_CHALLENGE_ROUND && dataRequestAnswer !== currentChallengeRound.winningOutcome) {
+        // The winning outcome for the challange was not correct.
+        // We should invalidate the challenge by creating a new challenge
+        logger.info(`🦠 Malicious challenge found for ${dataRequest.id} at ${dataRequest.providerId}`);
+        stakingResponse = await providerRegistry.challenge(dataRequest.providerId, dataRequest.id, currentChallengeRound.round, dataRequestAnswer);
+        roundIdStakingOn += 1;
     } else {
         // We can safely commit to the challenge
         // We should check how much the user wants to stake per data request
         // Also check whether the balance of the token is enough to stake
-        stakingResponse = await providerRegistry.stake(request.providerId, request.id, currentChallengeRound.round, result.data);
+        stakingResponse = await providerRegistry.stake(dataRequest.providerId, dataRequest.id, currentChallengeRound.round, dataRequestAnswer);
     }
 
-    if (!stakingResponse?.success) {
-        logger.error(`Staking failed for id ${request.id} on ${request.providerId}`);
+    if (!stakingResponse.success) {
+        logger.error(`Staking failed for id ${dataRequest.id} on ${dataRequest.providerId}`);
 
         return {
-            success: false,
-            error: SubmitJobToOracleError.Unknown,
+            error: StakeError.Unknown,
+            type: StakeResultType.Error,
         };
     }
 
-    const actualStaking = nodeOptions.stakePerRequest.sub(stakingResponse.amountBack);
-    availableStake.addRequestToActiveStaking(request, result, actualStaking);
+    const actualStaking = stake.sub(stakingResponse.amountBack);
+    nodeBalance.deposit(dataRequest.providerId, stakingResponse.amountBack);
 
     return {
-        success: true,
+        amountStaked: actualStaking.toString(),
+        roundId: roundIdStakingOn,
+        type: StakeResultType.Success,
     }
 }

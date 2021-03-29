@@ -9,6 +9,7 @@ export interface StakeResponse {
 
 export interface DataRequestFinalizeClaimResponse {
     received: string;
+    success: boolean;
 }
 
 export interface Provider {

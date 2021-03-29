@@ -1,5 +1,5 @@
 import Big from "big.js";
-import { createMockRequest } from "../models/DataRequest";
+import DataRequest, { createMockRequest } from "../models/DataRequest";
 import { isJobSuccesful } from "../models/JobExecuteResult";
 import { executeJob } from "./JobExecuter";
 
@@ -8,14 +8,17 @@ describe('JobExecuter', () => {
         it('should fetch the right property correctly', async () => {
             const result = await executeJob(createMockRequest({
                 id: '1',
-                source: 'https://pokeapi.co/api/v2/pokemon/ditto',
-                sourcePath: 'abilities[0].ability.name',
+                sources:[
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: 'abilities[0].ability.name',
+                    }
+                ],
                 outcomes: ['limber', 'forest'],
-                fees: new Big(0),
                 rounds: [],
             }));
 
-            expect(isJobSuccesful(result)).toBe(true);
+            expect(isJobSuccesful(result[0])).toBe(true);
         });
     });
 });

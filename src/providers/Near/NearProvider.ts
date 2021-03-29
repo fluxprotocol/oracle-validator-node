@@ -26,6 +26,7 @@ export default class NearProvider implements Provider {
     private nearConnection?: Near;
     private nodeAccount?: Account;
     private nearOptions?: NodeProviderOptions;
+    private nodeOptions?: NodeOptions;
 
     validateOptions(options: NodeOptions, providerOptions: Partial<NodeProviderOptions>) {
         const errors: string[] = [];
@@ -58,6 +59,7 @@ export default class NearProvider implements Provider {
         if (!nearOptions) throw new Error('Invalid config');
 
         this.nearOptions = nearOptions;
+        this.nodeOptions = options;
         this.nearConnection = await connectToNear(nearOptions.net as NetworkType, nearOptions.credentialsStorePath);
         this.nodeAccount = await getAccount(this.nearConnection, nearOptions.accountId);
     }
@@ -77,69 +79,79 @@ export default class NearProvider implements Provider {
     }
 
     async getDataRequestById(requestId: string): Promise<DataRequest> {
-        return DataRequest.fromString(JSON.stringify(createMockRequest({
+        return createMockRequest({
             id: requestId,
-            source: 'ads',
-            sourcePath: 'dsa',
-            fees: new Big(0),
+            sources: [{
+                end_point: '',
+                source_path: '',
+            }],
             rounds: [
                 {
-                    outcomeStakes: new Map(),
-                    quoromDate: new Date(),
+                    outcomeStakes: {},
+                    quoromDate: new Date().toJSON(),
                     round: 0,
                 }
             ],
-        })));
+        });
     }
 
     async getDataRequests(): Promise<DataRequest[]> {
         const max = 25;
         const request: DataRequest[] = [
-            DataRequest.fromString(JSON.stringify(createMockRequest({
+            createMockRequest({
                 id: getRandomInt(max).toString(),
-                source: 'https://pokeapi.co/api/v2/pokemon/ditto',
-                sourcePath: 'abilities[0].ability.name',
+                sources: [
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: 'abilities[0].ability.name'
+                    }
+                ],
                 outcomes: ['limber', 'forest'],
                 contractId: 'tralala.near',
-                fees: new Big(0),
                 rounds: [
                     {
-                        outcomeStakes: new Map(),
-                        quoromDate: new Date(),
+                        outcomeStakes: {},
+                        quoromDate: new Date().toJSON(),
                         round: 0,
                     }
                 ],
-            }))),
-            DataRequest.fromString(JSON.stringify(createMockRequest({
+            }),
+            createMockRequest({
                 id: getRandomInt(max).toString(),
-                source: 'https://pokeapi.co/api/v2/pokemon/ditto',
-                sourcePath: 'abilities[0].ability.name',
+                sources: [
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: 'abilities[0].ability.name'
+                    }
+                ],
                 outcomes: ['limber', 'forest'],
                 contractId: 'tralala.near',
-                fees: new Big(0),
                 rounds: [
                     {
-                        outcomeStakes: new Map(),
-                        quoromDate: new Date(),
+                        outcomeStakes: {},
+                        quoromDate: new Date().toJSON(),
                         round: 0,
                     }
                 ],
-            }))),
-            DataRequest.fromString(JSON.stringify(createMockRequest({
+            }),
+            createMockRequest({
                 id: getRandomInt(max).toString(),
-                source: 'https://pokeapi.co/api/v2/pokemon/ditto',
-                sourcePath: 'abilities[0].ability.name',
+                sources: [
+                    {
+                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
+                        source_path: 'abilities[0].ability.name'
+                    }
+                ],
                 outcomes: ['limber', 'forest'],
                 contractId: 'tralala.near',
-                fees: new Big(0),
                 rounds: [
                     {
-                        outcomeStakes: new Map(),
-                        quoromDate: new Date(),
+                        outcomeStakes: {},
+                        quoromDate: new Date().toJSON(),
                         round: 0,
                     }
                 ],
-            }))),
+            }),
         ];
 
         return request;
@@ -147,20 +159,21 @@ export default class NearProvider implements Provider {
 
     async claim(requestId: string): Promise<DataRequestFinalizeClaimResponse> {
         return {
-            received: '1000000000000000000',
+            received: this.nodeOptions?.stakePerRequest.add('1000000000000000000').toString() || '0',
+            success: true,
         };
     }
 
     async stake(): Promise<StakeResponse> {
         return {
-            amountBack: new Big(10),
+            amountBack: new Big('1000000000000000000'),
             success: true,
         };
     }
 
     async challenge(): Promise<StakeResponse> {
         return {
-            amountBack: new Big(10),
+            amountBack: new Big('1000000000000000000'),
             success: true,
         }
     }

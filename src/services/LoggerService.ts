@@ -1,13 +1,15 @@
+import Big from 'big.js';
 import winston, { format } from 'winston';
 import packageJson from '../../package.json';
 
 import { TOKEN_DENOM } from '../config';
-import AvailableStake from '../core/NodeBalance';
-import JobPool from '../core/JobPool';
+import JobWalker from '../core/JobWalker';
+import NodeBalance from '../core/NodeBalance';
 import { NodeOptions } from '../models/NodeOptions';
 import ProviderRegistry from '../providers/ProviderRegistry';
 import { sumBig } from '../utils/bigUtils';
 import { formatToken } from '../utils/tokenUtils';
+import { getAllDataRequests } from './DataRequestService';
 
 const logFormat = format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`)
 
@@ -28,15 +30,19 @@ const logger = winston.createLogger({
 
 export default logger;
 
-export function logBalances(availableStake: AvailableStake, pool: JobPool) {
-    const sumBalances = sumBig(Array.from(availableStake.balances.values()));
+export async function logBalances(nodeBalance: NodeBalance, walker: JobWalker) {
+    const sumBalances = sumBig(Array.from(nodeBalance.balances.values()));
 
-    const profit = availableStake.startingBalance.add(availableStake.totalStaked).sub(sumBalances);
+    const stakingRequests = walker.requests.flatMap(r => r.staking);
+    const amountStaked = stakingRequests.reduce((prev, curr) => prev.add(curr.amountStaked), new Big(0));
+
+    const profit = sumBalances.sub(nodeBalance.startingBalance);
     const profitFormatted = formatToken(profit.toString(), TOKEN_DENOM);
     const balanceFormatted = formatToken(sumBalances.toString(), TOKEN_DENOM);
-    const totalStakedFormatted = formatToken(availableStake.totalStaked.toString(), TOKEN_DENOM);
+    const totalStakedFormatted = formatToken(amountStaked.toString(), TOKEN_DENOM);
+    const dr = await getAllDataRequests();
 
-    logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs executed: ${pool.processedRequests.size}, Jobs actively staking: ${availableStake.activeStaking.size}`);
+    logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs actively staking: ${walker.requests.length}, Jobs Executed: ${dr.length}`);
 }
 
 export function logNodeOptions(providerRegistry: ProviderRegistry, nodeOptions: NodeOptions) {
