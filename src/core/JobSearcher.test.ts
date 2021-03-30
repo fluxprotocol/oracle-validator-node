@@ -39,7 +39,7 @@ describe('JobSearcher', () => {
     });
 
     describe('search', () => {
-        it('should get any requests that are valid', async (done) => {
+        it('should get any requests that are valid', (done) => {
             const providerRegistry = createMockProviderRegistry();
             const requests = [
                 createMockRequest({ id: '1' }),
@@ -57,20 +57,20 @@ describe('JobSearcher', () => {
             );
 
             const onDataRequests = jest.fn(() => {
+                expect(onDataRequests).toHaveBeenCalledTimes(1);
+                expect(onDataRequests).toHaveBeenCalledWith(requests);
+                expect(storeDataRequestSpy).toHaveBeenCalledTimes(2);
+                expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[1].internalId]);
+
                 done();
             });
 
             expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
 
             jobSearcher.search(onDataRequests);
-
-            expect(onDataRequests).toHaveBeenCalledTimes(1);
-            expect(onDataRequests).toHaveBeenCalledWith(requests);
-            expect(storeDataRequestSpy).toHaveBeenCalledTimes(2);
-            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[1].internalId]);
         });
 
-        it('should not return any requets that are already visited', async (done) => {
+        it('should not return any requets that are already visited', (done) => {
             const providerRegistry = createMockProviderRegistry();
             const requests = [
                 createMockRequest({ id: '1' }),
@@ -88,18 +88,19 @@ describe('JobSearcher', () => {
             );
 
             const onDataRequests = jest.fn(() => {
+                expect(onDataRequests).toHaveBeenCalledTimes(1);
+                expect(onDataRequests).toHaveBeenCalledWith([requests[1]]);
+                expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+                expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[1].internalId]);
+
                 done();
             });
+
             expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId]);
             jobSearcher.search(onDataRequests);
-
-            expect(onDataRequests).toHaveBeenCalledTimes(1);
-            expect(onDataRequests).toHaveBeenCalledWith([requests[0]]);
-            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
-            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[1].internalId]);
         });
 
-        it('should not return any requets that have not been whitelisted', async (done) => {
+        it('should not return any requets that have not been whitelisted', (done) => {
             const providerRegistry = createMockProviderRegistry();
             const requests = [
                 createMockRequest({ id: '1', contractId: 'yes', }),
@@ -119,15 +120,16 @@ describe('JobSearcher', () => {
             );
 
             const onDataRequests = jest.fn(() => {
+                expect(onDataRequests).toHaveBeenCalledTimes(1);
+                expect(onDataRequests).toHaveBeenCalledWith([requests[0]]);
+                expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+                expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId]);
+
                 done();
             });
+
             expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
             jobSearcher.search(onDataRequests);
-
-            expect(onDataRequests).toHaveBeenCalledTimes(1);
-            expect(onDataRequests).toHaveBeenCalledWith([requests[0]]);
-            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
-            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId]);
         });
     });
 });

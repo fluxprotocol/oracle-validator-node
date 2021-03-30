@@ -18,31 +18,27 @@ export default class JobSearcher {
 
     search(onRequests: (dataRequests: DataRequest[]) => void) {
         this.providerRegistry.getDataRequests(async (requests) => {
-            try {
-                const eligibleRequests: DataRequest[] = [];
+            const eligibleRequests: DataRequest[] = [];
 
-                requests.forEach((request) => {
-                    // Contract ids that are not whitelisted should not be handled
-                    if (this.nodeOptions.contractIds.length !== 0 && !this.nodeOptions.contractIds.includes(request.contractId)) {
-                        return;
-                    }
+            requests.forEach((request) => {
+                // Contract ids that are not whitelisted should not be handled
+                if (this.nodeOptions.contractIds.length !== 0 && !this.nodeOptions.contractIds.includes(request.contractId)) {
+                    return;
+                }
 
-                    // We should not overwrite data requests that we already have
-                    if (this.visitedDataRequestIds.includes(request.internalId)) {
-                        return;
-                    }
+                // We should not overwrite data requests that we already have
+                if (this.visitedDataRequestIds.includes(request.internalId)) {
+                    return;
+                }
 
-                    eligibleRequests.push(request);
-                    this.visitedDataRequestIds.push(request.internalId);
-                });
+                eligibleRequests.push(request);
+                this.visitedDataRequestIds.push(request.internalId);
+            });
 
-                const databasePromises = eligibleRequests.map((r) => storeDataRequest(r));
-                await Promise.all(databasePromises);
+            const databasePromises = eligibleRequests.map((r) => storeDataRequest(r));
+            await Promise.all(databasePromises);
 
-                onRequests(eligibleRequests);
-            } catch (error) {
-                logger.error(`[JobSearcher.search] ${error}`);
-            }
+            onRequests(eligibleRequests);
         });
     }
 
