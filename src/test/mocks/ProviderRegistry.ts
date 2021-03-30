@@ -2,7 +2,7 @@ import { parseNodeOptions } from "../../models/NodeOptions";
 import { Provider } from "../../providers/Provider";
 import ProviderRegistry from "../../providers/ProviderRegistry";
 
-export function createMockProviderRegistry(providers: Provider[]) {
+export function createMockProviderRegistry(providers: Provider[] = []) {
     return {
         nodeOptions: parseNodeOptions({}),
         providers,

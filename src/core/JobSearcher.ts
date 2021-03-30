@@ -39,10 +39,6 @@ export default class JobSearcher {
                 const databasePromises = eligibleRequests.map((r) => storeDataRequest(r));
                 await Promise.all(databasePromises);
 
-                if (eligibleRequests.length === 0) {
-                    return;
-                }
-
                 onRequests(eligibleRequests);
             } catch (error) {
                 logger.error(`[JobSearcher.search] ${error}`);

@@ -1,9 +1,21 @@
 import { createMockRequest } from "../models/DataRequest";
+import * as DataRequestService from '../services/DataRequestService';
 import { parseNodeOptions } from "../models/NodeOptions";
 import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
 import JobSearcher from "./JobSearcher";
 
 describe('JobSearcher', () => {
+    let storeDataRequestSpy: jest.SpyInstance<Promise<void>>;
+
+    beforeEach(() => {
+        storeDataRequestSpy = jest.spyOn(DataRequestService, 'storeDataRequest');
+        storeDataRequestSpy.mockResolvedValue();
+    });
+
+    afterEach(() => {
+        storeDataRequestSpy.mockRestore();
+    });
+
     describe('constructor', () => {
         it('should convert the data request to visited request ids', () => {
             const dataRequests = [
@@ -27,6 +39,95 @@ describe('JobSearcher', () => {
     });
 
     describe('search', () => {
+        it('should get any requests that are valid', async (done) => {
+            const providerRegistry = createMockProviderRegistry();
+            const requests = [
+                createMockRequest({ id: '1' }),
+                createMockRequest({ id: '2' })
+            ];
 
+            providerRegistry.getDataRequests = jest.fn((drCallback) => {
+                drCallback(requests);
+            });
+
+            const jobSearcher = new JobSearcher(
+                providerRegistry,
+                parseNodeOptions({}),
+                [],
+            );
+
+            const onDataRequests = jest.fn(() => {
+                done();
+            });
+
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
+
+            jobSearcher.search(onDataRequests);
+
+            expect(onDataRequests).toHaveBeenCalledTimes(1);
+            expect(onDataRequests).toHaveBeenCalledWith(requests);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(2);
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[1].internalId]);
+        });
+
+        it('should not return any requets that are already visited', async (done) => {
+            const providerRegistry = createMockProviderRegistry();
+            const requests = [
+                createMockRequest({ id: '1' }),
+                createMockRequest({ id: '2' })
+            ];
+
+            providerRegistry.getDataRequests = jest.fn((drCallback) => {
+                drCallback(requests);
+            });
+
+            const jobSearcher = new JobSearcher(
+                providerRegistry,
+                parseNodeOptions({}),
+                [requests[0]],
+            );
+
+            const onDataRequests = jest.fn(() => {
+                done();
+            });
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId]);
+            jobSearcher.search(onDataRequests);
+
+            expect(onDataRequests).toHaveBeenCalledTimes(1);
+            expect(onDataRequests).toHaveBeenCalledWith([requests[0]]);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[1].internalId]);
+        });
+
+        it('should not return any requets that have not been whitelisted', async (done) => {
+            const providerRegistry = createMockProviderRegistry();
+            const requests = [
+                createMockRequest({ id: '1', contractId: 'yes', }),
+                createMockRequest({ id: '2', contractId: 'no' })
+            ];
+
+            providerRegistry.getDataRequests = jest.fn((drCallback) => {
+                drCallback(requests);
+            });
+
+            const jobSearcher = new JobSearcher(
+                providerRegistry,
+                parseNodeOptions({
+                    contractIds: ['yes'],
+                }),
+                [],
+            );
+
+            const onDataRequests = jest.fn(() => {
+                done();
+            });
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
+            jobSearcher.search(onDataRequests);
+
+            expect(onDataRequests).toHaveBeenCalledTimes(1);
+            expect(onDataRequests).toHaveBeenCalledWith([requests[0]]);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId]);
+        });
     });
 });
