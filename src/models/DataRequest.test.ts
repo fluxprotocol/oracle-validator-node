@@ -6,6 +6,7 @@ import { JobExecuteResult, JobResultType } from "./JobExecuteResult";
 import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
 import { parseNodeOptions } from "./NodeOptions";
 import { createMockNodeBalance } from "../test/mocks/NodeBalance";
+import { ClaimResultType } from "./ClaimResult";
 
 describe('DataRequest', () => {
     describe('currentRound', () => {
@@ -134,8 +135,7 @@ describe('DataRequest', () => {
             const providerRegistry = createMockProviderRegistry([]);
 
             providerRegistry.claim.mockReturnValue({
-                success: false,
-                received: '0',
+                type: ClaimResultType.Error,
             });
 
             const result = await request.claim(providerRegistry);
@@ -148,7 +148,7 @@ describe('DataRequest', () => {
             const providerRegistry = createMockProviderRegistry([]);
 
             providerRegistry.claim.mockReturnValue({
-                success: true,
+                type: ClaimResultType.Success,
                 received: '100',
             });
 

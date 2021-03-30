@@ -37,12 +37,13 @@ export default class JobWalker {
         }
     }
 
-    private async walkRequest(request: DataRequest) {
+    async walkRequest(request: DataRequest) {
         const newStatus = await this.providerRegistry.getDataRequestById(request.providerId, request.id);
         if (!newStatus) return;
 
         request.update(newStatus);
 
+        // Claim the request earnings and remove it from the walker
         if (request.isClaimable()) {
             const isClaimSuccesful = await request.claim(this.providerRegistry);
 
@@ -53,6 +54,8 @@ export default class JobWalker {
             }
         }
 
+        // If something went wrong during taking/executing
+        // we retry it.
         if (!request.staking.length) {
             if (!request.executeResults.length) {
                 await request.execute();
@@ -72,22 +75,28 @@ export default class JobWalker {
         await storeDataRequest(request);
     }
 
+    async walkAllRequests() {
+        const promises = this.requests.map(async (request) => {
+            // Request is already being processed
+            if (this.processingIds.includes(request.internalId)) {
+                return;
+            }
+
+            this.processingIds.push(request.internalId);
+            await this.walkRequest(request);
+
+            // Let the next loop know we are ready to be processed again
+            // We can't trust the forEach index, because it could be gone by the time we processed it
+            const index = this.processingIds.findIndex(id => id === request.internalId);
+            this.processingIds.splice(index, 1);
+        });
+
+        await Promise.all(promises);
+    }
+
     startWalker() {
         setInterval(() => {
-            this.requests.forEach(async (request) => {
-                // Request is already being processed
-                if (this.processingIds.includes(request.internalId)) {
-                    return;
-                }
-
-                this.processingIds.push(request.internalId);
-                await this.walkRequest(request);
-
-                // Let the next loop know we are ready to be processed again
-                // We can't trust the forEach index, because it could be gone by the time we processed it
-                const index = this.processingIds.findIndex(id => id === request.internalId);
-                this.processingIds.splice(index, 1);
-            });
+            this.walkAllRequests();
         }, JOB_WALKER_INTERVAL);
     }
 }

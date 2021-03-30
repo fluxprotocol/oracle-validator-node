@@ -1,9 +1,10 @@
 import Big from "big.js";
 import { Account, Near } from "near-api-js";
+import { ClaimResult, ClaimResultType } from "../../models/ClaimResult";
 import DataRequest, { createMockRequest } from "../../models/DataRequest";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
-import { DataRequestFinalizeClaimResponse, Provider, StakeResponse } from "../Provider";
+import { Provider, StakeResponse } from "../Provider";
 import { connectToNear, getAccount } from "./NearService";
 
 function getRandomInt(max: number) {
@@ -157,10 +158,10 @@ export default class NearProvider implements Provider {
         return request;
     }
 
-    async claim(requestId: string): Promise<DataRequestFinalizeClaimResponse> {
+    async claim(requestId: string): Promise<ClaimResult> {
         return {
             received: this.nodeOptions?.stakePerRequest.add('1000000000000000000').toString() || '0',
-            success: true,
+            type: ClaimResultType.Success
         };
     }
 

@@ -2,6 +2,7 @@ import { executeJob } from "../core/JobExecuter";
 import NodeBalance from "../core/NodeBalance";
 import { stakeOrChallengeDataRequest } from "../core/Oracle";
 import ProviderRegistry from "../providers/ProviderRegistry";
+import { ClaimResultType, isClaimResultSuccesful } from "./ClaimResult";
 import { JobExecuteResult } from "./JobExecuteResult";
 import { NodeOptions } from "./NodeOptions";
 import { isStakeResultSuccesful, SuccessfulStakeResult } from "./StakingResult";
@@ -103,7 +104,7 @@ export default class DataRequest {
     async claim(providerRegistry: ProviderRegistry): Promise<boolean> {
         const claimResult = await providerRegistry.claim(this.providerId, this.id);
 
-        if (!claimResult.success) {
+        if (!isClaimResultSuccesful(claimResult)) {
             return false;
         }
 

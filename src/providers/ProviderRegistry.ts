@@ -1,8 +1,9 @@
 import Big from "big.js";
+import { ClaimError, ClaimResult, ClaimResultType } from "../models/ClaimResult";
 import DataRequest from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
 import logger from "../services/LoggerService";
-import { StakeResponse, DataRequestFinalizeClaimResponse, Provider } from "./Provider";
+import { StakeResponse, Provider } from "./Provider";
 
 export default class ProviderRegistry {
     providers: Provider[];
@@ -77,13 +78,13 @@ export default class ProviderRegistry {
         };
     }
 
-    async claim(providerId: string, requestId: string): Promise<DataRequestFinalizeClaimResponse> {
+    async claim(providerId: string, requestId: string): Promise<ClaimResult> {
         const provider = this.getProviderById(providerId);
 
         if (!provider) {
             return {
-                received: '0',
-                success: false,
+                type: ClaimResultType.Error,
+                error: ClaimError.Unknown,
             };
         }
 
