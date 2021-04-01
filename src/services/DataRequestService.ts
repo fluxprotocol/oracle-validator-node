@@ -42,9 +42,9 @@ export async function getAllDataRequests(query: PouchDB.Find.Selector = {}): Pro
  */
 export function getDataRequestAnswer(dataRequest: DataRequest): string | undefined {
     const latestExecuteResults = dataRequest.executeResults[dataRequest.executeResults.length - 1];
-    const result =  latestExecuteResults.results[0];
+    const result = latestExecuteResults.results[0];
 
-    if (!isJobSuccesful(result)) {
+    if (!result || !isJobSuccesful(result)) {
         return undefined;
     }
 
