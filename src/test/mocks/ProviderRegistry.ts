@@ -15,5 +15,6 @@ export function createMockProviderRegistry(providers: Provider[] = []) {
         stake: jest.fn(),
         challenge: jest.fn(),
         claim: jest.fn(),
+        finalize: jest.fn(),
     }
 }

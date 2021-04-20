@@ -1,6 +1,8 @@
-import { Account, connect, keyStores, Near } from "near-api-js";
+import { Account, connect, keyStores, Near, providers } from "near-api-js";
+import { FinalExecutionOutcome } from "near-api-js/lib/providers";
 import { createNearNetworkConfig, NetworkType } from "../../models/NearNetworkConfig";
 import cache from "../../utils/cache";
+import { parseJson } from "../../utils/jsonUtils";
 
 export async function connectToNear(net: NetworkType, credentialsStorePath: string): Promise<Near> {
     return connect({
@@ -15,4 +17,20 @@ export async function getAccount(connection: Near, accountId: string): Promise<A
     return cache(accountId, async () => {
         return connection.account(accountId);
     });
+}
+
+export function extractLogs(executionOutcome: providers.FinalExecutionOutcome) {
+    const logs: any[] = [];
+
+    executionOutcome.receipts_outcome.forEach((receipt) => {
+        receipt.outcome.logs.forEach((log) => {
+            const json = parseJson(log);
+
+            if (json) {
+                logs.push(json);
+            }
+        });
+    });
+
+    return logs;
 }

@@ -6,6 +6,8 @@ export enum StakeError {
     NotEnoughBalance = 'NotEnoughBalance',
     Unknown = 'Unknown',
     RequestNotFound = 'RequestNotFound',
+    AlreadyBonded = 'AlreadyBonded',
+    AlreadyStaked = 'AlreadyStaked',
 }
 
 export enum StakeResultType {

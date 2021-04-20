@@ -1,6 +1,7 @@
 import Big from "big.js";
 import { ClaimError, ClaimResult, ClaimResultType } from "../models/ClaimResult";
 import DataRequest from "../models/DataRequest";
+import { Outcome } from "../models/DataRequestOutcome";
 import { NodeOptions } from "../models/NodeOptions";
 import logger from "../services/LoggerService";
 import { StakeResponse, Provider } from "./Provider";
@@ -51,7 +52,7 @@ export default class ProviderRegistry {
         return provider.getDataRequestById(requestId);
     }
 
-    async stake(providerId: string, requestId: string, roundId: number, answer?: string): Promise<StakeResponse> {
+    async stake(providerId: string, requestId: string, answer: Outcome, stakeAmount: string): Promise<StakeResponse> {
         const provider = this.getProviderById(providerId);
         if (!provider) {
             return {
@@ -60,7 +61,7 @@ export default class ProviderRegistry {
             }
         }
 
-        return provider.stake(requestId, roundId, answer);
+        return provider.stake(requestId, answer, stakeAmount);
     }
 
     async challenge(providerId: string, requestId: string, roundId: number, answer?: string): Promise<StakeResponse> {
@@ -76,6 +77,16 @@ export default class ProviderRegistry {
             success: true,
             amountBack: new Big(10),
         };
+    }
+
+    async finalize(providerId: string, requestId: string): Promise<boolean> {
+        const provider = this.getProviderById(providerId);
+
+        if (!provider) {
+            return false;
+        }
+
+        return provider.finalize(requestId);
     }
 
     async claim(providerId: string, requestId: string): Promise<ClaimResult> {

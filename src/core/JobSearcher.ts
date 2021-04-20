@@ -3,7 +3,6 @@ import DataRequest from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { storeDataRequest } from "../services/DataRequestService";
-import logger from "../services/LoggerService";
 
 export default class JobSearcher {
     visitedDataRequestIds: string[];
@@ -28,6 +27,21 @@ export default class JobSearcher {
 
                 // We should not overwrite data requests that we already have
                 if (this.visitedDataRequestIds.includes(request.internalId)) {
+                    return;
+                }
+
+                // Already finished data requests should not be processed
+                if (request.finalizedOutcome) {
+                    return;
+                }
+
+                // Validators can only resolve requests that have an api attached to it
+                if (request.sources.length === 0) {
+                    return;
+                }
+
+                // We can't resolve final arbitrator requests
+                if (request.finalArbitratorTriggered) {
                     return;
                 }
 

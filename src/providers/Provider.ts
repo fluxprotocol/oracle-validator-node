@@ -1,6 +1,7 @@
 import Big from "big.js";
 import { ClaimResult } from "../models/ClaimResult";
 import DataRequest from "../models/DataRequest";
+import { Outcome } from "../models/DataRequestOutcome";
 import { NodeOptions } from "../models/NodeOptions";
 
 export interface StakeResponse {
@@ -19,7 +20,7 @@ export interface Provider {
     getDataRequestById(requestId: string): Promise<DataRequest | null>;
     getDataRequests(): Promise<DataRequest[]>;
 
-    stake(requestId: string, roundId: number, answer?: string): Promise<StakeResponse>;
+    stake(requestId: string, answer: Outcome, stakeAmount: string): Promise<StakeResponse>;
     claim(requestId: string): Promise<ClaimResult>;
-    challenge(requestId: string, answer: string): Promise<StakeResponse>
+    finalize(requestId: string): Promise<boolean>;
 }
