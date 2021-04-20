@@ -1,4 +1,5 @@
 import DataRequest, { DataRequestProps, DATA_REQUEST_TYPE } from "../models/DataRequest";
+import { Outcome, OutcomeType } from "../models/DataRequestOutcome";
 import { isJobSuccesful } from "../models/JobExecuteResult";
 import { createOrUpdateDocument, findDocuments } from "./DatabaseService";
 import logger from "./LoggerService";
@@ -8,7 +9,8 @@ export const DATA_REQUEST_DB_PREFIX = 'data_request_';
 export async function storeDataRequest(dataRequest: DataRequest): Promise<void> {
     try {
         const convertedDataRequest = JSON.parse(dataRequest.toString());
-        return createOrUpdateDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.id}`, convertedDataRequest);
+        logger.debug(`${dataRequest.internalId} - Storing in database`);
+        await createOrUpdateDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.internalId}`, convertedDataRequest);
     } catch (error) {
         logger.error(`[storeDataRequest] ${error}`);
     }
@@ -38,15 +40,20 @@ export async function getAllDataRequests(query: PouchDB.Find.Selector = {}): Pro
  *
  * @export
  * @param {DataRequest} dataRequest
- * @return {JobExecuteResult<string>}
+ * @return {JobExecuteResult<Outcome>}
  */
-export function getDataRequestAnswer(dataRequest: DataRequest): string | undefined {
+export function getDataRequestAnswer(dataRequest: DataRequest): Outcome {
     const latestExecuteResults = dataRequest.executeResults[dataRequest.executeResults.length - 1];
     const result = latestExecuteResults.results[0];
 
     if (!result || !isJobSuccesful(result)) {
-        return undefined;
+        return {
+            type: OutcomeType.Invalid,
+        };
     }
 
-    return result.data;
+    return {
+        type: OutcomeType.Answer,
+        answer: result.data,
+    };
 }

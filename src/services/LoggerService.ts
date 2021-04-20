@@ -20,9 +20,10 @@ const logger = winston.createLogger({
     ),
     transports: [
         new winston.transports.Console({
+            level: 'debug',
             format: format.combine(
                 format.colorize(),
-                logFormat
+                logFormat,
             ),
         }),
     ],
@@ -33,16 +34,16 @@ export default logger;
 export async function logBalances(nodeBalance: NodeBalance, walker: JobWalker) {
     const sumBalances = sumBig(Array.from(nodeBalance.balances.values()));
 
-    const stakingRequests = walker.requests.flatMap(r => r.staking);
+    const requests = Array.from(walker.requests.values());
+    const stakingRequests = requests.flatMap(r => r.staking);
     const amountStaked = stakingRequests.reduce((prev, curr) => prev.add(curr.amountStaked), new Big(0));
 
     const profit = sumBalances.sub(nodeBalance.startingBalance);
     const profitFormatted = formatToken(profit.toString(), TOKEN_DENOM);
     const balanceFormatted = formatToken(sumBalances.toString(), TOKEN_DENOM);
     const totalStakedFormatted = formatToken(amountStaked.toString(), TOKEN_DENOM);
-    const dr = await getAllDataRequests();
 
-    logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs actively staking: ${walker.requests.length}, Jobs Executed: ${dr.length}`);
+    logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs actively watching: ${walker.requests.size}`);
 }
 
 export function logNodeOptions(providerRegistry: ProviderRegistry, nodeOptions: NodeOptions) {

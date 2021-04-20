@@ -1,22 +1,16 @@
 import { executeJob } from "../core/JobExecuter";
 import NodeBalance from "../core/NodeBalance";
-import { stakeOrChallengeDataRequest } from "../core/Oracle";
+import { stakeOnDataRequest } from "../core/Oracle";
 import ProviderRegistry from "../providers/ProviderRegistry";
+import logger from "../services/LoggerService";
 import { ClaimResultType, isClaimResultSuccesful } from "./ClaimResult";
+import { Outcome } from './DataRequestOutcome';
 import { JobExecuteResult } from "./JobExecuteResult";
 import { NodeOptions } from "./NodeOptions";
-import { isStakeResultSuccesful, SuccessfulStakeResult } from "./StakingResult";
+import { ResolutionWindow } from "./ResolutionWindow";
+import { isStakeResultSuccesful, StakeError, StakeResult, StakeResultType, SuccessfulStakeResult } from "./StakingResult";
 
 export const DATA_REQUEST_TYPE = 'DataRequest';
-
-export interface Round {
-    round: number;
-    outcomeStakes: {
-        [key: string]: string;
-    };
-    quoromDate: string;
-    winningOutcome?: string;
-}
 
 export interface RequestInfo {
     end_point: string;
@@ -32,8 +26,10 @@ export interface DataRequestProps {
     id: string;
     sources: RequestInfo[];
     contractId: string;
+    finalArbitratorTriggered: boolean;
+    finalizedOutcome?: Outcome;
     outcomes: string[];
-    rounds: Round[];
+    resolutionWindows: ResolutionWindow[];
     providerId: string;
     executeResults: ExecuteResults[];
     staking: SuccessfulStakeResult[];
@@ -47,9 +43,11 @@ export default class DataRequest {
     contractId: string;
     outcomes: string[];
     sources: RequestInfo[];
-    rounds: Round[];
+    resolutionWindows: ResolutionWindow[];
+    finalArbitratorTriggered: boolean;
     executeResults: ExecuteResults[] = [];
     staking: SuccessfulStakeResult[] = [];
+    finalizedOutcome?: Outcome;
     claimedAmount?: string;
     type: string = DATA_REQUEST_TYPE;
 
@@ -60,14 +58,23 @@ export default class DataRequest {
         this.contractId = props.contractId;
         this.outcomes = props.outcomes ?? [];
         this.sources = props.sources;
-        this.rounds = props.rounds ?? [];
+        this.resolutionWindows = [];
         this.executeResults = props.executeResults ?? [];
         this.staking = props.staking ?? [];
         this.claimedAmount = props.claimedAmount ?? undefined;
+        this.finalArbitratorTriggered = props.finalArbitratorTriggered ?? false;
+        this.finalizedOutcome = props.finalizedOutcome ?? undefined;
+
+        if (props.resolutionWindows.length) {
+            this.resolutionWindows = props.resolutionWindows.map((rw) => ({
+                ...rw,
+                endTime: new Date(rw.endTime),
+            }));
+        }
     }
 
-    get currentRound(): Round {
-        return this.rounds[this.rounds.length - 1];
+    get currentWindow(): ResolutionWindow | undefined {
+        return this.resolutionWindows[this.resolutionWindows.length - 1];
     }
 
     hasStakenOnRound(roundId: number): boolean {
@@ -75,17 +82,29 @@ export default class DataRequest {
     }
 
     update(request: DataRequest) {
-        this.rounds = request.rounds;
+        this.resolutionWindows = request.resolutionWindows;
+        this.finalizedOutcome = request.finalizedOutcome;
+        this.finalArbitratorTriggered = request.finalArbitratorTriggered;
+        logger.debug(`${this.internalId} - Updating status fo: ${JSON.stringify(this.finalizedOutcome)}, rw: ${this.resolutionWindows.length}, fat: ${this.finalArbitratorTriggered}`);
     }
 
     isClaimable(): boolean {
+        // When we have nothing to stake we can not claim
+        if (this.staking.length === 0) {
+            return false;
+        }
+
         if (this.claimedAmount) {
+            return false;
+        }
+
+        if (!this.currentWindow) {
             return false;
         }
 
         const now = new Date();
 
-        if (now.getTime() >= new Date(this.currentRound.quoromDate).getTime()) {
+        if (now.getTime() >= new Date(this.currentWindow.endTime).getTime()) {
             return true;
         }
 
@@ -93,49 +112,78 @@ export default class DataRequest {
     }
 
     async execute() {
+        logger.debug(`${this.internalId} - Executing`);
         const results = await executeJob(this);
+        logger.debug(`${this.internalId} - Executed, results: ${JSON.stringify(results)}`);
 
         this.executeResults.push({
-            roundId: this.currentRound.round,
+            roundId: this.currentWindow?.round ?? 0,
             results
         });
     }
 
     async claim(providerRegistry: ProviderRegistry): Promise<boolean> {
-        const claimResult = await providerRegistry.claim(this.providerId, this.id);
+        try {
+            if (!this.finalizedOutcome) {
+                logger.debug(`${this.internalId} - Finalizing`);
+                await providerRegistry.finalize(this.providerId, this.id);
+                logger.debug(`${this.internalId} - Finalized`);
+            }
 
-        if (!isClaimResultSuccesful(claimResult)) {
+            logger.debug(`${this.internalId} - Claiming`);
+            const claimResult = await providerRegistry.claim(this.providerId, this.id);
+            logger.debug(`${this.internalId} - Claim, results: ${JSON.stringify(claimResult)}`);
+
+            if (!isClaimResultSuccesful(claimResult)) {
+                return false;
+            }
+
+            this.claimedAmount = claimResult.received;
+            return true;
+        } catch(error) {
             return false;
         }
-
-        this.claimedAmount = claimResult.received;
-        return true;
     }
 
-    async stakeOrChallenge(
+    async stake(
         nodeOptions: NodeOptions,
         providerRegistry: ProviderRegistry,
         nodeBalance: NodeBalance,
-    ): Promise<void> {
-        // TODO: determine if we want to restake when our outcome is being challenged
-        if (this.hasStakenOnRound(this.currentRound.round)) {
-            return;
+    ): Promise<StakeResult> {
+        if (this.hasStakenOnRound(this.currentWindow?.round ?? 0)) {
+            logger.debug(`${this.internalId} - Already staken`);
+            return {
+                type: StakeResultType.Error,
+                error: StakeError.AlreadyStaked,
+            };
         }
 
-        const stakeResult = await stakeOrChallengeDataRequest(
+        if (this.finalizedOutcome) {
+            logger.debug(`${this.internalId} - Already finalized, can't stake`);
+            return {
+                type: StakeResultType.Error,
+                error: StakeError.AlreadyBonded,
+            };
+        }
+
+        logger.debug(`${this.internalId} - Staking`);
+
+        const stakeResult = await stakeOnDataRequest(
             nodeOptions,
             providerRegistry,
             nodeBalance,
             this,
         );
 
-        // Something went wrong on the provider side
-        // We let the next jobwalker tick retry it.
-        if (!isStakeResultSuccesful(stakeResult)) {
-            return;
+        logger.debug(`${this.internalId} - Stake complete: ${JSON.stringify(stakeResult)}`);
+
+        if (isStakeResultSuccesful(stakeResult)) {
+            this.staking.push(stakeResult);
+        } else {
+            logger.debug(`${this.internalId} - Unsuccesful staking for: ${this.toString()}`);
         }
 
-        this.staking.push(stakeResult);
+        return stakeResult;
     }
 
     toString() {
@@ -151,11 +199,11 @@ export function createMockRequest(request: Partial<DataRequestProps> = {}): Data
         contractId: 'san.near',
         id: '1',
         outcomes: [],
-        rounds: [
+        resolutionWindows: [
             {
-                outcomeStakes: {},
-                quoromDate: new Date().toJSON(),
+                endTime: new Date(),
                 round: 0,
+                bondSize: '2',
             }
         ],
         sources: [],
@@ -163,6 +211,8 @@ export function createMockRequest(request: Partial<DataRequestProps> = {}): Data
         executeResults: [],
         staking: [],
         claimedAmount: undefined,
+        finalArbitratorTriggered: false,
+        finalizedOutcome: undefined,
         ...request,
     });
 }

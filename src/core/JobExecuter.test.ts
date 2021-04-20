@@ -15,7 +15,6 @@ describe('JobExecuter', () => {
                     }
                 ],
                 outcomes: ['limber', 'forest'],
-                rounds: [],
             }));
 
             expect(isJobSuccesful(result[0])).toBe(true);

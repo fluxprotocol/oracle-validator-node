@@ -1,5 +1,5 @@
 import { NodeOptions } from "../models/NodeOptions";
-import logger, { logNodeOptions, logBalances } from "../services/LoggerService";
+import { logNodeOptions, logBalances } from "../services/LoggerService";
 import JobSearcher from "./JobSearcher";
 import { BALANCE_REFRESH_INTERVAL } from "../config";
 import NodeBalance from './NodeBalance';

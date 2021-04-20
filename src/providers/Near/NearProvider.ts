@@ -1,23 +1,14 @@
 import Big from "big.js";
 import { Account, Near } from "near-api-js";
-import { ClaimResult, ClaimResultType } from "../../models/ClaimResult";
+import { ClaimError, ClaimResult, ClaimResultType } from "../../models/ClaimResult";
 import DataRequest, { createMockRequest } from "../../models/DataRequest";
+import { Outcome, OutcomeType } from "../../models/DataRequestOutcome";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
 import { Provider, StakeResponse } from "../Provider";
-import { connectToNear, getAccount } from "./NearService";
-
-function getRandomInt(max: number) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
-
-interface NodeProviderOptions {
-    credentialsStorePath: string;
-    net: string;
-    accountId: string;
-    oracleContractId: string;
-    tokenContractId: string;
-}
+import { getAllDataRequestsFromNear, getDataRequestByIdFromNear } from "./NearExplorerService";
+import NearProviderOptions from "./NearProviderOptions";
+import { connectToNear, extractLogs, getAccount } from "./NearService";
 
 export default class NearProvider implements Provider {
     providerName = 'NEAR';
@@ -26,10 +17,10 @@ export default class NearProvider implements Provider {
 
     private nearConnection?: Near;
     private nodeAccount?: Account;
-    private nearOptions?: NodeProviderOptions;
+    private nearOptions?: NearProviderOptions;
     private nodeOptions?: NodeOptions;
 
-    validateOptions(options: NodeOptions, providerOptions: Partial<NodeProviderOptions>) {
+    validateOptions(options: NodeOptions, providerOptions: Partial<NearProviderOptions>) {
         const errors: string[] = [];
 
         if (!providerOptions.credentialsStorePath) {
@@ -52,11 +43,23 @@ export default class NearProvider implements Provider {
             errors.push(`config option "tokenContractId" is required for ${this.id}`);
         }
 
+        if (!providerOptions.explorerApi) {
+            errors.push(`config option "explorerApi" is required for ${this.id}`);
+        }
+
+        if (!providerOptions.maxGas) {
+            errors.push(`config option "maxGas" is required for ${this.id}`);
+        }
+
+        if (!providerOptions.storageBase) {
+            errors.push(`config option "storageBase" is required for ${this.id}`);
+        }
+
         return errors;
     }
 
     async init(options: NodeOptions) {
-        const nearOptions = getProviderOptions<NodeProviderOptions>(this.id, options);
+        const nearOptions = getProviderOptions<NearProviderOptions>(this.id, options);
         if (!nearOptions) throw new Error('Invalid config');
 
         this.nearOptions = nearOptions;
@@ -79,103 +82,93 @@ export default class NearProvider implements Provider {
         }
     }
 
-    async getDataRequestById(requestId: string): Promise<DataRequest> {
-        return createMockRequest({
-            id: requestId,
-            sources: [{
-                end_point: '',
-                source_path: '',
-            }],
-            rounds: [
-                {
-                    outcomeStakes: {},
-                    quoromDate: new Date().toJSON(),
-                    round: 0,
-                }
-            ],
-        });
+    async getDataRequestById(requestId: string): Promise<DataRequest | null> {
+        if (!this.nearOptions) return null;
+        return getDataRequestByIdFromNear(this.nearOptions.explorerApi, requestId, this.nearOptions);
     }
 
     async getDataRequests(): Promise<DataRequest[]> {
-        const max = 25;
-        const request: DataRequest[] = [
-            createMockRequest({
-                id: getRandomInt(max).toString(),
-                sources: [
-                    {
-                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
-                        source_path: 'abilities[0].ability.name'
-                    }
-                ],
-                outcomes: ['limber', 'forest'],
-                contractId: 'tralala.near',
-                rounds: [
-                    {
-                        outcomeStakes: {},
-                        quoromDate: new Date().toJSON(),
-                        round: 0,
-                    }
-                ],
-            }),
-            createMockRequest({
-                id: getRandomInt(max).toString(),
-                sources: [
-                    {
-                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
-                        source_path: 'abilities[0].ability.name'
-                    }
-                ],
-                outcomes: ['limber', 'forest'],
-                contractId: 'tralala.near',
-                rounds: [
-                    {
-                        outcomeStakes: {},
-                        quoromDate: new Date().toJSON(),
-                        round: 0,
-                    }
-                ],
-            }),
-            createMockRequest({
-                id: getRandomInt(max).toString(),
-                sources: [
-                    {
-                        end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
-                        source_path: 'abilities[0].ability.name'
-                    }
-                ],
-                outcomes: ['limber', 'forest'],
-                contractId: 'tralala.near',
-                rounds: [
-                    {
-                        outcomeStakes: {},
-                        quoromDate: new Date().toJSON(),
-                        round: 0,
-                    }
-                ],
-            }),
-        ];
-
-        return request;
+        if (!this.nearOptions) return [];
+        return getAllDataRequestsFromNear(this.nearOptions.explorerApi, this.nearOptions);
     }
 
     async claim(requestId: string): Promise<ClaimResult> {
+        const account = this.nodeAccount;
+
+        if (!account || !this.nearOptions) {
+            return {
+                type: ClaimResultType.Error,
+                error: ClaimError.Unknown,
+            };
+        }
+
+        const result = await account.functionCall(this.nearOptions.oracleContractId, 'dr_claim', {
+            request_id: requestId,
+            account_id: account.accountId,
+            // @ts-ignore
+        }, this.nearOptions.maxGas, this.nearOptions.storageBase);
+
+        const logs = extractLogs(result);
+        const claimLog = logs.find(log => log.type === 'claims');
+
         return {
-            received: this.nodeOptions?.stakePerRequest.add('1000000000000000000').toString() || '0',
+            received: claimLog?.params.payout ?? '0',
             type: ClaimResultType.Success
         };
     }
 
-    async stake(): Promise<StakeResponse> {
-        return {
-            amountBack: new Big('1000000000000000000'),
-            success: true,
-        };
+    async finalize(requestId: string): Promise<boolean> {
+        const account = this.nodeAccount;
+
+        if (!account || !this.nearOptions) {
+            return false;
+        }
+
+        await account.functionCall(this.nearOptions.oracleContractId, 'dr_finalize', {
+            request_id: requestId,
+            // @ts-ignore
+        }, this.nearOptions.maxGas, this.nearOptions.storageBase);
+
+        return true;
     }
 
-    async challenge(): Promise<StakeResponse> {
-        return {
-            amountBack: new Big('1000000000000000000'),
-            success: true,
+    async stake(requestId: string, outcome: Outcome, stakeAmount: string): Promise<StakeResponse> {
+        const account = this.nodeAccount;
+        if (!account || !this.nearOptions) {
+            return {
+                amountBack: new Big(0),
+                success: false,
+            };
         }
+
+        // Formatting is weird in rust..
+        const stakeOutcome = outcome.type === OutcomeType.Invalid ? 'Invalid' : { 'Answer': outcome.answer };
+
+        const response = await account.functionCall(this.nearOptions.oracleContractId, 'transfer_call_stake', {
+            receiver_id: this.nearOptions.oracleContractId,
+            amount: stakeAmount,
+            msg: JSON.stringify({
+                'StakeDataRequest': {
+                    id: requestId,
+                    outcome: stakeOutcome,
+                }
+            }),
+            // @ts-ignore
+        }, this.nearOptions.maxGas);
+
+        const logs = extractLogs(response);
+        const userStake = logs.find(log => log.type === 'user_stakes');
+
+        if (!userStake) {
+            return {
+                amountBack: new Big(0),
+                success: true,
+            };
+        }
+
+        return {
+            amountBack: new Big(stakeAmount).sub(userStake.params.total_stake),
+            success: true,
+        };
     }
 }

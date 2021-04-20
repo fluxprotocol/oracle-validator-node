@@ -9,7 +9,8 @@
                 "accountId": "franklinwaller2.testnet",
                 "oracleContractId": "notavailableyet.near",
                 "tokenContractId": "wnear.flux-dev",
-                "net": "testnet"
+                "net": "testnet",
+                "maxGas": "200000000000000"
             }
         }
     ]
