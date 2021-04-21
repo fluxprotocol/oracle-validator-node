@@ -13,7 +13,6 @@ export function createProviderMock() {
 
         stake: jest.fn(),
         claim: jest.fn(),
-        challenge: jest.fn(),
         finalize: jest.fn(),
     };
 }

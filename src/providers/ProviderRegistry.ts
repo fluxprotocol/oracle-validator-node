@@ -61,21 +61,6 @@ export default class ProviderRegistry {
         return provider.stake(requestId, answer, stakeAmount);
     }
 
-    async challenge(providerId: string, requestId: string, roundId: number, answer?: string): Promise<StakeResponse> {
-        const provider = this.getProviderById(providerId);
-        if (!provider) {
-            return {
-                success: false,
-                amountBack: new Big(0),
-            }
-        }
-
-        return {
-            success: true,
-            amountBack: new Big(10),
-        };
-    }
-
     async finalize(providerId: string, requestId: string): Promise<boolean> {
         const provider = this.getProviderById(providerId);
 
