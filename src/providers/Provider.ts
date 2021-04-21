@@ -19,6 +19,7 @@ export interface Provider {
     getTokenBalance(): Promise<Big>;
     getDataRequestById(requestId: string): Promise<DataRequest | null>;
     getDataRequests(): Promise<DataRequest[]>;
+    listenForRequests(onRequests: (requests: DataRequest[]) => void): void;
 
     stake(requestId: string, answer: Outcome, stakeAmount: string): Promise<StakeResponse>;
     claim(requestId: string): Promise<ClaimResult>;

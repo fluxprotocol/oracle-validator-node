@@ -9,6 +9,7 @@ import { Provider, StakeResponse } from "../Provider";
 import { getAllDataRequestsFromNear, getDataRequestByIdFromNear } from "./NearExplorerService";
 import NearProviderOptions from "./NearProviderOptions";
 import { connectToNear, extractLogs, getAccount } from "./NearService";
+import { JOB_SEARCH_INTERVAL } from '../../config';
 
 export default class NearProvider implements Provider {
     providerName = 'NEAR';
@@ -85,6 +86,13 @@ export default class NearProvider implements Provider {
     async getDataRequestById(requestId: string): Promise<DataRequest | null> {
         if (!this.nearOptions) return null;
         return getDataRequestByIdFromNear(this.nearOptions.explorerApi, requestId, this.nearOptions);
+    }
+
+    listenForRequests(onRequests: (requests: DataRequest[]) => void) {
+        setInterval(async () => {
+            const requests = await this.getDataRequests();
+            onRequests(requests);
+        }, JOB_SEARCH_INTERVAL);
     }
 
     async getDataRequests(): Promise<DataRequest[]> {

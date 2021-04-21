@@ -15,8 +15,8 @@ export default class JobSearcher {
         this.visitedDataRequestIds = dataRequests.map(r => r.internalId);
     }
 
-    search(onRequests: (dataRequests: DataRequest[]) => void) {
-        this.providerRegistry.getDataRequests(async (requests) => {
+    startSearch(onRequests: (dataRequests: DataRequest[]) => void) {
+        this.providerRegistry.listenForRequests(async (requests) => {
             const eligibleRequests: DataRequest[] = [];
 
             requests.forEach((request) => {
@@ -54,11 +54,5 @@ export default class JobSearcher {
 
             onRequests(eligibleRequests);
         });
-    }
-
-    startSearch(onRequests: (dataRequests: DataRequest[]) => void) {
-        setInterval(() => {
-            this.search(onRequests);
-        }, JOB_SEARCH_INTERVAL);
     }
 }

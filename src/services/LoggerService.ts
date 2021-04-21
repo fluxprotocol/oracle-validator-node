@@ -38,7 +38,7 @@ export async function logBalances(nodeBalance: NodeBalance, walker: JobWalker) {
     const stakingRequests = requests.flatMap(r => r.staking);
     const amountStaked = stakingRequests.reduce((prev, curr) => prev.add(curr.amountStaked), new Big(0));
 
-    const profit = sumBalances.sub(nodeBalance.startingBalance);
+    const profit = sumBalances.add(amountStaked).sub(nodeBalance.startingBalance);
     const profitFormatted = formatToken(profit.toString(), TOKEN_DENOM);
     const balanceFormatted = formatToken(sumBalances.toString(), TOKEN_DENOM);
     const totalStakedFormatted = formatToken(amountStaked.toString(), TOKEN_DENOM);
