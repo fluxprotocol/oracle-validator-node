@@ -34,6 +34,14 @@ export default class ProviderRegistry {
         return provider.getTokenBalance();
     }
 
+    listenForRequests(onRequests: (requests: DataRequest[], providerId: string) => void) {
+        this.providers.forEach((provider) => {
+            provider.listenForRequests((requests) => {
+                onRequests(requests, provider.id);
+            });
+        });
+    }
+
     async getDataRequests(onRequests: (requests: DataRequest[], providerId: string) => void) {
         this.providers.forEach(async (provider) => {
             try {
