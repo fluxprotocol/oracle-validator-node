@@ -8,8 +8,8 @@ export function createProviderMock() {
 
         getTokenBalance: jest.fn(),
         getDataRequestById: jest.fn(),
-        getDataRequests: jest.fn(),
         listenForRequests: jest.fn(),
+        sync: jest.fn(),
 
         stake: jest.fn(),
         claim: jest.fn(),

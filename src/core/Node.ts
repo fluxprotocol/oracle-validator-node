@@ -1,5 +1,6 @@
+import death from 'death';
 import { NodeOptions } from "../models/NodeOptions";
-import { logNodeOptions, logBalances } from "../services/LoggerService";
+import logger, { logNodeOptions, logBalances } from "../services/LoggerService";
 import JobSearcher from "./JobSearcher";
 import { BALANCE_REFRESH_INTERVAL } from "../config";
 import NodeBalance from './NodeBalance';
@@ -34,4 +35,10 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
     });
 
     jobWalker.startWalker();
+
+    death(async () => {
+        logger.info('Finishing walk in order to keep data integrity');
+        await jobWalker.stopWalker();
+        process.exit(0);
+    });
 }

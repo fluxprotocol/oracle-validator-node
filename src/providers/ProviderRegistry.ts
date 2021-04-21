@@ -42,17 +42,6 @@ export default class ProviderRegistry {
         });
     }
 
-    async getDataRequests(onRequests: (requests: DataRequest[], providerId: string) => void) {
-        this.providers.forEach(async (provider) => {
-            try {
-                const requests = await provider.getDataRequests();
-                onRequests(requests, provider.id);
-            } catch (error) {
-                logger.error(`[ProviderRegistry.getDataRequests] ${error}`);
-            }
-        });
-    }
-
     async getDataRequestById(providerId: string, requestId: string): Promise<DataRequest | null> {
         const provider = this.getProviderById(providerId);
         if (!provider) return null;
