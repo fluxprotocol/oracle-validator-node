@@ -1,8 +1,4 @@
-import Big from "big.js";
-
 export enum StakeError {
-    MaxChallengeRoundExceeded = 'MaxChallengeRoundExceeded',
-    ChallengeHasWrongOutcome = 'ChallengeHasWrongOutcome',
     NotEnoughBalance = 'NotEnoughBalance',
     Unknown = 'Unknown',
     RequestNotFound = 'RequestNotFound',
