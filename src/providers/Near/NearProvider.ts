@@ -10,6 +10,7 @@ import { getAllDataRequestsFromNear, getDataRequestByIdFromNear } from "./NearEx
 import NearProviderOptions from "./NearProviderOptions";
 import { connectToNear, extractLogs, getAccount } from "./NearService";
 import { JOB_SEARCH_INTERVAL } from '../../config';
+import { startStorageDepositChecker } from './NearStorage';
 
 export default class NearProvider implements Provider {
     providerName = 'NEAR';
@@ -67,6 +68,8 @@ export default class NearProvider implements Provider {
         this.nodeOptions = options;
         this.nearConnection = await connectToNear(nearOptions.net as NetworkType, nearOptions.credentialsStorePath);
         this.nodeAccount = await getAccount(this.nearConnection, nearOptions.accountId);
+
+        startStorageDepositChecker(nearOptions, this.nodeAccount);
     }
 
     async getTokenBalance(): Promise<Big> {
@@ -178,5 +181,9 @@ export default class NearProvider implements Provider {
             amountBack: new Big(stakeAmount).sub(userStake.params.total_stake),
             success: true,
         };
+    }
+
+    sync(startingRequestId: string, onRequest: (request: DataRequest, completed: boolean) => void) {
+
     }
 }

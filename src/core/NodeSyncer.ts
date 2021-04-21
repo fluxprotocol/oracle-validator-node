@@ -1,3 +1,3 @@
-export function syncNode() {
+export async function syncNode() {
 
 }

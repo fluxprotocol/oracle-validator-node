@@ -14,6 +14,8 @@ export default class JobWalker {
     nodeBalance: NodeBalance;
     requests: Map<string, DataRequest>;
     processingIds: string[] = [];
+    walkerIntervalId?: any;
+    currentWalkerPromise?: Promise<void[]>;
 
     constructor(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry, nodeBalance: NodeBalance, initialRequests: DataRequest[] = []) {
         this.requests = new Map();
@@ -125,11 +127,21 @@ export default class JobWalker {
             this.processingIds.splice(index, 1);
         });
 
-        await Promise.all(promises);
+        this.currentWalkerPromise = Promise.all(promises);
+        await this.currentWalkerPromise;
+    }
+
+    async stopWalker() {
+        clearInterval(this.walkerIntervalId);
+
+        if (this.processingIds.length) {
+            await this.currentWalkerPromise;
+        }
     }
 
     startWalker() {
-        setInterval(() => {
+        if (this.walkerIntervalId) return;
+        this.walkerIntervalId = setInterval(() => {
             this.walkAllRequests();
         }, JOB_WALKER_INTERVAL);
     }
