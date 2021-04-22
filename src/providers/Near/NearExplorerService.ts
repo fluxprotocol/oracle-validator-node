@@ -34,22 +34,7 @@ export async function getAllDataRequestsFromNear(apiUrl: string, providerOptions
                                 dr_id
                                 end_time
                                 id
-                                outcome_stakes {
-                                    data_request_id
-                                    id
-                                    round
-                                    total_stake
-                                    outcome
-                                }
                                 round
-                                user_stakes {
-                                    account_id
-                                    data_request_id
-                                    id
-                                    outcome
-                                    round
-                                    total_stake
-                                }
                             }
                         }
                     }
@@ -100,22 +85,7 @@ export async function getDataRequestByIdFromNear(apiUrl: string, id: string, pro
                             dr_id
                             end_time
                             id
-                            outcome_stakes {
-                                data_request_id
-                                id
-                                round
-                                total_stake
-                                outcome
-                            }
                             round
-                            user_stakes {
-                                account_id
-                                data_request_id
-                                id
-                                outcome
-                                round
-                                total_stake
-                            }
                         }
                     }
                 }
@@ -130,5 +100,63 @@ export async function getDataRequestByIdFromNear(apiUrl: string, id: string, pro
     } catch (error) {
         console.error('[getDataRequestById]', error);
         return null;
+    }
+}
+
+interface GetDataRequestsAsCursorParams {
+    limit: number;
+    startingRequestId: string;
+}
+
+interface GetDataRequestsAsCursorResult {
+    items: DataRequest[];
+    next: string | null;
+}
+
+export async function getDataRequestsAsCursorFromNear(providerOptions: NearProviderOptions, params: GetDataRequestsAsCursorParams): Promise<GetDataRequestsAsCursorResult> {
+    try {
+        const response = await queryGraph(providerOptions.explorerApi, {
+            operationName: 'GetDataRequestsCursored',
+            query: `
+                query GetDataRequestsCursored($limit: Int, $cursor: String) {
+                    dataRequests: getDataRequestsAsCursor(cursor: $cursor, limit: $limit) {
+                        next
+                        items {
+                            id
+                            sources {
+                                end_point
+                                source_path
+                            }
+                            outcomes
+                            finalized_outcome
+                            final_arbitrator_triggered
+                            resolution_windows {
+                                round
+                                end_time
+                                bonded_outcome
+                            }
+                        }
+                    }
+                }
+            `,
+            variables: {
+                limit: params.limit,
+                cursor: params.startingRequestId,
+            }
+        });
+
+        const data: NearDataRequestGraphData[] = response.data.dataRequests.items;
+
+        return {
+            items: data.map(dr => transformNearDataRequestToDataRequest(providerOptions, dr)),
+            next: response.data.dataRequests.next,
+        };
+    } catch (error) {
+        console.error('[getDataRequestsAsCursor]', error);
+
+        return {
+            items: [],
+            next: null,
+        };
     }
 }

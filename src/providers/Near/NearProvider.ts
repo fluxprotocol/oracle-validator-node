@@ -6,7 +6,7 @@ import { Outcome, OutcomeType } from "../../models/DataRequestOutcome";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
 import { Provider, StakeResponse } from "../Provider";
-import { getAllDataRequestsFromNear, getDataRequestByIdFromNear } from "./NearExplorerService";
+import { getAllDataRequestsFromNear, getDataRequestByIdFromNear, getDataRequestsAsCursorFromNear } from "./NearExplorerService";
 import NearProviderOptions from "./NearProviderOptions";
 import { connectToNear, extractLogs, getAccount } from "./NearService";
 import { JOB_SEARCH_INTERVAL } from '../../config';
@@ -21,6 +21,7 @@ export default class NearProvider implements Provider {
     private nodeAccount?: Account;
     private nearOptions?: NearProviderOptions;
     private nodeOptions?: NodeOptions;
+    private currentRequestId?: string;
 
     validateOptions(options: NodeOptions, providerOptions: Partial<NearProviderOptions>) {
         const errors: string[] = [];
@@ -183,7 +184,38 @@ export default class NearProvider implements Provider {
         };
     }
 
-    sync(startingRequestId: string, onRequest: (request: DataRequest, completed: boolean) => void) {
+    private async getNextRequests() {
+        if (!this.nearOptions?.explorerApi) return [];
 
+        const currentRequestId = this.currentRequestId ?? '0';
+        const nextRequests = await getDataRequestsAsCursorFromNear(this.nearOptions, {
+            limit: 2,
+            startingRequestId: currentRequestId,
+        });
+
+        if (nextRequests.next) {
+            this.currentRequestId = nextRequests.next;
+        }
+
+        return nextRequests.items;
+    }
+
+    async sync(startingRequestId: string, onRequest: (request: DataRequest) => void): Promise<void> {
+        if (!this.nearOptions?.explorerApi) return Promise.reject();
+        this.currentRequestId = startingRequestId;
+
+        let hasMore = true;
+
+        while(hasMore) {
+            const requests = await this.getNextRequests();
+
+            if (!requests.length) {
+                hasMore = false;
+            }
+
+            requests.forEach((request) => {
+                onRequest(request);
+            });
+        }
     }
 }

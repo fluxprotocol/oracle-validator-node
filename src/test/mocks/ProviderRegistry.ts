@@ -1,6 +1,5 @@
 import { parseNodeOptions } from "../../models/NodeOptions";
 import { Provider } from "../../providers/Provider";
-import ProviderRegistry from "../../providers/ProviderRegistry";
 
 export function createMockProviderRegistry(providers: Provider[] = []) {
     return {
@@ -16,5 +15,6 @@ export function createMockProviderRegistry(providers: Provider[] = []) {
         claim: jest.fn(),
         finalize: jest.fn(),
         listenForRequests: jest.fn(),
+        syncAll: jest.fn(),
     }
 }

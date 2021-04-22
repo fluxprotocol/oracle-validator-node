@@ -7,12 +7,16 @@ import NodeBalance from './NodeBalance';
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { getAllDataRequests } from "../services/DataRequestService";
 import JobWalker from "./JobWalker";
+import NodeSyncer from './NodeSyncer';
 
 
 export async function startNode(providerRegistry: ProviderRegistry, options: NodeOptions) {
     logNodeOptions(providerRegistry, options);
 
     await providerRegistry.init();
+    const nodeSyncer = new NodeSyncer(providerRegistry);
+    await nodeSyncer.init();
+    await nodeSyncer.syncNode();
 
     // Restore our current validator state
     const dataRequests = await getAllDataRequests();
@@ -31,7 +35,10 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
     }, BALANCE_REFRESH_INTERVAL);
 
     jobSearcher.startSearch((requests) => {
-        requests.forEach(r => jobWalker.addNewDataRequest(r));
+        requests.forEach((request) => {
+            nodeSyncer.updateLatestDataRequest(request);
+            jobWalker.addNewDataRequest(request);
+        });
     });
 
     jobWalker.startWalker();

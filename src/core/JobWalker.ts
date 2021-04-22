@@ -40,7 +40,6 @@ export default class JobWalker {
         try {
             await request.execute();
             const stakeResult = await request.stake(
-                this.nodeOptions,
                 this.providerRegistry,
                 this.nodeBalance,
             );
@@ -100,7 +99,6 @@ export default class JobWalker {
         // This will prevent any mallicious attacks
         if (request.executeResults.length) {
             await request.stake(
-                this.nodeOptions,
                 this.providerRegistry,
                 this.nodeBalance
             );

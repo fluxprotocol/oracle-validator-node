@@ -45,7 +45,7 @@ export async function findDocuments<T>(query: PouchDB.Find.FindRequest<T>): Prom
     }
 }
 
-export async function createOrUpdateDocument(id: string, obj: object) {
+export async function createOrUpdateDocument(id: string, obj: object): Promise<void> {
     try {
         const existingDoc = await findDocumentById<object>(id);
 

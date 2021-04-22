@@ -1,5 +1,4 @@
 import { Account, connect, keyStores, Near, providers } from "near-api-js";
-import { FinalExecutionOutcome } from "near-api-js/lib/providers";
 import { createNearNetworkConfig, NetworkType } from "../../models/NearNetworkConfig";
 import cache from "../../utils/cache";
 import { parseJson } from "../../utils/jsonUtils";
