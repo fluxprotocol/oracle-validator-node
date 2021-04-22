@@ -7,10 +7,10 @@
 // import { createMockNodeBalance } from "../test/mocks/NodeBalance";
 // import { createProviderMock } from "../test/mocks/ProviderMock";
 // import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
-// import { stakeOrChallengeDataRequest } from "./Oracle";
+// import { stakeOnDataRequest } from "./Oracle";
 
 // describe('Oracle', () => {
-//     describe('stakeOrChallengeDataRequest', () => {
+//     describe('stakeOnDataRequest', () => {
 //         let config: NodeOptions;
 //         let provider = createProviderMock();
 
@@ -31,8 +31,7 @@
 
 //             nodeBalance.withdrawBalanceToStake.mockReturnValue(new Big(0));
 
-//             const result = await stakeOrChallengeDataRequest(
-//                 config,
+//             const result = await stakeOnDataRequest(
 //                 new ProviderRegistry(config, [provider]),
 //                 nodeBalance,
 //                 createMockRequest({
@@ -51,22 +50,16 @@
 //         it('should stake something as invalid when the round is challenged and the winningoutcome is not correct', async () => {
 //             const nodeBalance = createMockNodeBalance();
 //             const mockProviderRegistry = createMockProviderRegistry([]);
-//             mockProviderRegistry.challenge.mockReturnValue({
-//                 amountBack: new Big(0),
-//                 success: true,
-//             });
 
-//             const result = await stakeOrChallengeDataRequest(
-//                 config,
+//             const result = await stakeOnDataRequest(
 //                 mockProviderRegistry,
 //                 nodeBalance,
 //                 createMockRequest({
 //                     providerId: 'mock',
-//                     rounds: [{
+//                     resolutionWindows: [{
 //                         round: 1,
-//                         outcomeStakes: {},
-//                         quoromDate: new Date().toJSON(),
-//                         winningOutcome: 'wrong_answer',
+//                         endTime: new Date(),
+//                         bondedOutcome: 'wrong_answer',
 //                     }],
 //                     executeResults: [{
 //                         roundId: 0,
@@ -89,8 +82,7 @@
 //                 success: true,
 //             });
 
-//             const result = await stakeOrChallengeDataRequest(
-//                 config,
+//             const result = await stakeOnDataRequest(
 //                 mockProviderRegistry,
 //                 nodeBalance,
 //                 createMockRequest({
@@ -122,8 +114,7 @@
 //                 success: true,
 //             });
 
-//             const result = await stakeOrChallengeDataRequest(
-//                 config,
+//             const result = await stakeOnDataRequest(
 //                 mockProviderRegistry,
 //                 nodeBalance,
 //                 createMockRequest({
