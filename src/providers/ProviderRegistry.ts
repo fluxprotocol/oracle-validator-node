@@ -83,4 +83,8 @@ export default class ProviderRegistry {
 
         return provider.claim(requestId);
     }
+
+    syncAll() {
+
+    }
 }

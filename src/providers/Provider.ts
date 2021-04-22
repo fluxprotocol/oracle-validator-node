@@ -19,9 +19,10 @@ export interface Provider {
     getTokenBalance(): Promise<Big>;
     getDataRequestById(requestId: string): Promise<DataRequest | null>;
     listenForRequests(onRequests: (requests: DataRequest[]) => void): void;
-    sync(startingRequestId: string, onRequest: (request: DataRequest, completed: boolean) => void): void;
 
     stake(requestId: string, answer: Outcome, stakeAmount: string): Promise<StakeResponse>;
     claim(requestId: string): Promise<ClaimResult>;
     finalize(requestId: string): Promise<boolean>;
+
+    sync(startingRequestId: string, onRequest: (request: DataRequest) => void): Promise<void>;
 }
