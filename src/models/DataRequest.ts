@@ -3,10 +3,9 @@ import NodeBalance from "../core/NodeBalance";
 import { stakeOnDataRequest } from "../core/Oracle";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import logger from "../services/LoggerService";
-import { ClaimResultType, isClaimResultSuccesful } from "./ClaimResult";
+import { isClaimResultSuccesful } from "./ClaimResult";
 import { Outcome } from './DataRequestOutcome';
 import { JobExecuteResult } from "./JobExecuteResult";
-import { NodeOptions } from "./NodeOptions";
 import { ResolutionWindow } from "./ResolutionWindow";
 import { isStakeResultSuccesful, StakeError, StakeResult, StakeResultType, SuccessfulStakeResult } from "./StakingResult";
 
@@ -89,16 +88,16 @@ export default class DataRequest {
     }
 
     isClaimable(): boolean {
+        if (!this.currentWindow) {
+            return false;
+        }
+
         // When we have nothing to stake we can not claim
         if (this.staking.length === 0) {
             return false;
         }
 
         if (this.claimedAmount) {
-            return false;
-        }
-
-        if (!this.currentWindow) {
             return false;
         }
 
@@ -146,7 +145,6 @@ export default class DataRequest {
     }
 
     async stake(
-        nodeOptions: NodeOptions,
         providerRegistry: ProviderRegistry,
         nodeBalance: NodeBalance,
     ): Promise<StakeResult> {
@@ -169,7 +167,6 @@ export default class DataRequest {
         logger.debug(`${this.internalId} - Staking`);
 
         const stakeResult = await stakeOnDataRequest(
-            nodeOptions,
             providerRegistry,
             nodeBalance,
             this,
@@ -196,7 +193,7 @@ export default class DataRequest {
 
 export function createMockRequest(request: Partial<DataRequestProps> = {}): DataRequest {
     return new DataRequest({
-        contractId: 'san.near',
+        contractId: 'test.near',
         id: '1',
         outcomes: [],
         resolutionWindows: [

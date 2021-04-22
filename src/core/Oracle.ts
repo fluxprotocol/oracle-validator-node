@@ -2,7 +2,6 @@ import { NodeOptions } from "../models/NodeOptions";
 import DataRequest from "../models/DataRequest";
 import logger from "../services/LoggerService";
 import ProviderRegistry from "../providers/ProviderRegistry";
-import { StakeResponse } from "../providers/Provider";
 import NodeBalance from "./NodeBalance";
 import { getDataRequestAnswer } from "../services/DataRequestService";
 import { StakeError, StakeResult, StakeResultType } from "../models/StakingResult";
@@ -11,7 +10,6 @@ import { isOutcomesEqual } from "../models/DataRequestOutcome";
 const FIRST_CHALLENGE_ROUND = 0;
 
 export async function stakeOnDataRequest(
-    nodeOptions: NodeOptions,
     providerRegistry: ProviderRegistry,
     nodeBalance: NodeBalance,
     dataRequest: DataRequest,
