@@ -1,4 +1,3 @@
-import { NodeOptions } from "../models/NodeOptions";
 import DataRequest from "../models/DataRequest";
 import logger from "../services/LoggerService";
 import ProviderRegistry from "../providers/ProviderRegistry";
