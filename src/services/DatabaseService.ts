@@ -1,17 +1,24 @@
 import PouchDB from 'pouchdb';
+import path from 'path';
 import PouchDbFind from 'pouchdb-find';
-import { DATABASE_NAME } from '../config';
 import logger from './LoggerService';
 
 let database: PouchDB.Database;
 
-export async function startDatabase(): Promise<PouchDB.Database> {
+export async function startDatabase(dbPath: string, dbName: string): Promise<PouchDB.Database> {
     if (database) return database;
+
+    const fullDbPath = path.resolve(dbPath) + path.sep;
+
+    PouchDB.defaults({
+        prefix: fullDbPath,
+    });
 
     PouchDB.plugin(PouchDbFind);
 
-    database = new PouchDB(DATABASE_NAME, {
+    database = new PouchDB(dbName, {
         revs_limit: 1,
+        prefix: fullDbPath,
     });
 
     // TODO: Create indexes
@@ -63,7 +70,7 @@ export async function createOrUpdateDocument(id: string, obj: object): Promise<v
             force: true,
         });
     } catch (error) {
-        logger.error(`[createOrUpdateDocument] ${error}`);
+        logger.error(`[createOrUpdateDocument] ${error} -> ${id} - ${JSON.stringify(obj)}`);
     }
 }
 

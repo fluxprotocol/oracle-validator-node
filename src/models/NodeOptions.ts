@@ -4,6 +4,8 @@ import { toToken } from "../utils/tokenUtils";
 
 export interface RawNodeConfig {
     debug?: boolean;
+    dbPath?: string;
+    dbName?: string;
     stakePerRequest?: string;
     contractIds?: string[];
     providers?: {
@@ -14,6 +16,9 @@ export interface RawNodeConfig {
 
 export interface NodeOptions {
     debug: boolean;
+
+    dbPath: string;
+    dbName: string;
 
     /** The maximum amount the node is allowed to stake per a request */
     stakePerRequest: Big;
@@ -29,6 +34,8 @@ export interface NodeOptions {
 
 export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
     const result: NodeOptions = {
+        dbName: 'flux_db',
+        dbPath: './',
         debug: false,
         contractIds: [],
         stakePerRequest: new Big(toToken('2.5', TOKEN_DENOM)),
@@ -49,6 +56,14 @@ export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
 
     if (typeof options.debug === 'boolean') {
         result.debug = options.debug;
+    }
+
+    if (typeof options.dbPath === 'string') {
+        result.dbPath = options.dbPath;
+    }
+
+    if (typeof options.dbName === 'string') {
+        result.dbName = options.dbName;
     }
 
     return result;

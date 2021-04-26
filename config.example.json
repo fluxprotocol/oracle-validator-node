@@ -1,12 +1,15 @@
 {
+    "debug": true,
+    "dbPath": "./",
+    "dbName": "flux_db_testnet",
     "stakePerRequest": "2500000000000000000",
     "contractIds": [],
     "providers": [
         {
             "id": "near",
             "options": {
-                "credentialsStorePath": "~/.near/",
-                "accountId": "franklinwaller2.testnet",
+                "credentialsStorePath": "/Users/myAccount/.near-credentials/",
+                "accountId": "myaccount.testnet",
                 "oracleContractId": "notavailableyet.near",
                 "tokenContractId": "wnear.flux-dev",
                 "net": "testnet",

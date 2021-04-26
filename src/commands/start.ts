@@ -20,7 +20,6 @@ export const start: CommandModule = {
         })
     ,
     handler: async (args) => {
-        await startDatabase();
         const file = await fs.readFile(args.config as string, {
             encoding: 'utf-8',
         });
@@ -32,6 +31,8 @@ export const start: CommandModule = {
 
         const nodeOptions = parseNodeOptions(JSON.parse(file));
         const providers: Provider[] = [];
+
+        await startDatabase(nodeOptions.dbPath, nodeOptions.dbName);
 
         logger.transports.forEach((transport) => {
             transport.level = nodeOptions.debug ? 'debug' : 'info';

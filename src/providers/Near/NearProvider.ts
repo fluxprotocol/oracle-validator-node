@@ -1,4 +1,5 @@
 import Big from "big.js";
+import path from 'path';
 import { Account, Near } from "near-api-js";
 import { ClaimError, ClaimResult, ClaimResultType } from "../../models/ClaimResult";
 import DataRequest, { createMockRequest } from "../../models/DataRequest";
@@ -65,9 +66,11 @@ export default class NearProvider implements Provider {
         const nearOptions = getProviderOptions<NearProviderOptions>(this.id, options);
         if (!nearOptions) throw new Error('Invalid config');
 
+        const credentialsStorePath = path.resolve(nearOptions.credentialsStorePath) + path.sep;
+
         this.nearOptions = nearOptions;
         this.nodeOptions = options;
-        this.nearConnection = await connectToNear(nearOptions.net as NetworkType, nearOptions.credentialsStorePath);
+        this.nearConnection = await connectToNear(nearOptions.net as NetworkType, credentialsStorePath);
         this.nodeAccount = await getAccount(this.nearConnection, nearOptions.accountId);
 
         startStorageDepositChecker(nearOptions, this.nodeAccount);

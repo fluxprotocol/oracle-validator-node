@@ -43,7 +43,15 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
 
     jobWalker.startWalker();
 
+    let deathCounter = 0;
+
     death(async () => {
+        if (deathCounter === 1) {
+            logger.info('Data could be inaccurate for next run. Please check the explorer to claim manually.');
+            process.exit(1);
+        }
+
+        deathCounter += 1;
         logger.info('Finishing walk in order to keep data integrity');
         await jobWalker.stopWalker();
         process.exit(0);

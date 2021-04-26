@@ -25,7 +25,7 @@ describe('NodeSyncer', () => {
             expect(syncer.latestDataRequests.has(request.providerId));
             expect(syncer.latestDataRequests.size).toBe(1);
             expect(createOrUpdateDocumentSpy).toHaveBeenCalledTimes(1);
-            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith(request.providerId, {
+            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith(request.providerId + '_latest_request', {
                 id: request.id,
                 provider: request.providerId,
                 type: 'LATEST_REQUEST',
@@ -95,7 +95,7 @@ describe('NodeSyncer', () => {
 
             expect(syncer.latestDataRequests.size).toBe(2);
             expect(createOrUpdateDocumentSpy).toHaveBeenCalledTimes(1);
-            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith(request.providerId, {
+            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith(request.providerId + '_latest_request', {
                 id: request.id,
                 provider: request.providerId,
                 type: 'LATEST_REQUEST',

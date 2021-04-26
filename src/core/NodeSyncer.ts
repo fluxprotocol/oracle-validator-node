@@ -16,7 +16,7 @@ export async function getLatestDataRequests(): Promise<LatestRequest[]> {
 }
 
 export async function storeLatestDataRequest(latestRequest: LatestRequest) {
-    await createOrUpdateDocument(latestRequest.provider, latestRequest);
+    await createOrUpdateDocument(`${latestRequest.provider}_latest_request`, latestRequest);
 }
 
 export default class NodeSyncer {
