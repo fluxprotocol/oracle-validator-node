@@ -1,207 +1,266 @@
-// import { createMockRequest } from "../models/DataRequest";
-// import { parseNodeOptions } from "../models/NodeOptions";
-// import { createMockNodeBalance } from "../test/mocks/NodeBalance";
-// import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
-// import * as DataRequestService from '../services/DataRequestService';
-// import JobWalker from "./JobWalker";
-// import { StakeResultType } from "../models/StakingResult";
-// import { JobResultType } from "../models/JobExecuteResult";
+import { createMockRequest } from "../models/DataRequest";
+import { parseNodeOptions } from "../models/NodeOptions";
+import { createMockNodeBalance } from "../test/mocks/NodeBalance";
+import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
+import * as DataRequestService from '../services/DataRequestService';
+import JobWalker from "./JobWalker";
+import { StakeResult, StakeResultType } from "../models/StakingResult";
+import { JobResultType } from "../models/JobExecuteResult";
+import { OutcomeType } from "../models/DataRequestOutcome";
 
-// describe('JobWalker', () => {
-//     let storeDataRequestSpy: jest.SpyInstance<Promise<void>>;
+describe('JobWalker', () => {
+    let storeDataRequestSpy: jest.SpyInstance<Promise<void>>;
 
-//     beforeEach(() => {
-//         storeDataRequestSpy = jest.spyOn(DataRequestService, 'storeDataRequest');
-//         storeDataRequestSpy.mockResolvedValue();
-//     });
+    beforeEach(() => {
+        storeDataRequestSpy = jest.spyOn(DataRequestService, 'storeDataRequest');
+        storeDataRequestSpy.mockResolvedValue();
+    });
 
-//     afterEach(() => {
-//         storeDataRequestSpy.mockRestore();
-//     });
+    afterEach(() => {
+        storeDataRequestSpy.mockRestore();
+    });
 
-//     describe('constructor', () => {
-//         it('should only have requests that are not claimed yet', () => {
-//             const jobWalker = new JobWalker(
-//                 parseNodeOptions({}),
-//                 createMockProviderRegistry([]),
-//                 createMockNodeBalance(),
-//                 [
-//                     createMockRequest({}),
-//                     createMockRequest({}),
-//                     createMockRequest({
-//                         claimedAmount: '1',
-//                     }),
-//                 ]
-//             );
+    describe('constructor', () => {
+        it('should only have requests that are not claimed yet', () => {
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                createMockProviderRegistry([]),
+                createMockNodeBalance(),
+                [
+                    createMockRequest({
+                        id: '1'
+                    }),
+                    createMockRequest({
+                        id: '2'
+                    }),
+                    createMockRequest({
+                        id: '3',
+                        claimedAmount: '1',
+                    }),
+                ]
+            );
 
-//             expect(jobWalker.requests.length).toBe(2);
-//         });
-//     });
+            expect(jobWalker.requests.size).toBe(2);
+        });
 
-//     describe('addNewDataRequest', () => {
-//         it('should add a new request and push it to the job walker', async () => {
-//             const jobWalker = new JobWalker(
-//                 parseNodeOptions({}),
-//                 createMockProviderRegistry([]),
-//                 createMockNodeBalance(),
-//                 []
-//             );
+        it('should add requests that have been finalized and staked on but not claimed', () => {
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                createMockProviderRegistry([]),
+                createMockNodeBalance(),
+                [
+                    createMockRequest({
+                        id: '1',
+                        staking: [{
+                            amountStaked: '1',
+                            roundId: 0,
+                            type: StakeResultType.Success,
+                        }],
+                        finalizedOutcome: {
+                            type: OutcomeType.Invalid,
+                        }
+                    }),
+                    createMockRequest({
+                        id: '2',
+                        staking: [{
+                            amountStaked: '1',
+                            roundId: 0,
+                            type: StakeResultType.Success,
+                        }],
+                        finalizedOutcome: {
+                            answer: 'Tralala',
+                            type: OutcomeType.Answer,
+                        }
+                    }),
+                    createMockRequest({
+                        id: '3',
+                        staking: [],
+                        finalizedOutcome: {
+                            type: OutcomeType.Invalid,
+                        }
+                    }),
+                ]
+            );
 
-//             const request = createMockRequest({});
+            expect(jobWalker.requests.size).toBe(2);
+        });
+    });
 
-//             request.execute = jest.fn();
-//             request.stakeOrChallenge = jest.fn();
+    describe('addNewDataRequest', () => {
+        it('should add a new request and push it to the job walker', async () => {
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                createMockProviderRegistry([]),
+                createMockNodeBalance(),
+                []
+            );
 
-//             storeDataRequestSpy.mockResolvedValue();
+            const request = createMockRequest({});
 
-//             expect(jobWalker.requests.length).toBe(0);
+            request.execute = jest.fn();
+            request.stake = jest.fn(() => {
+                return Promise.resolve({
+                    amountStaked: '1',
+                    roundId: 0,
+                    type: StakeResultType.Success,
+                } as StakeResult);
+            });
 
-//             await jobWalker.addNewDataRequest(request);
+            storeDataRequestSpy.mockResolvedValue();
 
-//             expect(request.execute).toBeCalledTimes(1);
-//             expect(request.stakeOrChallenge).toBeCalledTimes(1);
-//             expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
-//             expect(jobWalker.requests.length).toBe(1);
-//         });
-//     });
+            expect(jobWalker.requests.size).toBe(0);
 
-//     describe('walkAllRequests', () => {
-//         it('should process requests that are not already processing', async () => {
-//             const request = createMockRequest({});
-//             const request2 = createMockRequest({
-//                 id: '2',
-//             });
-//             const jobWalker = new JobWalker(
-//                 parseNodeOptions({}),
-//                 createMockProviderRegistry([]),
-//                 createMockNodeBalance(),
-//                 [request, request2]
-//             );
+            await jobWalker.addNewDataRequest(request);
 
-//             const walkRequestMock = jest.fn();
-//             jobWalker.processingIds = [request2.internalId];
-//             jobWalker.walkRequest = walkRequestMock;
-//             await jobWalker.walkAllRequests();
+            expect(request.execute).toBeCalledTimes(1);
+            expect(request.stake).toBeCalledTimes(1);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+            expect(jobWalker.requests.size).toBe(1);
+        });
+    });
 
-//             expect(walkRequestMock).toHaveBeenCalledTimes(1);
-//             expect(walkRequestMock).toHaveBeenCalledWith(request);
-//             expect(jobWalker.processingIds).toStrictEqual([request2.internalId]);
-//         });
-//     });
+    describe('walkAllRequests', () => {
+        it('should process requests that are not already processing', async () => {
+            const request = createMockRequest({});
+            const request2 = createMockRequest({
+                id: '2',
+            });
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                createMockProviderRegistry([]),
+                createMockNodeBalance(),
+                [request, request2]
+            );
 
-//     describe('walkRequest', () => {
-//         it('should claim when the request is claimable', async () => {
-//             const request = createMockRequest({
-//                 staking: [{
-//                     amountStaked: '1',
-//                     roundId: 0,
-//                     type: StakeResultType.Success,
-//                 }],
-//             });
+            const walkRequestMock = jest.fn();
+            jobWalker.processingIds = [request2.internalId];
+            jobWalker.walkRequest = walkRequestMock;
+            await jobWalker.walkAllRequests();
 
-//             const mockExecute = jest.fn();
-//             const mockClaim = jest.fn().mockResolvedValue(true);
-//             const mockStakeOrChallenge = jest.fn();
+            expect(walkRequestMock).toHaveBeenCalledTimes(1);
+            expect(walkRequestMock).toHaveBeenCalledWith(request);
+            expect(jobWalker.processingIds).toStrictEqual([request2.internalId]);
+        });
+    });
 
-//             request.execute = mockExecute;
-//             request.claim = mockClaim;
-//             request.stakeOrChallenge = mockStakeOrChallenge;
-//             request.isClaimable = jest.fn(() => true);
+    describe('walkRequest', () => {
+        it('should claim when the request is claimable', async () => {
+            const request = createMockRequest({
+                staking: [{
+                    amountStaked: '1',
+                    roundId: 0,
+                    type: StakeResultType.Success,
+                }],
+            });
 
-//             const providerRegistry = createMockProviderRegistry([]);
-//             const jobWalker = new JobWalker(
-//                 parseNodeOptions({}),
-//                 providerRegistry,
-//                 createMockNodeBalance(),
-//                 [request]
-//             );
+            const mockExecute = jest.fn();
+            const mockClaim = jest.fn().mockResolvedValue(true);
+            const mockStakeOrChallenge = jest.fn();
 
-//             expect(jobWalker.requests.length).toBe(1);
+            request.execute = mockExecute;
+            request.claim = mockClaim;
+            request.stake = mockStakeOrChallenge;
+            request.isClaimable = jest.fn(() => true);
 
-//             providerRegistry.getDataRequestById.mockResolvedValue(request);
-//             await jobWalker.walkRequest(request);
+            const providerRegistry = createMockProviderRegistry([]);
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                providerRegistry,
+                createMockNodeBalance(),
+                [request]
+            );
 
-//             expect(mockExecute).toHaveBeenCalledTimes(0);
-//             expect(mockClaim).toHaveBeenCalledTimes(1);
-//             expect(mockStakeOrChallenge).toHaveBeenCalledTimes(0);
-//             expect(jobWalker.requests.length).toBe(0);
-//             expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
-//         });
+            expect(jobWalker.requests.size).toBe(1);
 
-//         it('should re-stake if there is an execute result but no staking', async () => {
-//             const request = createMockRequest({
-//                 executeResults: [{
-//                     results: [{
-//                         data: 'answer',
-//                         status: 200,
-//                         type: JobResultType.Success,
-//                     }],
-//                     roundId: 0,
-//                 }],
-//             });
+            providerRegistry.getDataRequestById.mockResolvedValue(request);
+            await jobWalker.walkRequest(request);
 
-//             const mockExecute = jest.fn();
-//             const mockClaim = jest.fn().mockResolvedValue(false);
-//             const mockStakeOrChallenge = jest.fn();
+            expect(mockExecute).toHaveBeenCalledTimes(0);
+            expect(mockClaim).toHaveBeenCalledTimes(1);
+            expect(mockStakeOrChallenge).toHaveBeenCalledTimes(0);
+            expect(jobWalker.requests.size).toBe(0);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+        });
 
-//             request.execute = mockExecute;
-//             request.claim = mockClaim;
-//             request.stakeOrChallenge = mockStakeOrChallenge;
-//             request.isClaimable = jest.fn(() => false);
+        it('should re-stake if there is an execute result but no staking', async () => {
+            const request = createMockRequest({
+                executeResults: [{
+                    results: [{
+                        data: 'answer',
+                        status: 200,
+                        type: JobResultType.Success,
+                    }],
+                    roundId: 0,
+                }],
+            });
 
-//             const providerRegistry = createMockProviderRegistry([]);
-//             const jobWalker = new JobWalker(
-//                 parseNodeOptions({}),
-//                 providerRegistry,
-//                 createMockNodeBalance(),
-//                 [request]
-//             );
+            const mockExecute = jest.fn();
+            const mockClaim = jest.fn().mockResolvedValue(false);
+            const mockStakeOrChallenge = jest.fn();
 
-//             expect(jobWalker.requests.length).toBe(1);
+            request.execute = mockExecute;
+            request.claim = mockClaim;
+            request.stake = mockStakeOrChallenge;
+            request.isClaimable = jest.fn(() => false);
 
-//             providerRegistry.getDataRequestById.mockResolvedValue(request);
-//             await jobWalker.walkRequest(request);
+            const providerRegistry = createMockProviderRegistry([]);
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                providerRegistry,
+                createMockNodeBalance(),
+                [request]
+            );
 
-//             expect(mockExecute).toHaveBeenCalledTimes(0);
-//             expect(mockClaim).toHaveBeenCalledTimes(0);
-//             expect(mockStakeOrChallenge).toHaveBeenCalledTimes(1);
-//             expect(jobWalker.requests.length).toBe(1);
-//             expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
-//         });
+            expect(jobWalker.requests.size).toBe(1);
 
-//         it('should execute and stake when there is no staking and no execute results', async () => {
-//             const request = createMockRequest({});
+            providerRegistry.getDataRequestById.mockResolvedValue(request);
+            await jobWalker.walkRequest(request);
 
-//             const mockExecute = jest.fn();
-//             const mockClaim = jest.fn().mockResolvedValue(false);
-//             const mockStakeOrChallenge = jest.fn();
-//             const mockUpdate = jest.fn();
+            expect(mockExecute).toHaveBeenCalledTimes(0);
+            expect(mockClaim).toHaveBeenCalledTimes(0);
+            expect(mockStakeOrChallenge).toHaveBeenCalledTimes(1);
+            expect(jobWalker.requests.size).toBe(1);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+        });
 
-//             request.execute = mockExecute;
-//             request.update = mockUpdate;
-//             request.claim = mockClaim;
-//             request.stakeOrChallenge = mockStakeOrChallenge;
-//             request.isClaimable = jest.fn(() => false);
+        it('should execute and stake when there is no staking and no execute results', async () => {
+            const request = createMockRequest({});
 
-//             const providerRegistry = createMockProviderRegistry([]);
-//             const jobWalker = new JobWalker(
-//                 parseNodeOptions({}),
-//                 providerRegistry,
-//                 createMockNodeBalance(),
-//                 [request]
-//             );
+            const mockExecute = jest.fn(async () => {
+                request.executeResults.push({
+                    roundId: 0,
+                    results: [],
+                });
+            });
+            const mockClaim = jest.fn().mockResolvedValue(false);
+            const mockStake = jest.fn();
+            const mockUpdate = jest.fn();
 
-//             expect(jobWalker.requests.length).toBe(1);
+            request.execute = mockExecute;
+            request.update = mockUpdate;
+            request.claim = mockClaim;
+            request.stake = mockStake;
+            request.isClaimable = jest.fn(() => false);
 
-//             providerRegistry.getDataRequestById.mockResolvedValue(createMockRequest());
-//             await jobWalker.walkRequest(request);
+            const providerRegistry = createMockProviderRegistry([]);
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                providerRegistry,
+                createMockNodeBalance(),
+                [request]
+            );
 
-//             expect(mockUpdate).toHaveBeenCalledTimes(1);
-//             expect(mockExecute).toHaveBeenCalledTimes(1);
-//             expect(mockClaim).toHaveBeenCalledTimes(0);
-//             expect(mockStakeOrChallenge).toHaveBeenCalledTimes(1);
-//             expect(jobWalker.requests.length).toBe(1);
-//             expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
-//         });
-//     });
-// });
+            expect(jobWalker.requests.size).toBe(1);
+
+            providerRegistry.getDataRequestById.mockResolvedValue(createMockRequest());
+            await jobWalker.walkRequest(request);
+
+            expect(mockUpdate).toHaveBeenCalledTimes(1);
+            expect(mockExecute).toHaveBeenCalledTimes(1);
+            expect(mockClaim).toHaveBeenCalledTimes(0);
+            expect(mockStake).toHaveBeenCalledTimes(1);
+            expect(jobWalker.requests.size).toBe(1);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+        });
+    });
+});
