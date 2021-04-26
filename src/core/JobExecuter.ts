@@ -49,7 +49,7 @@ async function fetchJobData(requestInfo: RequestInfo): Promise<JobExecuteResult<
     }
 }
 
-function resolveJobData(request: DataRequest, requestInfo: RequestInfo, parsedBody: object): JobExecuteResult<string> {
+export function resolveJobData(request: DataRequest, requestInfo: RequestInfo, parsedBody: object): JobExecuteResult<string> {
     const value = pathToValue(requestInfo.source_path, parsedBody);
 
     if (value === null) {
