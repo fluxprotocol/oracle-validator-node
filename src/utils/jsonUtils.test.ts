@@ -1,6 +1,20 @@
-import { pathToValue } from './jsonUtils';
+import { parseJson, pathToValue } from './jsonUtils';
 
 describe('jsonUtils', () => {
+    describe('parseJson', () => {
+        it('should be able to parse JSON', () => {
+            const result = parseJson('{ "a": 1 }');
+            expect(result).toStrictEqual({
+                a: 1,
+            });
+        });
+
+        it('should return null when the input was not valid JSON', () => {
+            const result = parseJson('test');
+            expect(result).toStrictEqual(null);
+        });
+    });
+
     describe('pathToValue', () => {
         it('should get the correct value using a stringified path', () => {
             const result = pathToValue('a.b.c', {

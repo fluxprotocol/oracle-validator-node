@@ -32,10 +32,6 @@ export function pathToValue(path: string, obj: any): string | null {
         return null;
     }
 
-    if (typeof value === 'string') {
-        return value;
-    }
-
     // JSON objects are allowed.
     if (typeof value === 'object') {
         return JSON.stringify(value);
@@ -49,5 +45,6 @@ export function pathToValue(path: string, obj: any): string | null {
         return value ? 'true' : 'false';
     }
 
-    return value;
+    // Value must be a string
+    return value as string;
 }

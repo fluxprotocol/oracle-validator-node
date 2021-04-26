@@ -8,6 +8,12 @@ describe('tokenUtils', () => {
             expect(result).toBe('2.50');
         });
 
+        it('should format a token to a human readable format with 3 decimal points', () => {
+            const result = formatToken('2512000000000000000', 18, 3);
+
+            expect(result).toBe('2.512');
+        });
+
         it('should format a token to a 0.00 when there is dust', () => {
             const result = formatToken('2500000000000000');
 
