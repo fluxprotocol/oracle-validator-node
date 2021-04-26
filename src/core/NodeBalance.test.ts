@@ -8,6 +8,7 @@ describe('NodeBalance', () => {
                 stakePerRequest: new Big(100),
                 contractIds: [],
                 providersConfig: [],
+                debug: false,
             }, {} as any);
 
             stake.balances = new Map();
@@ -21,6 +22,7 @@ describe('NodeBalance', () => {
                 stakePerRequest: new Big(100),
                 contractIds: [],
                 providersConfig: [],
+                debug: false,
             }, {} as any);
 
             stake.balances = new Map();
@@ -36,6 +38,7 @@ describe('NodeBalance', () => {
                 stakePerRequest: new Big(200),
                 contractIds: [],
                 providersConfig: [],
+                debug: false,
             }, {} as any);
 
             stake.balances = new Map();
@@ -51,6 +54,7 @@ describe('NodeBalance', () => {
                 stakePerRequest: new Big(200),
                 contractIds: [],
                 providersConfig: [],
+                debug: false,
             }, {} as any);
 
             stake.balances = new Map();

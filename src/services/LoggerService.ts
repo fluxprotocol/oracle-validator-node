@@ -9,9 +9,8 @@ import { NodeOptions } from '../models/NodeOptions';
 import ProviderRegistry from '../providers/ProviderRegistry';
 import { sumBig } from '../utils/bigUtils';
 import { formatToken } from '../utils/tokenUtils';
-import { getAllDataRequests } from './DataRequestService';
 
-const logFormat = format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`)
+const logFormat = format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`);
 
 const logger = winston.createLogger({
     format: format.combine(
@@ -20,7 +19,7 @@ const logger = winston.createLogger({
     ),
     transports: [
         new winston.transports.Console({
-            level: 'debug',
+            level: 'info',
             format: format.combine(
                 format.colorize(),
                 logFormat,

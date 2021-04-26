@@ -3,6 +3,7 @@ import { TOKEN_DENOM } from "../config";
 import { toToken } from "../utils/tokenUtils";
 
 export interface RawNodeConfig {
+    debug?: boolean;
     stakePerRequest?: string;
     contractIds?: string[];
     providers?: {
@@ -12,6 +13,8 @@ export interface RawNodeConfig {
 }
 
 export interface NodeOptions {
+    debug: boolean;
+
     /** The maximum amount the node is allowed to stake per a request */
     stakePerRequest: Big;
 
@@ -26,6 +29,7 @@ export interface NodeOptions {
 
 export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
     const result: NodeOptions = {
+        debug: false,
         contractIds: [],
         stakePerRequest: new Big(toToken('2.5', TOKEN_DENOM)),
         providersConfig: [],
@@ -41,6 +45,10 @@ export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
 
     if (Array.isArray(options.providers) && options.providers.length > 0) {
         result.providersConfig = options.providers;
+    }
+
+    if (typeof options.debug === 'boolean') {
+        result.debug = options.debug;
     }
 
     return result;

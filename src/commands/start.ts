@@ -28,11 +28,14 @@ export const start: CommandModule = {
         if (!file) {
             logger.error(`Config file could not be found at ${args.config}`);
             process.exit(1);
-            return;
         }
 
         const nodeOptions = parseNodeOptions(JSON.parse(file));
         const providers: Provider[] = [];
+
+        logger.transports.forEach((transport) => {
+            transport.level = nodeOptions.debug ? 'debug' : 'info';
+        });
 
         nodeOptions.providersConfig.forEach((providerConfig) => {
             if (providerConfig.id === NearProvider.id) {
@@ -42,7 +45,6 @@ export const start: CommandModule = {
                 if (errors.length) {
                     logger.error(errors.join('\n'));
                     process.exit(1);
-                    return;
                 }
 
                 providers.push(provider);
@@ -52,7 +54,6 @@ export const start: CommandModule = {
         if (!providers.length) {
             logger.error('No providers configured..');
             process.exit(1);
-            return;
         }
 
         const providerRegistry = new ProviderRegistry(nodeOptions, providers);
