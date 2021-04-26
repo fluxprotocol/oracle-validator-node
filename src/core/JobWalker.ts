@@ -24,6 +24,7 @@ export default class JobWalker {
                 return;
             }
 
+            // There was a finalized outcome but we haven't claimed it yet
             if (request.finalizedOutcome && !request.staking.length) {
                 return;
             }
@@ -39,18 +40,16 @@ export default class JobWalker {
     async addNewDataRequest(request: DataRequest) {
         try {
             await request.execute();
-            const stakeResult = await request.stake(
+
+            // It could be that the staking failed due it being finalized already or
+            // something else
+            // We let the job walker take care of it in the next tick
+            await request.stake(
                 this.providerRegistry,
                 this.nodeBalance,
             );
 
             await storeDataRequest(request);
-
-            if (!isStakeResultSuccesful(stakeResult)) {
-                if (stakeResult.error === StakeError.AlreadyBonded) {
-                    return;
-                }
-            }
 
             this.requests.set(request.internalId, request);
         } catch (error) {
