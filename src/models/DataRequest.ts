@@ -96,6 +96,10 @@ export default class DataRequest {
      * @memberof DataRequest
      */
     isDeletable(): boolean {
+        if (this.claimedAmount) {
+            return true;
+        }
+
         if (this.finalArbitratorTriggered) {
             return true;
         }

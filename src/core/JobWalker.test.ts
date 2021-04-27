@@ -138,13 +138,13 @@ describe('JobWalker', () => {
             );
 
             const walkRequestMock = jest.fn();
-            jobWalker.processingIds = [request2.internalId];
+            jobWalker.processingIds.add(request2.internalId);
             jobWalker.walkRequest = walkRequestMock;
             await jobWalker.walkAllRequests();
 
             expect(walkRequestMock).toHaveBeenCalledTimes(1);
             expect(walkRequestMock).toHaveBeenCalledWith(request);
-            expect(jobWalker.processingIds).toStrictEqual([request2.internalId]);
+            expect(jobWalker.processingIds).toStrictEqual(new Set([request2.internalId]));
         });
     });
 

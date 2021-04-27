@@ -12,7 +12,7 @@ export default class JobWalker {
     providerRegistry: ProviderRegistry;
     nodeBalance: NodeBalance;
     requests: Map<string, DataRequest>;
-    processingIds: string[] = [];
+    processingIds: Set<string> = new Set();
     walkerIntervalId?: any;
     currentWalkerPromise?: Promise<void[]>;
 
@@ -104,18 +104,15 @@ export default class JobWalker {
         const requests = Array.from(this.requests.values());
         const promises = requests.map(async (request) => {
             // Request is already being processed
-            if (this.processingIds.includes(request.internalId)) {
+            if (this.processingIds.has(request.internalId)) {
                 return;
             }
 
-            this.processingIds.push(request.internalId);
+            this.processingIds.add(request.internalId);
             logger.debug(`${request.internalId} - Start walk`);
             await this.walkRequest(request);
 
-            // Let the next loop know we are ready to be processed again
-            // We can't trust the forEach index, because it could be gone by the time we processed it
-            const index = this.processingIds.findIndex(id => id === request.internalId);
-            this.processingIds.splice(index, 1);
+            this.processingIds.delete(request.internalId);
         });
 
         this.currentWalkerPromise = Promise.all(promises);
@@ -125,7 +122,7 @@ export default class JobWalker {
     async stopWalker() {
         clearInterval(this.walkerIntervalId);
 
-        if (this.processingIds.length) {
+        if (this.processingIds.size) {
             await this.currentWalkerPromise;
         }
     }
