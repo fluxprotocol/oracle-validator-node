@@ -29,6 +29,7 @@ export default class NodeSyncer {
 
     async init() {
         const latestRequests = await getLatestDataRequests();
+
         latestRequests.forEach((request) => {
             this.latestDataRequests.set(request.provider, request);
         });
@@ -44,7 +45,7 @@ export default class NodeSyncer {
 
         // We should always have atleast 1 latest request
         if (!latestRequest) {
-            logger.debug(`${dataRequest.internalId} - no latest request found`);
+            logger.debug(`${dataRequest.internalId} - no latest request found, setting it to this one`);
             this.latestDataRequests.set(doc.provider, doc);
             await storeLatestDataRequest(doc);
             return;
@@ -63,6 +64,7 @@ export default class NodeSyncer {
     async syncNode(): Promise<void> {
         try {
             const storePromises: Promise<void>[] = [];
+            let lastDataRequest: DataRequest | undefined;
 
             const syncPromises = this.providerRegistry.providers.map(async (provider) => {
                 const latestRequest = this.latestDataRequests.get(provider.id);
@@ -71,12 +73,19 @@ export default class NodeSyncer {
                 logger.info(`🔄 Syncing for ${provider.id} starting from request id ${latestRequestId}`);
 
                 await provider.sync(latestRequestId, (request) => {
+                    lastDataRequest = request;
+
+                    if (!request.sources.length) {
+                        return;
+                    }
+
+                    if (request.isDeletable()) {
+                        return;
+                    }
+
                     // We push rather than wait due the async nature of getting data requests
                     // We could end up with a data request being slower to store than the last request coming in
                     storePromises.push(storeDataRequest(request));
-
-                    // We also want to update our latest request pointer
-                    storePromises.push(this.updateLatestDataRequest(request));
                 });
 
                 logger.info(`✅ Syncing completed for ${provider.id}`);
@@ -87,6 +96,10 @@ export default class NodeSyncer {
 
             // Then wait for all database stores to complete
             await Promise.all(storePromises);
+
+            if (lastDataRequest) {
+                await this.updateLatestDataRequest(lastDataRequest);
+            }
         } catch (error) {
             logger.error(`❌ Syncing node error ${error}`);
         }

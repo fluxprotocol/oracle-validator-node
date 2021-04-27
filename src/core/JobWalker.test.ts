@@ -10,14 +10,19 @@ import { OutcomeType } from "../models/DataRequestOutcome";
 
 describe('JobWalker', () => {
     let storeDataRequestSpy: jest.SpyInstance<Promise<void>>;
+    let deleteDataRequestSpy: jest.SpyInstance<Promise<void>>;
 
     beforeEach(() => {
         storeDataRequestSpy = jest.spyOn(DataRequestService, 'storeDataRequest');
         storeDataRequestSpy.mockResolvedValue();
+
+        deleteDataRequestSpy = jest.spyOn(DataRequestService, 'deleteDataRequest');
+        deleteDataRequestSpy.mockResolvedValue();
     });
 
     afterEach(() => {
         storeDataRequestSpy.mockRestore();
+        deleteDataRequestSpy.mockRestore();
     });
 
     describe('constructor', () => {
@@ -179,7 +184,8 @@ describe('JobWalker', () => {
             expect(mockClaim).toHaveBeenCalledTimes(1);
             expect(mockStakeOrChallenge).toHaveBeenCalledTimes(0);
             expect(jobWalker.requests.size).toBe(0);
-            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(0);
+            expect(deleteDataRequestSpy).toHaveBeenCalledTimes(1);
         });
 
         it('should re-stake if there is an execute result but no staking', async () => {

@@ -7,7 +7,7 @@ import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
 import { parseNodeOptions } from "./NodeOptions";
 import { createMockNodeBalance } from "../test/mocks/NodeBalance";
 import { ClaimResultType } from "./ClaimResult";
-import { transformToOutcome } from "./DataRequestOutcome";
+import { OutcomeType, transformToOutcome } from "./DataRequestOutcome";
 
 describe('DataRequest', () => {
     describe('resolutionWindows', () => {
@@ -67,6 +67,53 @@ describe('DataRequest', () => {
             }));
 
             expect(request.resolutionWindows.length).toBe(2);
+        });
+    });
+
+    describe('isDeletable', () => {
+        it('should return true when the final arbitrator has been triggered', () => {
+            const request = createMockRequest({
+                finalArbitratorTriggered: true,
+            });
+
+            expect(request.isDeletable()).toBe(true);
+        });
+
+        it('should return true when the request was already claimed and a finalized outcome is there', () => {
+            const request = createMockRequest({
+                finalizedOutcome: {
+                    type: OutcomeType.Invalid,
+                },
+                claimedAmount: '1',
+            });
+
+            expect(request.isDeletable()).toBe(true);
+        });
+
+        it('should return false when it has not been claimed yet', () => {
+            const request = createMockRequest({
+                finalizedOutcome: {
+                    type: OutcomeType.Invalid,
+                },
+                resolutionWindows: [{
+                    bondSize: '1',
+                    endTime: new Date(),
+                    round: 1,
+                }],
+                staking: [{
+                    amountStaked: '1',
+                    roundId: 0,
+                    type: StakeResultType.Success,
+                }],
+            });
+
+            expect(request.isDeletable()).toBe(false);
+        });
+
+        it('should return false when there is no finalized outcome and the final arbitrator has not been triggered', () => {
+            const request = createMockRequest({});
+
+            expect(request.isDeletable()).toBe(false);
         });
     });
 

@@ -1,10 +1,19 @@
 import DataRequest, { DataRequestProps, DATA_REQUEST_TYPE } from "../models/DataRequest";
 import { Outcome, OutcomeType } from "../models/DataRequestOutcome";
 import { isJobSuccesful } from "../models/JobExecuteResult";
-import { createOrUpdateDocument, findDocuments } from "./DatabaseService";
+import { createOrUpdateDocument, deleteDocument, findDocuments } from "./DatabaseService";
 import logger from "./LoggerService";
 
 export const DATA_REQUEST_DB_PREFIX = 'data_request_';
+
+export async function deleteDataRequest(dataRequest: DataRequest): Promise<void> {
+    try {
+        logger.debug(`${dataRequest.internalId} - Deleting from database`);
+        await deleteDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.internalId}`);
+    } catch (error) {
+        logger.error(`[deleteDataRequest] ${error}`);
+    }
+}
 
 export async function storeDataRequest(dataRequest: DataRequest): Promise<void> {
     try {

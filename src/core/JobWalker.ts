@@ -2,9 +2,8 @@ import Big from "big.js";
 import { JOB_WALKER_INTERVAL } from "../config";
 import DataRequest from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
-import { isStakeResultSuccesful, StakeError } from "../models/StakingResult";
 import ProviderRegistry from "../providers/ProviderRegistry";
-import { storeDataRequest } from "../services/DataRequestService";
+import { deleteDataRequest, storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
 import NodeBalance from "./NodeBalance";
 
@@ -20,12 +19,7 @@ export default class JobWalker {
     constructor(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry, nodeBalance: NodeBalance, initialRequests: DataRequest[] = []) {
         this.requests = new Map();
         initialRequests.forEach((request) => {
-            if (request.claimedAmount) {
-                return;
-            }
-
-            // There was a finalized outcome but we haven't claimed it yet
-            if (request.finalizedOutcome && !request.staking.length) {
+            if (request.isDeletable()) {
                 return;
             }
 
@@ -75,17 +69,17 @@ export default class JobWalker {
                 logger.debug(`${request.internalId} - Pruning from pool due completed claim`);
                 this.requests.delete(request.internalId);
                 this.nodeBalance.deposit(request.providerId, new Big(request.claimedAmount ?? 0));
-                await storeDataRequest(request);
+                await deleteDataRequest(request);
                 return;
             }
         }
 
         // Either we did not stake (or already claimed), but the request got finalized or the final arbitrator got triggered
         // Either way it's safe to remove this from our watch pool and let the user manually claim the earnings
-        if (request.finalArbitratorTriggered || (request.finalizedOutcome && !request.isClaimable())) {
+        if (request.isDeletable()) {
             this.requests.delete(request.internalId);
             logger.debug(`${request.internalId} - Pruning from pool fat: ${request.finalArbitratorTriggered}, fo: ${JSON.stringify(request.finalizedOutcome)}, ic: ${request.isClaimable()}`);
-            await storeDataRequest(request);
+            await deleteDataRequest(request);
             return;
         }
 

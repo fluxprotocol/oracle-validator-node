@@ -87,6 +87,26 @@ export default class DataRequest {
         logger.debug(`${this.internalId} - Updating status fo: ${JSON.stringify(this.finalizedOutcome)}, rw: ${this.resolutionWindows.length}, fat: ${this.finalArbitratorTriggered}`);
     }
 
+    /**
+     * Checks whether this request can be safely removen from the database
+     * Either we did not stake (or already claimed), but the request got finalized or the final arbitrator got triggered
+     * Either way it's safe to remove this from our watch pool and let the user manually claim the earnings
+     *
+     * @return {boolean}
+     * @memberof DataRequest
+     */
+    isDeletable(): boolean {
+        if (this.finalArbitratorTriggered) {
+            return true;
+        }
+
+        if (this.finalizedOutcome && !this.isClaimable()) {
+            return true;
+        }
+
+        return false;
+    }
+
     isClaimable(): boolean {
         if (!this.currentWindow) {
             return false;

@@ -33,6 +33,15 @@ export async function createDocument(id: string, obj: object) {
     await database.put(doc);
 }
 
+export async function deleteDocument(id: string) {
+    try {
+        const doc = await findDocumentById(id);
+        await database.remove(doc as PouchDB.Core.RemoveDocument);
+    } catch(error) {
+        return;
+    }
+}
+
 export async function findDocumentById<T>(id: string): Promise<T | null> {
     try {
         const doc = await database.get<T>(id);

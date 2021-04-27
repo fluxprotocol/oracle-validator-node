@@ -7,7 +7,7 @@ import { Outcome, OutcomeType } from "../../models/DataRequestOutcome";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
 import { Provider, StakeResponse } from "../Provider";
-import { getAllDataRequestsFromNear, getDataRequestByIdFromNear, getDataRequestsAsCursorFromNear } from "./NearExplorerService";
+import { getDataRequestByIdFromNear, getDataRequestsAsCursorFromNear } from "./NearExplorerService";
 import NearProviderOptions from "./NearProviderOptions";
 import { connectToNear, extractLogs, getAccount } from "./NearService";
 import { JOB_SEARCH_INTERVAL } from '../../config';
@@ -97,14 +97,9 @@ export default class NearProvider implements Provider {
 
     listenForRequests(onRequests: (requests: DataRequest[]) => void) {
         setInterval(async () => {
-            const requests = await this.getDataRequests();
+            const requests = await this.getNextRequests();
             onRequests(requests);
         }, JOB_SEARCH_INTERVAL);
-    }
-
-    async getDataRequests(): Promise<DataRequest[]> {
-        if (!this.nearOptions) return [];
-        return getAllDataRequestsFromNear(this.nearOptions.explorerApi, this.nearOptions);
     }
 
     async claim(requestId: string): Promise<ClaimResult> {
@@ -192,7 +187,7 @@ export default class NearProvider implements Provider {
 
         const currentRequestId = this.currentRequestId ?? '0';
         const nextRequests = await getDataRequestsAsCursorFromNear(this.nearOptions, {
-            limit: 2,
+            limit: 100,
             startingRequestId: currentRequestId,
         });
 
