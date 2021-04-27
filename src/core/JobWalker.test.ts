@@ -268,5 +268,39 @@ describe('JobWalker', () => {
             expect(jobWalker.requests.size).toBe(1);
             expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
         });
+
+        it('should delete the request when it\'s deletable', async () => {
+            const request = createMockRequest({});
+            const mockExecute = jest.fn();
+            const mockClaim = jest.fn().mockResolvedValue(false);
+            const mockStake = jest.fn();
+            const mockUpdate = jest.fn();
+
+            request.execute = mockExecute;
+            request.update = mockUpdate;
+            request.claim = mockClaim;
+            request.stake = mockStake;
+
+            const providerRegistry = createMockProviderRegistry([]);
+            const jobWalker = new JobWalker(
+                parseNodeOptions({}),
+                providerRegistry,
+                createMockNodeBalance(),
+                [request]
+            );
+
+            request.isDeletable = jest.fn(() => true);
+            expect(jobWalker.requests.size).toBe(1);
+
+            providerRegistry.getDataRequestById.mockResolvedValue(createMockRequest());
+            await jobWalker.walkRequest(request);
+
+            expect(mockUpdate).toHaveBeenCalledTimes(1);
+            expect(mockExecute).toHaveBeenCalledTimes(0);
+            expect(mockClaim).toHaveBeenCalledTimes(0);
+            expect(mockStake).toHaveBeenCalledTimes(0);
+            expect(jobWalker.requests.size).toBe(0);
+            expect(deleteDataRequestSpy).toHaveBeenCalledTimes(1);
+        });
     });
 });
