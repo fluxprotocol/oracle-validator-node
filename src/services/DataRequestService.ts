@@ -1,7 +1,7 @@
 import DataRequest, { DataRequestProps, DATA_REQUEST_TYPE } from "../models/DataRequest";
 import { Outcome, OutcomeType } from "../models/DataRequestOutcome";
 import { isJobSuccesful } from "../models/JobExecuteResult";
-import { createOrUpdateDocument, deleteDocument, findDocuments } from "./DatabaseService";
+import { createDocument, createOrUpdateDocument, deleteDocument, findDocuments } from "./DatabaseService";
 import logger from "./LoggerService";
 
 export const DATA_REQUEST_DB_PREFIX = 'data_request_';
@@ -19,6 +19,7 @@ export async function storeDataRequest(dataRequest: DataRequest): Promise<void> 
     try {
         const convertedDataRequest = JSON.parse(dataRequest.toString());
         logger.debug(`${dataRequest.internalId} - Storing in database`);
+
         await createOrUpdateDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.internalId}`, convertedDataRequest);
     } catch (error) {
         logger.error(`[storeDataRequest] ${error}`);

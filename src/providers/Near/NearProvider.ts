@@ -154,7 +154,7 @@ export default class NearProvider implements Provider {
         // Formatting is weird in rust..
         const stakeOutcome = outcome.type === OutcomeType.Invalid ? 'Invalid' : { 'Answer': outcome.answer };
 
-        const response = await account.functionCall(this.nearOptions.oracleContractId, 'transfer_call_stake', {
+        const response = await account.functionCall(this.nearOptions.tokenContractId, 'ft_transfer_call', {
             receiver_id: this.nearOptions.oracleContractId,
             amount: stakeAmount,
             msg: JSON.stringify({
@@ -164,7 +164,7 @@ export default class NearProvider implements Provider {
                 }
             }),
             // @ts-ignore
-        }, this.nearOptions.maxGas);
+        }, this.nearOptions.maxGas, '1');
 
         const logs = extractLogs(response);
         const userStake = logs.find(log => log.type === 'user_stakes');

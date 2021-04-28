@@ -7,7 +7,7 @@ async function checkCurrentStorage(nearOptions: NearProviderOptions, account: Ac
         account_id: account.accountId,
     });
 
-    logger.debug(`near: Current storage status: ${storage}`);
+    logger.debug(`near: Current storage status: ${JSON.stringify(storage)}`);
 }
 
 export async function startStorageDepositChecker(nearOptions: NearProviderOptions, account: Account) {

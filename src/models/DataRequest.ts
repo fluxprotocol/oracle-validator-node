@@ -201,7 +201,9 @@ export default class DataRequest {
         if (isStakeResultSuccesful(stakeResult)) {
             this.staking.push(stakeResult);
         } else {
-            logger.debug(`${this.internalId} - Unsuccesful staking for: ${this.toString()}`);
+            if (stakeResult.error !== StakeError.AlreadyBonded) {
+                logger.debug(`${this.internalId} - Unsuccesful staking for: ${this.toString()}`);
+            }
         }
 
         return stakeResult;

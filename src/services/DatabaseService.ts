@@ -1,6 +1,9 @@
 import PouchDB from 'pouchdb';
 import path from 'path';
 import PouchDbFind from 'pouchdb-find';
+// @ts-ignore
+import PouchDbDebug from 'pouchdb-debug';
+
 import logger from './LoggerService';
 
 let database: PouchDB.Database;
@@ -10,10 +13,12 @@ export async function startDatabase(dbPath: string, dbName: string): Promise<Pou
 
     const fullDbPath = path.resolve(dbPath) + path.sep;
 
+
     PouchDB.defaults({
         prefix: fullDbPath,
     });
 
+    PouchDB.plugin(PouchDbDebug);
     PouchDB.plugin(PouchDbFind);
 
     database = new PouchDB(dbName, {
@@ -28,6 +33,7 @@ export async function startDatabase(dbPath: string, dbName: string): Promise<Pou
 export async function createDocument(id: string, obj: object) {
     let doc = {
         _id: id,
+        ...obj,
     };
 
     await database.put(doc);

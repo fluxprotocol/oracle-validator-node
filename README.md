@@ -46,6 +46,7 @@ If everything went correctly you should see something like the following:
 2021-04-28 10:30:37 info: 🛠  Listening to all contracts
 2021-04-28 10:30:37 info: 🔄 Syncing for near starting from request id 0
 2021-04-28 10:30:59 info: ✅ Syncing completed for near
+2021-04-28 10:30:37 info: 💸 Balance: 1440800.53 FLX, Staking: 0.00 FLX, Profit: 0.00 FLX, Jobs actively watching: 0
 ```
 
 It can take some time for syncing to complete. Once it's finished it will start looking for jobs and execute them.
