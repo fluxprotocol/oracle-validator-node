@@ -1,7 +1,7 @@
 import DataRequest, { DataRequestProps, DATA_REQUEST_TYPE } from "../models/DataRequest";
 import { Outcome, OutcomeType } from "../models/DataRequestOutcome";
 import { isJobSuccesful } from "../models/JobExecuteResult";
-import { createDocument, createOrUpdateDocument, deleteDocument, findDocuments } from "./DatabaseService";
+import Database from "./DatabaseService";
 import logger from "./LoggerService";
 
 export const DATA_REQUEST_DB_PREFIX = 'data_request_';
@@ -9,7 +9,7 @@ export const DATA_REQUEST_DB_PREFIX = 'data_request_';
 export async function deleteDataRequest(dataRequest: DataRequest): Promise<void> {
     try {
         logger.debug(`${dataRequest.internalId} - Deleting from database`);
-        await deleteDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.internalId}`);
+        await Database.deleteDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.internalId}`);
     } catch (error) {
         logger.error(`[deleteDataRequest] ${error}`);
     }
@@ -20,7 +20,7 @@ export async function storeDataRequest(dataRequest: DataRequest): Promise<void> 
         const convertedDataRequest = JSON.parse(dataRequest.toString());
         logger.debug(`${dataRequest.internalId} - Storing in database`);
 
-        await createOrUpdateDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.internalId}`, convertedDataRequest);
+        await Database.createOrUpdateDocument(`${DATA_REQUEST_DB_PREFIX}${dataRequest.internalId}`, convertedDataRequest);
     } catch (error) {
         logger.error(`[storeDataRequest] ${error}`);
     }
@@ -28,7 +28,7 @@ export async function storeDataRequest(dataRequest: DataRequest): Promise<void> 
 
 export async function getAllDataRequests(query: PouchDB.Find.Selector = {}): Promise<DataRequest[]> {
     try {
-        const requests = await findDocuments<DataRequestProps>({
+        const requests = await Database.findDocuments<DataRequestProps>({
             selector: {
                 ...query,
                 type: DATA_REQUEST_TYPE,

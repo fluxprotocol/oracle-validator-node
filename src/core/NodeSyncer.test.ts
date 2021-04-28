@@ -1,6 +1,6 @@
 import { createMockRequest } from '../models/DataRequest';
 import { LatestRequest } from '../models/LatestRequest';
-import * as DatabaseService from '../services/DatabaseService';
+import Database from '../services/DatabaseService';
 import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
 import NodeSyncer from "./NodeSyncer";
 
@@ -8,7 +8,7 @@ describe('NodeSyncer', () => {
     let createOrUpdateDocumentSpy: jest.SpyInstance<Promise<void>>
 
     beforeEach(() => {
-        createOrUpdateDocumentSpy = jest.spyOn(DatabaseService, 'createOrUpdateDocument');
+        createOrUpdateDocumentSpy = jest.spyOn(Database, 'createOrUpdateDocument');
         createOrUpdateDocumentSpy.mockResolvedValue();
     });
 

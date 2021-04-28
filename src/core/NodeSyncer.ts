@@ -1,12 +1,12 @@
 import DataRequest from "../models/DataRequest";
 import { LatestRequest, LATEST_REQUEST_TYPE } from "../models/LatestRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
-import { createOrUpdateDocument, findDocuments } from "../services/DatabaseService";
+import Database from "../services/DatabaseService";
 import { storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
 
 export async function getLatestDataRequests(): Promise<LatestRequest[]> {
-    const latestRequests = await findDocuments<LatestRequest>({
+    const latestRequests = await Database.findDocuments<LatestRequest>({
         selector: {
             type: LATEST_REQUEST_TYPE,
         }
@@ -16,7 +16,7 @@ export async function getLatestDataRequests(): Promise<LatestRequest[]> {
 }
 
 export async function storeLatestDataRequest(latestRequest: LatestRequest) {
-    await createOrUpdateDocument(`${latestRequest.provider}_latest_request`, latestRequest);
+    await Database.createOrUpdateDocument(`${latestRequest.provider}_latest_request`, latestRequest);
 }
 
 export default class NodeSyncer {

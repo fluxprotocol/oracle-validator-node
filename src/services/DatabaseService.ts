@@ -3,98 +3,91 @@ import path from 'path';
 import PouchDbFind from 'pouchdb-find';
 // @ts-ignore
 import PouchDbDebug from 'pouchdb-debug';
-
 import logger from './LoggerService';
 
-let database: PouchDB.Database;
+class Database {
+    database?: PouchDB.Database;
 
-export async function startDatabase(dbPath: string, dbName: string): Promise<PouchDB.Database> {
-    if (database) return database;
+    async startDatabase(dbPath: string, dbName: string) {
+        if (this.database) return this.database;
 
-    const fullDbPath = path.resolve(dbPath) + path.sep;
+        const fullDbPath = path.resolve(dbPath) + path.sep;
 
+        PouchDB.defaults({
+            prefix: fullDbPath,
+        });
 
-    PouchDB.defaults({
-        prefix: fullDbPath,
-    });
+        PouchDB.plugin(PouchDbDebug);
+        PouchDB.plugin(PouchDbFind);
 
-    PouchDB.plugin(PouchDbDebug);
-    PouchDB.plugin(PouchDbFind);
+        this.database = new PouchDB(dbName, {
+            revs_limit: 1,
+            prefix: fullDbPath,
+        });
 
-    database = new PouchDB(dbName, {
-        revs_limit: 1,
-        prefix: fullDbPath,
-    });
-
-    // TODO: Create indexes
-    return database;
-}
-
-export async function createDocument(id: string, obj: object) {
-    let doc = {
-        _id: id,
-        ...obj,
-    };
-
-    await database.put(doc);
-}
-
-export async function deleteDocument(id: string) {
-    try {
-        const doc = await findDocumentById(id);
-        await database.remove(doc as PouchDB.Core.RemoveDocument);
-    } catch(error) {
-        return;
+        // TODO: Create indexes
+        return this.database;
     }
-}
 
-export async function findDocumentById<T>(id: string): Promise<T | null> {
-    try {
-        const doc = await database.get<T>(id);
-        return doc;
-    } catch (error) {
-        return null;
-    }
-}
-
-export async function findDocuments<T>(query: PouchDB.Find.FindRequest<T>): Promise<T[]> {
-    try {
-        const data = await database.find(query);
-        return data.docs as unknown as T[];
-    } catch (error) {
-        logger.error(`[findDocuments] ${error}`);
-        return [];
-    }
-}
-
-export async function createOrUpdateDocument(id: string, obj: object): Promise<void> {
-    try {
-        const existingDoc = await findDocumentById<object>(id);
-
-        if (!existingDoc) {
-            await createDocument(id, obj);
-            return;
-        }
-
-        const updatedDoc = {
-            ...existingDoc,
+    async createDocument(id: string, obj: object) {
+        let doc = {
+            _id: id,
             ...obj,
         };
 
-        await database.put(updatedDoc, {
-            force: true,
-        });
-    } catch (error) {
-        logger.error(`[createOrUpdateDocument] ${error} -> ${id} - ${JSON.stringify(obj)}`);
+        await this.database?.put(doc);
+    }
+
+    async deleteDocument(id: string) {
+        try {
+            const doc = await this.findDocumentById(id);
+            await this.database?.remove(doc as PouchDB.Core.RemoveDocument);
+        } catch (error) {
+            return;
+        }
+    }
+
+    async findDocumentById<T>(id: string): Promise<T | null> {
+        try {
+            const doc = await this.database?.get<T>(id);
+            return doc ?? null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    async findDocuments<T>(query: PouchDB.Find.FindRequest<T>): Promise<T[]> {
+        try {
+            const data = await this.database?.find(query);
+            return data?.docs as unknown as T[] ?? [];
+        } catch (error) {
+            logger.error(`[findDocuments] ${error}`);
+            return [];
+        }
+    }
+
+    async createOrUpdateDocument(id: string, obj: object): Promise<void> {
+        try {
+            const existingDoc = await this.findDocumentById<object>(id);
+
+            if (!existingDoc) {
+                await this.createDocument(id, obj);
+                return;
+            }
+
+            const updatedDoc = {
+                ...existingDoc,
+                ...obj,
+            };
+
+            await this.database?.put(updatedDoc, {
+                force: true,
+            });
+        } catch (error) {
+            logger.error(`[createOrUpdateDocument] ${error} -> ${id} - ${JSON.stringify(obj)}`);
+        }
     }
 }
 
-export function listenToDatabase(onEntry: (doc: any) => void) {
-    database.changes({
-        since: 'now',
-        live: true,
-        include_docs: true,
-    }).on('change', (event) => {
-        onEntry(event.doc!);
-    });
-}
+const database = new Database();
+export default database;

@@ -5,7 +5,7 @@ import { parseNodeOptions } from '../models/NodeOptions';
 import NearProvider from '../providers/Near/NearProvider';
 import { Provider } from '../providers/Provider';
 import ProviderRegistry from '../providers/ProviderRegistry';
-import { startDatabase } from '../services/DatabaseService';
+import Database from '../services/DatabaseService';
 import logger from '../services/LoggerService';
 
 export const start: CommandModule = {
@@ -32,7 +32,7 @@ export const start: CommandModule = {
         const nodeOptions = parseNodeOptions(JSON.parse(file));
         const providers: Provider[] = [];
 
-        await startDatabase(nodeOptions.dbPath, nodeOptions.dbName);
+        await Database.startDatabase(nodeOptions.dbPath, nodeOptions.dbName);
 
         logger.transports.forEach((transport) => {
             transport.level = nodeOptions.debug ? 'debug' : 'info';
