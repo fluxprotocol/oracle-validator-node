@@ -1,4 +1,5 @@
 import { Account } from "near-api-js";
+import logger from "../../services/LoggerService";
 import NearProviderOptions from "./NearProviderOptions";
 
 async function checkCurrentStorage(nearOptions: NearProviderOptions, account: Account) {
@@ -6,7 +7,7 @@ async function checkCurrentStorage(nearOptions: NearProviderOptions, account: Ac
         account_id: account.accountId,
     });
 
-    console.log('[] storage -> ', storage);
+    logger.debug(`near: Current storage status: ${storage}`);
 }
 
 export async function startStorageDepositChecker(nearOptions: NearProviderOptions, account: Account) {

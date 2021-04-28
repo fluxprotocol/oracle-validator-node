@@ -181,6 +181,24 @@ describe('DataRequest', () => {
 
             expect(request.isClaimable()).toBe(true);
         });
+
+        it('should not be claimable as a default', () => {
+            const request = createMockRequest({
+                staking: [{
+                    amountStaked: '1',
+                    roundId: 0,
+                    type: StakeResultType.Success,
+                }],
+                resolutionWindows: [{
+                    bondSize: '2',
+                    endTime: new Date(new Date().getTime() + 100000),
+                    round: 0,
+                    bondedOutcome: transformToOutcome('Invalid'),
+                }],
+            });
+
+            expect(request.isClaimable()).toBe(false);
+        });
     });
 
     describe('execute', () => {
@@ -249,14 +267,14 @@ describe('DataRequest', () => {
     });
 
     describe('stake', () => {
-        let stakeOrChallengeSpy: jest.SpyInstance<Promise<StakeResult>>;
+        let stakeOnDataRequestSpy: jest.SpyInstance<Promise<StakeResult>>;
 
         beforeEach(() => {
-            stakeOrChallengeSpy = jest.spyOn(Oracle, 'stakeOnDataRequest');
+            stakeOnDataRequestSpy = jest.spyOn(Oracle, 'stakeOnDataRequest');
         });
 
         afterEach(() => {
-            stakeOrChallengeSpy.mockRestore();
+            stakeOnDataRequestSpy.mockRestore();
         });
 
         it('should not stake again when there is already staken on the round', async () => {
@@ -281,6 +299,29 @@ describe('DataRequest', () => {
             );
 
             expect(request.staking.length).toBe(1);
+            expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(0);
+        });
+
+        it('should not stake again when the request has been finalized', async () => {
+            const request = createMockRequest({
+                finalizedOutcome: transformToOutcome('Invalid'),
+                resolutionWindows: [{
+                    round: 0,
+                    endTime: new Date(),
+                    bondSize: '2',
+                }],
+                staking: [],
+            });
+
+            expect(request.staking.length).toBe(0);
+
+            await request.stake(
+                createMockProviderRegistry([]),
+                createMockNodeBalance(),
+            );
+
+            expect(request.staking.length).toBe(0);
+            expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(0);
         });
 
         it('should not add the staking when the stake result is not succesful', async () => {
@@ -292,7 +333,7 @@ describe('DataRequest', () => {
                 }],
             });
 
-            stakeOrChallengeSpy.mockReturnValue(new Promise((resolve) => {
+            stakeOnDataRequestSpy.mockReturnValue(new Promise((resolve) => {
                 resolve({
                     type: StakeResultType.Error,
                     error: StakeError.Unknown,
@@ -307,6 +348,7 @@ describe('DataRequest', () => {
             );
 
             expect(request.staking.length).toBe(0);
+            expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(1);
         });
 
         it('should add to the staking when the stake result is succesful', async () => {
@@ -318,7 +360,7 @@ describe('DataRequest', () => {
                 }],
             });
 
-            stakeOrChallengeSpy.mockReturnValue(new Promise((resolve) => {
+            stakeOnDataRequestSpy.mockReturnValue(new Promise((resolve) => {
                 resolve({
                     amountStaked: '1',
                     roundId: 0,
@@ -334,6 +376,38 @@ describe('DataRequest', () => {
             );
 
             expect(request.staking.length).toBe(1);
+            expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('toString', () => {
+        it('should convert the class to a string', () => {
+            const request = createMockRequest({
+                resolutionWindows: [{
+                    bondSize: '1',
+                    endTime: new Date(1),
+                    round: 0,
+                }],
+            });
+            const str = request.toString();
+
+            expect(JSON.parse(str)).toStrictEqual({
+                contractId: 'test.near',
+                executeResults: [],
+                finalArbitratorTriggered: false,
+                id: '1',
+                internalId: '1_near_test.near',
+                outcomes: [],
+                providerId: 'near',
+                resolutionWindows: [{
+                    bondSize: '1',
+                    endTime: '1970-01-01T00:00:00.001Z',
+                    round: 0,
+                }],
+                sources: [],
+                staking: [],
+                type: 'DataRequest',
+            });
         });
     });
 });

@@ -1,7 +1,7 @@
 {
-    "debug": true,
+    "debug": false,
     "dbPath": "./",
-    "dbName": "flux_db_testnet",
+    "dbName": "flux_db",
     "stakePerRequest": "2500000000000000000",
     "contractIds": [],
     "providers": [
@@ -9,11 +9,13 @@
             "id": "near",
             "options": {
                 "credentialsStorePath": "/Users/myAccount/.near-credentials/",
-                "accountId": "myaccount.testnet",
-                "oracleContractId": "notavailableyet.near",
+                "explorerApi": "https://testnet-oracle.flux.xyz/graphql",
+                "accountId": "myAccount.testnet",
+                "oracleContractId": "temp-oracle.flux-dev",
                 "tokenContractId": "wnear.flux-dev",
                 "net": "testnet",
-                "maxGas": "200000000000000"
+                "maxGas": "200000000000000",
+                "storageBase": "30000000000000000000000"
             }
         }
     ]
