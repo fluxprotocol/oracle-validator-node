@@ -11,26 +11,35 @@ class Database {
     async startDatabase(dbPath: string, dbName: string) {
         if (this.database) return this.database;
 
+        const fullDbPath = path.resolve(dbPath) + path.sep;
+
+        PouchDB.defaults({
+            prefix: fullDbPath,
+        });
+
+        PouchDB.plugin(PouchDbDebug);
+        PouchDB.plugin(PouchDbFind);
+
+        this.database = new PouchDB(dbName, {
+            revs_limit: 1,
+            prefix: fullDbPath,
+        });
+
+        // TODO: Create indexes
+        return this.database;
+
+    }
+
+    /**
+     * Checks if the database was correctly created
+     * If it was not created we exit the node
+     *
+     * @memberof Database
+     */
+    async checkDatabase() {
         try {
-            const fullDbPath = path.resolve(dbPath) + path.sep;
-
-            PouchDB.defaults({
-                prefix: fullDbPath,
-            });
-
-            PouchDB.plugin(PouchDbDebug);
-            PouchDB.plugin(PouchDbFind);
-
-            this.database = new PouchDB(dbName, {
-                revs_limit: 1,
-                prefix: fullDbPath,
-            });
-
-            await this.database.info();
-
-            // TODO: Create indexes
-            return this.database;
-        } catch(error) {
+            await this.database?.info();
+        } catch (error) {
             logger.error(`Database could not be created: ${error}`);
             process.exit(1);
         }

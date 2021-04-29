@@ -33,6 +33,7 @@ export const start: CommandModule = {
         const providers: Provider[] = [];
 
         await Database.startDatabase(nodeOptions.dbPath, nodeOptions.dbName);
+        await Database.checkDatabase();
 
         logger.transports.forEach((transport) => {
             transport.level = nodeOptions.debug ? 'debug' : 'info';
