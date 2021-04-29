@@ -19,6 +19,7 @@ npm install
 After this you need to login with your near credentials using:
 
 ```Bash
+npm install -g near-cli
 near login
 ```
 
