@@ -8,6 +8,7 @@ import ProviderRegistry from "../providers/ProviderRegistry";
 import { getAllDataRequests } from "../services/DataRequestService";
 import JobWalker from "./JobWalker";
 import NodeSyncer from './NodeSyncer';
+import { startHttpServer } from './http/NodeHttp';
 
 
 export async function startNode(providerRegistry: ProviderRegistry, options: NodeOptions) {
@@ -23,6 +24,8 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
     const jobSearcher = new JobSearcher(providerRegistry, options, dataRequests);
     const nodeBalance = new NodeBalance(options, providerRegistry);
     const jobWalker = new JobWalker(options, providerRegistry, nodeBalance, dataRequests);
+
+    startHttpServer(options, jobWalker);
 
     // Used to keep track of how much the node can spend
     await nodeBalance.refreshBalances(true);

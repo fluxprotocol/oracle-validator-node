@@ -1,4 +1,3 @@
-import Big from 'big.js';
 import winston, { format } from 'winston';
 import packageJson from '../../package.json';
 
@@ -7,8 +6,8 @@ import JobWalker from '../core/JobWalker';
 import NodeBalance from '../core/NodeBalance';
 import { NodeOptions } from '../models/NodeOptions';
 import ProviderRegistry from '../providers/ProviderRegistry';
-import { sumBig } from '../utils/bigUtils';
 import { formatToken } from '../utils/tokenUtils';
+import { calculateBalanceStatus } from './NodeBalanceService';
 
 const logFormat = format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`);
 
@@ -31,16 +30,11 @@ const logger = winston.createLogger({
 export default logger;
 
 export async function logBalances(nodeBalance: NodeBalance, walker: JobWalker) {
-    const sumBalances = sumBig(Array.from(nodeBalance.balances.values()));
+    const result = calculateBalanceStatus(nodeBalance, walker);
 
-    const requests = Array.from(walker.requests.values());
-    const stakingRequests = requests.flatMap(r => r.staking);
-    const amountStaked = stakingRequests.reduce((prev, curr) => prev.add(curr.amountStaked), new Big(0));
-
-    const profit = sumBalances.add(amountStaked).sub(nodeBalance.startingBalance);
-    const profitFormatted = formatToken(profit.toString(), TOKEN_DENOM);
-    const balanceFormatted = formatToken(sumBalances.toString(), TOKEN_DENOM);
-    const totalStakedFormatted = formatToken(amountStaked.toString(), TOKEN_DENOM);
+    const profitFormatted = formatToken(result.profit.toString(), TOKEN_DENOM);
+    const balanceFormatted = formatToken(result.balance.toString(), TOKEN_DENOM);
+    const totalStakedFormatted = formatToken(result.amountStaked.toString(), TOKEN_DENOM);
 
     logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs actively watching: ${walker.requests.size}`);
 }

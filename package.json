@@ -12,6 +12,7 @@
     "devDependencies": {
         "@types/big.js": "^6.0.2",
         "@types/death": "^1.1.1",
+        "@types/express": "^4.17.11",
         "@types/jest": "^26.0.19",
         "@types/lodash.at": "^4.6.6",
         "@types/node": "^14.14.14",
@@ -36,6 +37,7 @@
     "dependencies": {
         "big.js": "^6.0.3",
         "death": "^1.1.0",
+        "express": "^4.17.1",
         "lodash.at": "^4.6.0",
         "near-api-js": "^0.38.0",
         "node-fetch": "^2.6.1",

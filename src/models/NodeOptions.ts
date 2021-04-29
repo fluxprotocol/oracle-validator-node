@@ -12,6 +12,10 @@ export interface RawNodeConfig {
         id: string;
         options?: object;
     }[];
+
+    http?: {
+        port?: number;
+    }
 }
 
 export interface NodeOptions {
@@ -30,6 +34,10 @@ export interface NodeOptions {
         id: string;
         options?: any;
     }[];
+
+    http: {
+        port: number;
+    }
 }
 
 export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
@@ -40,6 +48,9 @@ export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
         contractIds: [],
         stakePerRequest: new Big(toToken('2.5', TOKEN_DENOM)),
         providersConfig: [],
+        http: {
+            port: 3000,
+        },
     };
 
     if (options.contractIds && Array.isArray(options.contractIds)) {
@@ -64,6 +75,12 @@ export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
 
     if (typeof options.dbName === 'string') {
         result.dbName = options.dbName;
+    }
+
+    if (typeof options.http === 'object') {
+        if (typeof options.http.port === 'number') {
+            result.http.port = options.http.port;
+        }
     }
 
     return result;
