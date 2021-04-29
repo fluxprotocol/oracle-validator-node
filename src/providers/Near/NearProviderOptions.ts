@@ -1,5 +1,6 @@
 export default interface NearProviderOptions {
-    credentialsStorePath: string;
+    privateKey?: string;
+    credentialsStorePath?: string;
     net: string;
     accountId: string;
     oracleContractId: string;

@@ -11,22 +11,29 @@ class Database {
     async startDatabase(dbPath: string, dbName: string) {
         if (this.database) return this.database;
 
-        const fullDbPath = path.resolve(dbPath) + path.sep;
+        try {
+            const fullDbPath = path.resolve(dbPath) + path.sep;
 
-        PouchDB.defaults({
-            prefix: fullDbPath,
-        });
+            PouchDB.defaults({
+                prefix: fullDbPath,
+            });
 
-        PouchDB.plugin(PouchDbDebug);
-        PouchDB.plugin(PouchDbFind);
+            PouchDB.plugin(PouchDbDebug);
+            PouchDB.plugin(PouchDbFind);
 
-        this.database = new PouchDB(dbName, {
-            revs_limit: 1,
-            prefix: fullDbPath,
-        });
+            this.database = new PouchDB(dbName, {
+                revs_limit: 1,
+                prefix: fullDbPath,
+            });
 
-        // TODO: Create indexes
-        return this.database;
+            await this.database.info();
+
+            // TODO: Create indexes
+            return this.database;
+        } catch(error) {
+            logger.error(`Database could not be created: ${error}`);
+            process.exit(1);
+        }
     }
 
     async createDocument(id: string, obj: object) {

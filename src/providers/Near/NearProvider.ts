@@ -1,5 +1,4 @@
 import Big from "big.js";
-import path from 'path';
 import { Account, Near } from "near-api-js";
 import { ClaimError, ClaimResult, ClaimResultType } from "../../models/ClaimResult";
 import DataRequest, { createMockRequest } from "../../models/DataRequest";
@@ -27,8 +26,8 @@ export default class NearProvider implements Provider {
     validateOptions(options: NodeOptions, providerOptions: Partial<NearProviderOptions>) {
         const errors: string[] = [];
 
-        if (!providerOptions.credentialsStorePath) {
-            errors.push(`config option "credentialsStorePath" is required for ${this.id}`);
+        if (!providerOptions.credentialsStorePath && !providerOptions.privateKey) {
+            errors.push(`config option "credentialsStorePath" or "privateKey" is required for ${this.id}`);
         }
 
         if (!providerOptions.net) {
@@ -36,7 +35,7 @@ export default class NearProvider implements Provider {
         }
 
         if (!providerOptions.accountId) {
-            errors.push(`config option "accountId" is required for ${this.id}`);
+            errors.push(`config option "accountId" is required for ${this.id}"`);
         }
 
         if (!providerOptions.oracleContractId) {
@@ -66,11 +65,9 @@ export default class NearProvider implements Provider {
         const nearOptions = getProviderOptions<NearProviderOptions>(this.id, options);
         if (!nearOptions) throw new Error('Invalid config');
 
-        const credentialsStorePath = path.resolve(nearOptions.credentialsStorePath) + path.sep;
-
         this.nearOptions = nearOptions;
         this.nodeOptions = options;
-        this.nearConnection = await connectToNear(nearOptions.net as NetworkType, credentialsStorePath);
+        this.nearConnection = await connectToNear(nearOptions.net as NetworkType, nearOptions);
         this.nodeAccount = await getAccount(this.nearConnection, nearOptions.accountId);
 
         startStorageDepositChecker(nearOptions, this.nodeAccount);

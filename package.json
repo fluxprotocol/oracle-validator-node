@@ -4,7 +4,7 @@
     "description": "Resolving data requests on the Flux Oracle",
     "main": "index.js",
     "scripts": {
-        "start": "npm run build && node 'dist/src/main.js'",
+        "start": "npm run build && node 'dist/src/main.js' start",
         "test": "jest",
         "build": "tsc -p .",
         "dev": "npm run build && node 'dist/src/main.js' start"
