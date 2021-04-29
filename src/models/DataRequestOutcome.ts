@@ -1,3 +1,6 @@
+import DataRequest from "./DataRequest";
+import { isJobSuccesful } from "./JobExecuteResult";
+
 export enum OutcomeType {
     Answer,
     Invalid
@@ -41,4 +44,27 @@ export function isOutcomesEqual(a: Outcome, b: Outcome): boolean {
     }
 
     return false;
+}
+
+/**
+ * Converts the latest execute result to an outcome
+ *
+ * @export
+ * @param {DataRequest} dataRequest
+ * @return {JobExecuteResult<Outcome>}
+ */
+export function getRequestOutcome(dataRequest: DataRequest): Outcome {
+    const latestExecuteResults = dataRequest.executeResults[dataRequest.executeResults.length - 1];
+    const result = latestExecuteResults.results[0];
+
+    if (!result || !isJobSuccesful(result)) {
+        return {
+            type: OutcomeType.Invalid,
+        };
+    }
+
+    return {
+        type: OutcomeType.Answer,
+        answer: result.data,
+    };
 }

@@ -2,9 +2,8 @@ import DataRequest from "../models/DataRequest";
 import logger from "../services/LoggerService";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import NodeBalance from "./NodeBalance";
-import { getDataRequestAnswer } from "../services/DataRequestService";
 import { StakeError, StakeResult, StakeResultType } from "../models/StakingResult";
-import { isOutcomesEqual } from "../models/DataRequestOutcome";
+import { getRequestOutcome, isOutcomesEqual } from "../models/DataRequestOutcome";
 
 const FIRST_CHALLENGE_ROUND = 0;
 
@@ -25,7 +24,7 @@ export async function stakeOnDataRequest(
     }
 
     const roundIdStakingOn = currentResolutionWindow?.round ?? 0;
-    const dataRequestAnswer = getDataRequestAnswer(dataRequest);
+    const dataRequestAnswer = getRequestOutcome(dataRequest);
 
     if (roundIdStakingOn > FIRST_CHALLENGE_ROUND) {
         // A window has already been closed.

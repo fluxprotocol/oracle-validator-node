@@ -55,7 +55,7 @@ interface GetDataRequestsAsCursorParams {
     startingRequestId: string;
 }
 
-interface GetDataRequestsAsCursorResult {
+export interface GetDataRequestsAsCursorResult {
     items: DataRequest[];
     next: string | null;
 }

@@ -1,7 +1,7 @@
 import Big from "big.js";
 import { Account, Near } from "near-api-js";
 import { ClaimError, ClaimResult, ClaimResultType } from "../../models/ClaimResult";
-import DataRequest, { createMockRequest } from "../../models/DataRequest";
+import DataRequest from "../../models/DataRequest";
 import { Outcome, OutcomeType } from "../../models/DataRequestOutcome";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
@@ -17,11 +17,10 @@ export default class NearProvider implements Provider {
     id = 'near';
     static id = 'near';
 
-    private nearConnection?: Near;
-    private nodeAccount?: Account;
-    private nearOptions?: NearProviderOptions;
-    private nodeOptions?: NodeOptions;
-    private currentRequestId?: string;
+    nearConnection?: Near;
+    nodeAccount?: Account;
+    nearOptions?: NearProviderOptions;
+    currentRequestId?: string;
 
     validateOptions(options: NodeOptions, providerOptions: Partial<NearProviderOptions>) {
         const errors: string[] = [];
@@ -66,7 +65,6 @@ export default class NearProvider implements Provider {
         if (!nearOptions) throw new Error('Invalid config');
 
         this.nearOptions = nearOptions;
-        this.nodeOptions = options;
         this.nearConnection = await connectToNear(nearOptions.net as NetworkType, nearOptions);
         this.nodeAccount = await getAccount(this.nearConnection, nearOptions.accountId);
 
@@ -179,7 +177,7 @@ export default class NearProvider implements Provider {
         };
     }
 
-    private async getNextRequests() {
+    async getNextRequests() {
         if (!this.nearOptions?.explorerApi) return [];
 
         const currentRequestId = this.currentRequestId ?? '0';

@@ -41,29 +41,3 @@ export async function getAllDataRequests(query: PouchDB.Find.Selector = {}): Pro
         return [];
     }
 }
-
-/**
- * Gets the data request answer
- * This should always be used as the real answer that will be submitted to
- * the Oracle.
- * TODO: Add number calculations (price feed, average, etc.)
- *
- * @export
- * @param {DataRequest} dataRequest
- * @return {JobExecuteResult<Outcome>}
- */
-export function getDataRequestAnswer(dataRequest: DataRequest): Outcome {
-    const latestExecuteResults = dataRequest.executeResults[dataRequest.executeResults.length - 1];
-    const result = latestExecuteResults.results[0];
-
-    if (!result || !isJobSuccesful(result)) {
-        return {
-            type: OutcomeType.Invalid,
-        };
-    }
-
-    return {
-        type: OutcomeType.Answer,
-        answer: result.data,
-    };
-}

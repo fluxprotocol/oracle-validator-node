@@ -1,4 +1,6 @@
-import { transformToOutcome, OutcomeType, OutcomeAnswer, isOutcomesEqual } from "./DataRequestOutcome";
+import { createMockRequest } from "./DataRequest";
+import { transformToOutcome, OutcomeType, OutcomeAnswer, isOutcomesEqual, getRequestOutcome } from "./DataRequestOutcome";
+import { JobExecuteError, JobResultType } from "./JobExecuteResult";
 
 describe('DataRequestOutcome', () => {
     describe('transformToOutcome', () => {
@@ -46,6 +48,63 @@ describe('DataRequestOutcome', () => {
             const result = isOutcomesEqual({ type: OutcomeType.Answer, answer: 'test' }, { type: OutcomeType.Answer, answer: 'test2' });
 
             expect(result).toBe(false);
+        });
+    });
+
+
+    describe('getRequestOutcome', () => {
+        it('should return an invalid outcome when the job is not succesful', () => {
+            const result = getRequestOutcome(createMockRequest({
+                executeResults: [{
+                    roundId: 0,
+                    results: [{
+                        type: JobResultType.Error,
+                        error: JobExecuteError.Unknown,
+                        status: 500,
+                    }],
+                }],
+            }));
+
+            expect(result.type).toBe(OutcomeType.Invalid);
+        });
+
+        it('should return an valid outcome when the job is succesful', () => {
+            const result = getRequestOutcome(createMockRequest({
+                executeResults: [{
+                    roundId: 0,
+                    results: [{
+                        type: JobResultType.Success,
+                        data: 'foo',
+                        status: 200,
+                    }],
+                }],
+            }));
+
+            expect(result.type).toBe(OutcomeType.Answer);
+            expect((result as OutcomeAnswer).answer).toBe('foo');
+        });
+
+        it('should always get the latest outcome', () => {
+            const result = getRequestOutcome(createMockRequest({
+                executeResults: [{
+                    roundId: 0,
+                    results: [{
+                        type: JobResultType.Error,
+                        error: JobExecuteError.ValueDoesNotExist,
+                        status: 200,
+                    }],
+                },{
+                    roundId: 1,
+                    results: [{
+                        type: JobResultType.Success,
+                        data: 'foo',
+                        status: 200,
+                    }],
+                }],
+            }));
+
+            expect(result.type).toBe(OutcomeType.Answer);
+            expect((result as OutcomeAnswer).answer).toBe('foo');
         });
     });
 });
