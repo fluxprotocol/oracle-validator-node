@@ -5,7 +5,7 @@ export function createMockProviderRegistry(providers: Provider[] = []) {
     return {
         nodeOptions: parseNodeOptions({}),
         providers,
-        activeProviders: [],
+        activeProviders: providers.map(p => p.id),
         getProviderById: jest.fn(),
         init: jest.fn(),
         getTokenBalance: jest.fn(),

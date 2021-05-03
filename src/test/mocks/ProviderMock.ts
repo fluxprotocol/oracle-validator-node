@@ -1,7 +1,7 @@
-export function createProviderMock() {
+export function createProviderMock(name = 'mock') {
     return {
-        providerName: 'mock',
-        id: 'mock',
+        providerName: name,
+        id: name,
 
         validateOptions: jest.fn(),
         init: jest.fn(),
