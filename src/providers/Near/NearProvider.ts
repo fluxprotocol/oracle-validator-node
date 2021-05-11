@@ -149,6 +149,7 @@ export default class NearProvider implements Provider {
         // Formatting is weird in rust..
         const stakeOutcome = outcome.type === OutcomeType.Invalid ? 'Invalid' : { 'Answer': outcome.answer };
 
+        // TODO: Use the token contract id from the request. This could change in a config update.
         const response = await account.functionCall(this.nearOptions.tokenContractId, 'ft_transfer_call', {
             receiver_id: this.nearOptions.oracleContractId,
             amount: stakeAmount,

@@ -383,6 +383,7 @@ describe('DataRequest', () => {
     describe('toString', () => {
         it('should convert the class to a string', () => {
             const request = createMockRequest({
+                settlementTime: new Date(2),
                 resolutionWindows: [{
                     bondSize: '1',
                     endTime: new Date(1),
@@ -399,6 +400,7 @@ describe('DataRequest', () => {
                 internalId: '1_near_test.near',
                 outcomes: [],
                 providerId: 'near',
+                settlementTime: "1970-01-01T00:00:00.002Z",
                 resolutionWindows: [{
                     bondSize: '1',
                     endTime: '1970-01-01T00:00:00.001Z',

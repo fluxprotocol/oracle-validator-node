@@ -8,6 +8,7 @@ import { OutcomeType } from "../models/DataRequestOutcome";
 describe('JobSearcher', () => {
     let storeDataRequestSpy: jest.SpyInstance<Promise<void>>;
     let validDataRequest: DataRequestProps = {
+        settlementTime: new Date(1),
         contractId: '',
         executeResults: [],
         id: '1',

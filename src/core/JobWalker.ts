@@ -33,18 +33,21 @@ export default class JobWalker {
 
     async addNewDataRequest(request: DataRequest) {
         try {
-            await request.execute();
+            if (request.isExecutable()) {
+                await request.execute();
 
-            // It could be that the staking failed due it being finalized already or
-            // something else
-            // We let the job walker take care of it in the next tick
-            await request.stake(
-                this.providerRegistry,
-                this.nodeBalance,
-            );
+                // It could be that the staking failed due it being finalized already or
+                // something else
+                // We let the job walker take care of it in the next tick
+                await request.stake(
+                    this.providerRegistry,
+                    this.nodeBalance,
+                );
+            } else {
+                logger.debug(`${request.internalId} - Currently not executeable, can be executed on ${request.settlementTime}`);
+            }
 
             await storeDataRequest(request);
-
             this.requests.set(request.internalId, request);
         } catch (error) {
             logger.error(`[JobWalker.addNewDataRequest] ${error}`);
@@ -55,6 +58,12 @@ export default class JobWalker {
         const newStatus = await this.providerRegistry.getDataRequestById(request.providerId, request.id);
         if (!newStatus) return;
         request.update(newStatus);
+
+        if (!request.isExecutable()) {
+            logger.debug(`${request.internalId} - Cannot be executed till ${request.settlementTime}`);
+            await storeDataRequest(request);
+            return;
+        }
 
         // Claim the request earnings and remove it from the walker
         if (request.isClaimable()) {

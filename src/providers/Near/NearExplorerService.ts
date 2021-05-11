@@ -10,6 +10,7 @@ export async function getDataRequestByIdFromNear(apiUrl: string, id: string, pro
             query: `
                 query GetDataRequest($id: String!) {
                     dataRequest: getDataRequest(id: $id) {
+                        settlement_time
                         block_height
                         date
                         final_arbitrator_triggered
@@ -70,6 +71,7 @@ export async function getDataRequestsAsCursorFromNear(providerOptions: NearProvi
                         next
                         items {
                             id
+                            settlement_time
                             sources {
                                 end_point
                                 source_path

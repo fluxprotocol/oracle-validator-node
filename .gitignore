@@ -5,3 +5,5 @@ coverage
 config.json
 .env
 flux_db
+*_db
+*.config.json

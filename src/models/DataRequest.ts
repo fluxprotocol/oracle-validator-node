@@ -33,6 +33,7 @@ export interface DataRequestProps {
     executeResults: ExecuteResults[];
     staking: SuccessfulStakeResult[];
     claimedAmount?: string;
+    settlementTime: Date;
 }
 
 export default class DataRequest {
@@ -42,6 +43,7 @@ export default class DataRequest {
     contractId: string;
     outcomes: string[];
     sources: RequestInfo[];
+    settlementTime: Date;
     resolutionWindows: ResolutionWindow[];
     finalArbitratorTriggered: boolean;
     executeResults: ExecuteResults[] = [];
@@ -63,6 +65,7 @@ export default class DataRequest {
         this.claimedAmount = props.claimedAmount ?? undefined;
         this.finalArbitratorTriggered = props.finalArbitratorTriggered ?? false;
         this.finalizedOutcome = props.finalizedOutcome ?? undefined;
+        this.settlementTime = new Date(props.settlementTime);
 
         if (props.resolutionWindows.length) {
             this.resolutionWindows = props.resolutionWindows.map((rw) => ({
@@ -85,6 +88,23 @@ export default class DataRequest {
         this.finalizedOutcome = request.finalizedOutcome;
         this.finalArbitratorTriggered = request.finalArbitratorTriggered;
         logger.debug(`${this.internalId} - Updating status fo: ${JSON.stringify(this.finalizedOutcome)}, rw: ${this.resolutionWindows.length}, fat: ${this.finalArbitratorTriggered}`);
+    }
+
+    /**
+     * Checks whether or not the data request can be executed & staked on
+     * We cannot pre run a API call. This would cause the node to stake on wrong data
+     *
+     * @return {boolean}
+     * @memberof DataRequest
+     */
+    isExecutable(): boolean {
+        const now = new Date();
+
+        if (now.getTime() >= this.settlementTime.getTime()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -135,6 +155,11 @@ export default class DataRequest {
     }
 
     async execute() {
+        if (!this.isExecutable()) {
+            logger.debug(`${this.internalId} - Execute was called but it cannot be executed yet`);
+            return;
+        }
+
         logger.debug(`${this.internalId} - Executing`);
         const results = await executeJob(this);
         logger.debug(`${this.internalId} - Executed, results: ${JSON.stringify(results)}`);
@@ -236,6 +261,7 @@ export function createMockRequest(request: Partial<DataRequestProps> = {}): Data
         claimedAmount: undefined,
         finalArbitratorTriggered: false,
         finalizedOutcome: undefined,
+        settlementTime: new Date(1),
         ...request,
     });
 }

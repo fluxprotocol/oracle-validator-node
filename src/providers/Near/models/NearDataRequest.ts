@@ -3,10 +3,12 @@ import { NearResolutionWindowGraphData } from "./NearResolutionWindow";
 import NearProviderOptions from '../NearProviderOptions';
 import NearProvider from "../NearProvider";
 import { transformToOutcome } from "../../../models/DataRequestOutcome";
+import { nsToMs } from "../../../utils/dateUtils";
 
 export interface NearDataRequestGraphData {
     id: string;
     block_height: string;
+    settlement_time: string;
     date: string;
     final_arbitrator_triggered: boolean;
     global_config_id: string;
@@ -28,6 +30,7 @@ export function transformNearDataRequestToDataRequest(providerOptions: NearProvi
         executeResults: [],
         id: data.id,
         providerId: NearProvider.id,
+        settlementTime: new Date(nsToMs(Number(data.settlement_time))),
         outcomes: data.outcomes,
         sources: data.sources,
         staking: [],
