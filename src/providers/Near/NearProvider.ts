@@ -137,7 +137,7 @@ export default class NearProvider implements Provider {
         return true;
     }
 
-    async stake(requestId: string, outcome: Outcome, stakeAmount: string): Promise<StakeResponse> {
+    async stake(request: DataRequest, outcome: Outcome, stakeAmount: string): Promise<StakeResponse> {
         const account = this.nodeAccount;
         if (!account || !this.nearOptions) {
             return {
@@ -155,7 +155,7 @@ export default class NearProvider implements Provider {
             amount: stakeAmount,
             msg: JSON.stringify({
                 'StakeDataRequest': {
-                    id: requestId,
+                    id: request.id,
                     outcome: stakeOutcome,
                 }
             }),

@@ -408,6 +408,7 @@ describe('DataRequest', () => {
                 }],
                 sources: [],
                 staking: [],
+                tokenContractId: 'token.near',
                 type: 'DataRequest',
             });
         });

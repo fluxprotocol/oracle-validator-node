@@ -49,7 +49,7 @@ export default class ProviderRegistry {
         return provider.getDataRequestById(requestId);
     }
 
-    async stake(providerId: string, requestId: string, answer: Outcome, stakeAmount: string): Promise<StakeResponse> {
+    async stake(providerId: string, request: DataRequest, answer: Outcome, stakeAmount: string): Promise<StakeResponse> {
         const provider = this.getProviderById(providerId);
         if (!provider) {
             return {
@@ -58,7 +58,7 @@ export default class ProviderRegistry {
             }
         }
 
-        return provider.stake(requestId, answer, stakeAmount);
+        return provider.stake(request, answer, stakeAmount);
     }
 
     async finalize(providerId: string, requestId: string): Promise<boolean> {

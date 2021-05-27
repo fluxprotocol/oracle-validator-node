@@ -20,7 +20,7 @@ export interface Provider {
     getDataRequestById(requestId: string): Promise<DataRequest | null>;
     listenForRequests(onRequests: (requests: DataRequest[]) => void): void;
 
-    stake(requestId: string, answer: Outcome, stakeAmount: string): Promise<StakeResponse>;
+    stake(request: DataRequest, answer: Outcome, stakeAmount: string): Promise<StakeResponse>;
     claim(requestId: string): Promise<ClaimResult>;
     finalize(requestId: string): Promise<boolean>;
 
