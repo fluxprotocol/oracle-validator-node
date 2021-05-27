@@ -21,6 +21,9 @@ export async function getDataRequestByIdFromNear(apiUrl: string, id: string, pro
                         requestor
                         target_contract
                         finalized_outcome
+                        config {
+                            stake_token
+                        }
                         sources {
                             end_point
                             source_path
@@ -72,6 +75,9 @@ export async function getDataRequestsAsCursorFromNear(providerOptions: NearProvi
                         items {
                             id
                             settlement_time
+                            config {
+                                stake_token
+                            }
                             sources {
                                 end_point
                                 source_path

@@ -17,6 +17,9 @@ export interface NearDataRequestGraphData {
     requestor: string;
     target_contract: string;
     finalized_outcome: string | null;
+    config: {
+        stake_token: string;
+    };
     sources: {
         end_point: string;
         source_path: string;
@@ -33,6 +36,7 @@ export function transformNearDataRequestToDataRequest(providerOptions: NearProvi
         settlementTime: new Date(nsToMs(Number(data.settlement_time))),
         outcomes: data.outcomes,
         sources: data.sources,
+        tokenContractId: data.config.stake_token,
         staking: [],
         resolutionWindows: data.resolution_windows.map(rw => {
             return {

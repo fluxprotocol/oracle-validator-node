@@ -50,7 +50,7 @@ export async function stakeOnDataRequest(
         }
     }
 
-    const stakingResponse = await providerRegistry.stake(dataRequest.providerId, dataRequest.id, dataRequestAnswer, stake.toString());
+    const stakingResponse = await providerRegistry.stake(dataRequest.providerId, dataRequest, dataRequestAnswer, stake.toString());
 
     if (!stakingResponse.success) {
         logger.error(`Staking failed for id ${dataRequest.id} on ${dataRequest.providerId}`);

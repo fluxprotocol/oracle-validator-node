@@ -25,6 +25,7 @@ export interface DataRequestProps {
     id: string;
     sources: RequestInfo[];
     contractId: string;
+    tokenContractId: string;
     finalArbitratorTriggered: boolean;
     finalizedOutcome?: Outcome;
     outcomes: string[];
@@ -41,6 +42,7 @@ export default class DataRequest {
     internalId: string;
     providerId: string;
     contractId: string;
+    tokenContractId: string;
     outcomes: string[];
     sources: RequestInfo[];
     settlementTime: Date;
@@ -66,6 +68,7 @@ export default class DataRequest {
         this.finalArbitratorTriggered = props.finalArbitratorTriggered ?? false;
         this.finalizedOutcome = props.finalizedOutcome ?? undefined;
         this.settlementTime = new Date(props.settlementTime);
+        this.tokenContractId = props.tokenContractId;
 
         if (props.resolutionWindows.length) {
             this.resolutionWindows = props.resolutionWindows.map((rw) => ({
@@ -245,6 +248,7 @@ export default class DataRequest {
 export function createMockRequest(request: Partial<DataRequestProps> = {}): DataRequest {
     return new DataRequest({
         contractId: 'test.near',
+        tokenContractId: 'token.near',
         id: '1',
         outcomes: [],
         resolutionWindows: [

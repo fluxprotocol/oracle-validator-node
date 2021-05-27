@@ -62,27 +62,28 @@ describe('Oracle', () => {
                 return x;
             });
 
+            const request = createMockRequest({
+                providerId: 'mock',
+                resolutionWindows: [{
+                    round: 0,
+                    endTime: new Date(),
+                    bondSize: '1',
+                    bondedOutcome: undefined,
+                }],
+                executeResults: [{
+                    roundId: 0,
+                    results: [{ type: JobResultType.Success, data: 'good_answer', status: 200 }],
+                }]
+            });
             const result = await stakeOnDataRequest(
                 mockProviderRegistry,
                 nodeBalance,
-                createMockRequest({
-                    providerId: 'mock',
-                    resolutionWindows: [{
-                        round: 0,
-                        endTime: new Date(),
-                        bondSize: '1',
-                        bondedOutcome: undefined,
-                    }],
-                    executeResults: [{
-                        roundId: 0,
-                        results: [{ type: JobResultType.Success, data: 'good_answer', status: 200 }],
-                    }]
-                })
+                request
             );
 
             expect(result.type === StakeResultType.Success).toBe(true);
             expect(mockProviderRegistry.stake).toHaveBeenCalledTimes(1);
-            expect(mockProviderRegistry.stake).toHaveBeenCalledWith('mock', '1', {
+            expect(mockProviderRegistry.stake).toHaveBeenCalledWith('mock', request, {
                 answer: 'good_answer',
                 type: OutcomeType.Answer,
             }, '2500000000000000000');
@@ -136,35 +137,36 @@ describe('Oracle', () => {
                 return x;
             });
 
+            const request = createMockRequest({
+                providerId: 'mock',
+                resolutionWindows: [{
+                    round: 0,
+                    endTime: new Date(),
+                    bondSize: '1',
+                    bondedOutcome: {
+                        answer: 'wrong_answer',
+                        type: OutcomeType.Answer,
+                    }
+                }, {
+                    round: 1,
+                    endTime: new Date(),
+                    bondSize: '1',
+                    bondedOutcome: undefined,
+                }],
+                executeResults: [{
+                    roundId: 0,
+                    results: [{ type: JobResultType.Success, data: 'good_answer', status: 200 }],
+                }]
+            });
             const result = await stakeOnDataRequest(
                 mockProviderRegistry,
                 nodeBalance,
-                createMockRequest({
-                    providerId: 'mock',
-                    resolutionWindows: [{
-                        round: 0,
-                        endTime: new Date(),
-                        bondSize: '1',
-                        bondedOutcome: {
-                            answer: 'wrong_answer',
-                            type: OutcomeType.Answer,
-                        }
-                    }, {
-                        round: 1,
-                        endTime: new Date(),
-                        bondSize: '1',
-                        bondedOutcome: undefined,
-                    }],
-                    executeResults: [{
-                        roundId: 0,
-                        results: [{ type: JobResultType.Success, data: 'good_answer', status: 200 }],
-                    }]
-                })
+                request
             );
 
             expect(result.type === StakeResultType.Success).toBe(true);
             expect(mockProviderRegistry.stake).toHaveBeenCalledTimes(1);
-            expect(mockProviderRegistry.stake).toHaveBeenCalledWith('mock', '1', {
+            expect(mockProviderRegistry.stake).toHaveBeenCalledWith('mock', request, {
                 answer: 'good_answer',
                 type: OutcomeType.Answer,
             }, '2500000000000000000');

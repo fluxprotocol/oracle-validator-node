@@ -19,6 +19,7 @@ describe('NearProvider', () => {
         it('should stake invalid when the outcome type is invalid', async () => {
             const nearProvider = new NearProvider();
             const options = createNearProviderOptionsMock();
+            const dataRequest = createMockRequest();
             nearProvider.nearOptions = options;
             const functionCall = jest.fn(async () => ({
                 receipts_outcome: [{
@@ -34,7 +35,7 @@ describe('NearProvider', () => {
                 functionCall,
             };
 
-            const response = await nearProvider.stake('1', { type: OutcomeType.Invalid }, '100');
+            const response = await nearProvider.stake(dataRequest, { type: OutcomeType.Invalid }, '100');
 
             expect(functionCall).toHaveBeenCalledTimes(1);
             expect(functionCall).toHaveBeenCalledWith(options.tokenContractId, 'ft_transfer_call', {
@@ -55,6 +56,7 @@ describe('NearProvider', () => {
         it('should stake valid when the outcome type is valid', async () => {
             const nearProvider = new NearProvider();
             const options = createNearProviderOptionsMock();
+            const dataRequest = createMockRequest();
             nearProvider.nearOptions = options;
             const functionCall = jest.fn(async () => ({
                 receipts_outcome: [{
@@ -70,7 +72,7 @@ describe('NearProvider', () => {
                 functionCall,
             };
 
-            const response = await nearProvider.stake('1', { type: OutcomeType.Answer, answer: 'test' }, '100');
+            const response = await nearProvider.stake(dataRequest, { type: OutcomeType.Answer, answer: 'test' }, '100');
 
             expect(functionCall).toHaveBeenCalledTimes(1);
             expect(functionCall).toHaveBeenCalledWith(options.tokenContractId, 'ft_transfer_call', {
