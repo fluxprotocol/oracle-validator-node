@@ -115,9 +115,11 @@ export default class NearProvider implements Provider {
 
         const logs = extractLogs(result);
         const claimLog = logs.find(log => log.type === 'claims');
+        const profit = new Big(claimLog?.params.payout ?? '0');
+        const correctStake = new Big(claimLog?.params.user_correct_stake ?? '0');
 
         return {
-            received: claimLog?.params.payout ?? '0',
+            received: profit.add(correctStake).toString(),
             type: ClaimResultType.Success
         };
     }

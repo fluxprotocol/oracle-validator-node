@@ -34,7 +34,7 @@ export async function logBalances(nodeBalance: NodeBalance, walker: JobWalker) {
 
     const profitFormatted = formatToken(result.profit.toString(), TOKEN_DENOM);
     const balanceFormatted = formatToken(result.balance.toString(), TOKEN_DENOM);
-    const totalStakedFormatted = formatToken(result.amountStaked.toString(), TOKEN_DENOM);
+    const totalStakedFormatted = formatToken(result.activelyStaking.toString(), TOKEN_DENOM);
 
     logger.info(`💸 Balance: ${balanceFormatted} FLX, Staking: ${totalStakedFormatted} FLX, Profit: ${profitFormatted} FLX, Jobs actively watching: ${walker.requests.size}`);
 }

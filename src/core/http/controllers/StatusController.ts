@@ -15,7 +15,7 @@ StatusController.get('/', async (req, res) => {
         processing: context.jobWalker.processingIds.size,
         watching: context.jobWalker.requests.size,
         profit: balanceStatus.profit.toString(),
-        amountStaked: balanceStatus.amountStaked.toString(),
+        activelyStaking: balanceStatus.activelyStaking.toString(),
         balance: balanceStatus.balance.toString(),
         latestRequests: latestRequests.map((latestRequest) => ({
             provider: latestRequest.provider,
