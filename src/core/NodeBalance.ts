@@ -1,8 +1,11 @@
 import Big from "big.js";
+import DataRequest from "../models/DataRequest";
 import { NodeOptions } from "../models/NodeOptions";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import logger from "../services/LoggerService";
+import { getBalanceStatus, storeBalanceStatus } from "../services/NodeBalanceService";
 import { sumBig } from "../utils/bigUtils";
+import { BalanceStatusViewModel, transformToBalanceStatusViewModel } from '../models/BalanceStatus';
 
 export default class NodeBalance {
     nodeOptions: NodeOptions;
@@ -10,12 +13,47 @@ export default class NodeBalance {
     balances: Map<string, Big> = new Map();
     providerRegistry: ProviderRegistry;
 
+
+    /** Keeps track of profit/total staked */
+    balanceStatus: BalanceStatusViewModel;
+
     /** Used for not spamming the RPC with balance requests */
     balanceFetch?: Promise<Big[]>;
 
     constructor(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry) {
         this.nodeOptions = nodeOptions;
         this.providerRegistry = providerRegistry;
+        this.balanceStatus = transformToBalanceStatusViewModel({
+            balance: '0',
+            claimed: '0',
+            staked: '0',
+        });
+    }
+
+    async init() {
+        this.balanceStatus = await getBalanceStatus();
+    }
+
+    /**
+     * Adds a request that is claimed to the profit
+     *
+     * @param {DataRequest} request
+     * @memberof NodeBalance
+     */
+    addClaimedRequest(request: DataRequest) {
+        if (!request.claimedAmount) {
+            logger.error(`${request.internalId} - Missing claimed amount`);
+            return;
+        }
+
+        const amountStaked = request.staking.reduce((prev, curr) => prev.add(curr.amountStaked), new Big(0));
+
+        this.deposit(request.providerId, new Big(request.claimedAmount));
+        this.balanceStatus = transformToBalanceStatusViewModel({
+            balance: sumBig(Array.from(this.balances.values())).toString(),
+            claimed: this.balanceStatus.claimed.add(request.claimedAmount).toString(),
+            staked: this.balanceStatus.staked.add(amountStaked).toString(),
+        });
     }
 
     /**
@@ -45,11 +83,14 @@ export default class NodeBalance {
                 this.balances.set(providerId, balances[index]);
             });
 
-            this.balanceFetch = undefined;
-
             if (isStartingBalance) {
                 this.startingBalance = sumBig(balances);
             }
+
+            // Store the balance data to the database
+            await storeBalanceStatus(this.balanceStatus);
+
+            this.balanceFetch = undefined;
         } catch (error) {
             logger.error(`[NodeBalance.refreshBalances] ${error}`);
         }

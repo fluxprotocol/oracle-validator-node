@@ -77,7 +77,7 @@ export default class JobWalker {
             if (isClaimSuccesful) {
                 logger.debug(`${request.internalId} - Pruning from pool due completed claim`);
                 this.requests.delete(request.internalId);
-                this.nodeBalance.deposit(request.providerId, new Big(request.claimedAmount ?? 0));
+                this.nodeBalance.addClaimedRequest(request);
                 await deleteDataRequest(request);
                 return;
             }
