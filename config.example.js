@@ -1,4 +1,4 @@
-{
+module.exports = {
     "debug": false,
     "dbPath": "./",
     "dbName": "flux_db",
@@ -10,7 +10,7 @@
             "options": {
                 "credentialsStorePath": "/Users/myAccount/.near-credentials/",
                 "explorerApi": "https://testnet-oracle.flux.xyz/graphql",
-                "accountId": "myAccount.testnet",
+                "accountId": process.env.ACCOUNT_ID,
                 "oracleContractId": "temp-oracle.flux-dev",
                 "tokenContractId": "wnear.flux-dev",
                 "net": "testnet",
@@ -19,4 +19,4 @@
             }
         }
     ]
-}
+};

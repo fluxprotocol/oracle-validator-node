@@ -13,16 +13,14 @@ export const start: CommandModule = {
     describe: 'Starts the oracle node',
     builder: (yargs: Argv) => yargs
         .option('config', {
-            describe: 'Path to the config.json',
+            describe: 'Path to the config.js',
             type: 'string',
             demandOption: false,
-            default: './config.json',
+            default: '../../../config.js',
         })
     ,
     handler: async (args) => {
-        const file = await fs.readFile(args.config as string, {
-            encoding: 'utf-8',
-        });
+        const file = JSON.stringify(require(args.config as string));
 
         if (!file) {
             logger.error(`Config file could not be found at ${args.config}`);

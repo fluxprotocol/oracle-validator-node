@@ -1,3 +1,4 @@
+require('dotenv').config()
 import yargs from "yargs";
 
 import { start } from "./commands/start";
