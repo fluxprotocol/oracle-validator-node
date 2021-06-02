@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  light-node:
+    image: fluxprotocol/light-node
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.light-node
+    container_name: flux-light-node
+    ports:
+      - "3000:3000"
