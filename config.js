@@ -8,7 +8,6 @@ module.exports = {
         {
             "id": "near",
             "options": {
-                "credentialsStorePath": "/opt/near-credentials/",
                 "explorerApi": "https://testnet-oracle.flux.xyz/graphql",
                 "accountId": process.env.ACCOUNT_ID,
                 "oracleContractId": "oracle_0.flux-dev",

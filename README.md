@@ -6,38 +6,53 @@
 * Configurable staking amount
 * Automatic pruning of data to keep the node small
 * Automatic claiming of fees
-* Re-staking on a mallicious stake
+* Re-staking on a malicious stake
 
-## Installation
+## Getting started
 
-The validator node requires you to have node.js installed. After installing you can run:
-
-```Bash
-npm install
-```
-
-After this you need to login with your near credentials using:
+The node can either be run natively (Node.js) or Docker with no external dependencies. Both require first logging into the near-cli:
 
 ```Bash
 npm install -g near-cli
 near login
 ```
-
 ## Configuration
 
-Copy the `config.example.json` and name it `config.json` and change the following options:
+Environment variables are stored in `.env` so that it can be injected into `config.js` from Docker and Node.js.
+
+To create and populate the `.env` file, run the utility script to copy NEAR credientials to `.env` (which auto-detects the location of your `.near-credentials` folder depending on your OS):
+
+```Bash
+node utils.js copy-near-credentials --account_id <account_id>
+```
+
+The script will prompt you to add or replace lines to your `.env` using your NEAR account information. All information is stored locally and is included in the `.gitignore` so that it won't show up in the Git repository. You can also pass the `--network`, `--path`, and `--help` arguments.
+
+In addition to the account information, other environment variables you can modify are:
 
 * `stakePerRequest` to the amount you want to stake per request. Default is 2.5 FLX (2500000000000000000)
-* `credentialsStorePath` to the path where your `.near-credentials` are stored. Must be the full path (Usually it's located in your home directory)
-* `accountId` to the account id you previously logged in with (using `near login`)
 
 More information about the other options coming soon..
 
 ## Running the node
 
+### Docker
+
+Docker and Docker Compose must be installed before running a containerized validator node. To run a light node (using the Explorer GraphQL and standard RPC):
+
+``` Bash
+docker-compose --env-file .env up
+```
+
+### Native
+
+Node.js must be installed before running a validator node natively. After installing you can run:
+
 ```Bash
+npm install
 npm start
 ```
+
 
 If everything went correctly you should see something like the following:
 

@@ -10,7 +10,7 @@ require('yargs')
     .command('copy-near-credentials [path] [network] [account_id]', 'copy .near-credientials to .env', (yargs) => {
         yargs.positional('path', {
             type: 'string',
-            describe: 'path to the .near-credientials folder (ending with /)'
+            describe: 'optional path to the .near-credientials folder (ending with /)'
         })
         yargs.positional('network', {
             type: 'string',
@@ -24,7 +24,13 @@ require('yargs')
         })
     }, function (argv) {
 
-        // TODO: create .env if it doesn't exist
+        // copy .env if it doesn't exist
+        if (!fs.existsSync(DOTENV)) {
+            envExample = "./.env.example";
+            console.log(`${DOTENV} not found. Copying ${envExample}...`)
+            fs.copyFileSync(envExample, DOTENV);
+            console.log(`Done creating ${DOTENV}.`)
+        }
 
         // fetch .near-credentials folder
         let prefix;
@@ -51,7 +57,7 @@ require('yargs')
             console.log(`Error reading file at ${filePath}`)
             process.exit(1);
         }
-        console.log(`Found account ${accountId} for network ${argv.network}.`);
+        console.log(`Found account ${accountId} for network '${argv.network}'.`);
 
         // ask to replace lines in .env
         let replaced_config_options = 0;
