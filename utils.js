@@ -72,24 +72,28 @@ require('yargs')
     .help()
     .argv;
 
-function askToReplaceEnvLines(phrase, newValue) {
+// @returns 1 if newValue is added in configOption, otherwise 0
+function askToReplaceEnvLines(configOption, newValue) {
 
-    // search for phrase (configuration option) in .env. Ask to replace lines if they differ from newValue
-    console.log(`Searching for configuration option ${phrase}...`);
+    // search for configOption in .env. Ask to replace lines if they differ from newValue
+    console.log(`Searching for configuration option ${configOption}...`);
     const data = fs.readFileSync(DOTENV, 'UTF-8');
     const lines = data.split(/\r?\n/);
 
-    let match = "";
+    // loop through lines in .env
     for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith(phrase)) {
+        // check if line matches config option
+        if (lines[i].startsWith(configOption)) {
+            // return 0 early if configOption is already set to newValue
             if (lines[i].endsWith(newValue)) {
-                console.log(`${phrase} already set to ${truncate(newValue, 15, 5, 25)}. Skipping.`);
+                console.log(`${configOption} already set to ${truncate(newValue, 15, 5, 25)}. Skipping.`);
                 return 0;
+            // otherwise, the configOption needs to be changed to the newValue
             } else {
                 while (true) {
                     let res = prompt(`Found ${truncate(lines[i], 15, 5, 25)} in ${DOTENV}. Overwrite value with ${truncate(newValue, 15, 5, 25)}? (Y/n) `);
                     if (res === "Y") {
-                        lines[i] = `${phrase}=${newValue}`;
+                        lines[i] = `${configOption}=${newValue}`;
                         fs.writeFile(DOTENV, lines.join("\n"), function(err) {
                             if (err) return console.log(err);
                         });
@@ -105,11 +109,11 @@ function askToReplaceEnvLines(phrase, newValue) {
         }
     }
 
-    // phrase (configuration option) not found in .env. Ask to append
+    // configOption not found in .env. Ask to append
     while (true) {
-        let res = prompt(`'${phrase}' not found in ${DOTENV}. Append ${newValue}? (Y/n) `);
+        let res = prompt(`'${configOption}' not found in ${DOTENV}. Append ${newValue}? (Y/n) `);
         if (res === "Y") {
-            lines.push(`${phrase}=${newValue}`);
+            lines.push(`${configOption}=${newValue}`);
             fs.writeFile(DOTENV, lines.join("\n"), function(err) {
                 if (err) return console.log(err);
             });
