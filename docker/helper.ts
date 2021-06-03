@@ -81,15 +81,18 @@ function askToReplaceEnvLines(phrase, newValue) {
                 return 0;
             } else {
                 while (true) {
-                    let res = prompt(`Found ${truncate(lines[i], 15, 5, 25)} in ${DOTENV}. Overwrite with ${truncate(newValue, 15, 5, 25)}? (Y/n) `);
+                    let res = prompt(`Found ${truncate(lines[i], 15, 5, 25)} in ${DOTENV}. Overwrite value with ${truncate(newValue, 15, 5, 25)}? (Y/n) `);
                     if (res === "Y") {
-                        // TODO: replace line
+                        lines[i] = `${phrase}=${newValue}`;
+                        fs.writeFile(DOTENV, lines.join("\n"), function(err) {
+                            if (err) return console.log(err);
+                        });
                         return 1;
                     } else if (res.toLowerCase() === "n" || res.toLowerCase() === "no") {
                         console.log(`Skipping.`)
                         return 0;
                     } else {
-                        console.log(`Invalid answer '${res}'.`);
+                        console.log(`Invalid answer '${res}'. Please type 'Y' or 'n'.`);
                     }
                 }
             }
@@ -100,13 +103,16 @@ function askToReplaceEnvLines(phrase, newValue) {
     while (true) {
         let res = prompt(`'${phrase}' not found in ${DOTENV}. Append ${newValue}? (Y/n) `);
         if (res === "Y") {
-            // TODO: append to .env
+            lines.push(`${phrase}=${newValue}`);
+            fs.writeFile(DOTENV, lines.join("\n"), function(err) {
+                if (err) return console.log(err);
+            });
             return 1;
         } else if (res.toLowerCase() === "n" || res.toLowerCase() === "no") {
             console.log(`Skipping.`)
             return 0;
         } else {
-            console.log(`Invalid answer '${res}'.`);
+            console.log(`Invalid answer '${res}'. Please type 'Y' or 'n'.`);
         }
     }
 
