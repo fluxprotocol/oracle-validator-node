@@ -11,18 +11,18 @@ export const copyNearCredentials: CommandModule = {
     command: 'copy-near-credentials',
     describe: 'Copies NEAR account details from local near-cli configuration to .env',
     builder: (yargs: Argv) => yargs
-        .positional('path', {
+        .option('path', {
             describe: 'Optional path to the .near-credentials folder (ending with /)',
             type: 'string',
             demandOption: false,
         })
-        .positional('network', {
+        .option('network', {
             type: 'string',
             default: 'testnet',
             describe: 'Network of credentials to copy (e.g. mainnet, testnet)',
             demandOption: false,
         })
-        .positional('account_id', {
+        .option('account_id', {
             type: 'string',
             demandOption: true,
             describe: 'Account name (e.g. user.near)'
@@ -62,7 +62,7 @@ export const copyNearCredentials: CommandModule = {
             console.log(`Error reading file at ${filePath}`)
             process.exit(1);
         }
-        console.log(`Found account ${accountId} for network '${args.network}'.`);
+        console.log(`Found account ${accountId} for network '${args.network}' in ${filePath}.`);
 
         // ask to replace lines in .env
         let replaced_config_options = 0;
