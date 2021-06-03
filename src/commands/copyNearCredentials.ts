@@ -1,32 +1,37 @@
-const os = require("os");
-const fs = require('fs');
+import fs from 'fs';
+import os from 'os';
+import { Argv, CommandModule } from 'yargs';
+import { truncate } from '../utils/stringUtils';
+
 const prompt = require('prompt-sync')();
 
 const DOTENV = `./.env`;
 
-require('yargs')
-    .scriptName("copy-near-credentials")
-    .usage('$0 <cmd> [args]')
-    .command('copy-near-credentials [path] [network] [account_id]', 'copy .near-credientials to .env', (yargs) => {
-        yargs.positional('path', {
+export const copyNearCredentials: CommandModule = {
+    command: 'copy-near-credentials',
+    describe: 'Copies NEAR account details from local near-cli configuration to .env',
+    builder: (yargs: Argv) => yargs
+        .positional('path', {
+            describe: 'Optional path to the .near-credentials folder (ending with /)',
             type: 'string',
-            describe: 'optional path to the .near-credientials folder (ending with /)'
+            demandOption: false,
         })
-        yargs.positional('network', {
+        .positional('network', {
             type: 'string',
             default: 'testnet',
-            describe: 'network of credientials to copy (e.g. mainnet, testnet)'
+            describe: 'Network of credentials to copy (e.g. mainnet, testnet)',
+            demandOption: false,
         })
-        yargs.positional('account_id', {
+        .positional('account_id', {
             type: 'string',
             demandOption: true,
-            describe: 'account name (e.g. user.near)'
+            describe: 'Account name (e.g. user.near)'
         })
-    }, function (argv) {
-
-        // copy .env if it doesn't exist
+    ,
+    handler: async (args) => {
+        // copy .env.example to .env if it doesn't exist
         if (!fs.existsSync(DOTENV)) {
-            envExample = "./.env.example";
+            let envExample = "./.env.example";
             console.log(`${DOTENV} not found. Copying ${envExample}...`)
             fs.copyFileSync(envExample, DOTENV);
             console.log(`Done creating ${DOTENV}.`)
@@ -34,9 +39,9 @@ require('yargs')
 
         // fetch .near-credentials folder
         let prefix;
-        let homedir = os.homedir();
-        if (argv.path) {
-            prefix = argv.path;
+        const homedir = os.homedir();
+        if (args.path) {
+            prefix = args.path;
         } else if (homedir.length > 0) {
             prefix = `${homedir}/.near-credentials/`;
         } else {
@@ -45,7 +50,7 @@ require('yargs')
         }
 
         // fetch account id and private key
-        let filePath = `${prefix}${argv.network}/${argv.account_id}.json`;
+        const filePath = `${prefix}${args.network}/${args.account_id}.json`;
         let file;
         let accountId;
         let privateKey;
@@ -57,7 +62,7 @@ require('yargs')
             console.log(`Error reading file at ${filePath}`)
             process.exit(1);
         }
-        console.log(`Found account ${accountId} for network '${argv.network}'.`);
+        console.log(`Found account ${accountId} for network '${args.network}'.`);
 
         // ask to replace lines in .env
         let replaced_config_options = 0;
@@ -68,16 +73,15 @@ require('yargs')
 
         console.log(`Replaced ${replaced_config_options} configuration options. Done.`);
 
-    })
-    .help()
-    .argv;
+    }
+};
 
 // @returns 1 if newValue is added in configOption, otherwise 0
-function askToReplaceEnvLines(configOption, newValue) {
+function askToReplaceEnvLines(configOption: string, newValue: string) {
 
     // search for configOption in .env. Ask to replace lines if they differ from newValue
     console.log(`Searching for configuration option ${configOption}...`);
-    const data = fs.readFileSync(DOTENV, 'UTF-8');
+    const data = fs.readFileSync(DOTENV).toString();
     const lines = data.split(/\r?\n/);
 
     // loop through lines in .env
@@ -86,12 +90,12 @@ function askToReplaceEnvLines(configOption, newValue) {
         if (lines[i].startsWith(configOption)) {
             // return 0 early if configOption is already set to newValue
             if (lines[i].endsWith(newValue)) {
-                console.log(`${configOption} already set to ${truncate(newValue, 15, 5, 25)}. Skipping.`);
+                console.log(`${configOption} already set to ${truncate(newValue)}. Skipping.`);
                 return 0;
             // otherwise, the configOption needs to be changed to the newValue
             } else {
                 while (true) {
-                    let res = prompt(`Found ${truncate(lines[i], 15, 5, 25)} in ${DOTENV}. Overwrite value with ${truncate(newValue, 15, 5, 25)}? (Y/n) `);
+                    const res = prompt(`Found ${truncate(lines[i])} in ${DOTENV}. Overwrite value with ${truncate(newValue)}? (Y/n) `);
                     if (res === "Y") {
                         lines[i] = `${configOption}=${newValue}`;
                         fs.writeFile(DOTENV, lines.join("\n"), function(err) {
@@ -111,7 +115,7 @@ function askToReplaceEnvLines(configOption, newValue) {
 
     // configOption not found in .env. Ask to append
     while (true) {
-        let res = prompt(`'${configOption}' not found in ${DOTENV}. Append ${newValue}? (Y/n) `);
+        const res = prompt(`'${configOption}' not found in ${DOTENV}. Append ${newValue}? (Y/n) `);
         if (res === "Y") {
             lines.push(`${configOption}=${newValue}`);
             fs.writeFile(DOTENV, lines.join("\n"), function(err) {
@@ -127,13 +131,4 @@ function askToReplaceEnvLines(configOption, newValue) {
     }
 
     return 0;
-}
-
-function truncate(text, startChars, endChars, maxLength) {
-    if (text.length > maxLength) {
-        var start = text.substring(0, startChars);
-        var end = text.substring(text.length - endChars, text.length);
-        return start + '...' + end;
-    }
-    return text;
 }

@@ -20,7 +20,7 @@ Environment variables are stored in `.env` so that it can be injected into `conf
 To create and populate the `.env` file, run the utility script to copy NEAR credientials to `.env` (which auto-detects the location of your `.near-credentials` folder depending on your OS):
 
 ```Bash
-node utils.js copy-near-credentials --account_id <account_id>
+npm run copyNearCredentials --account_id <account_id>
 ```
 
 The script will prompt you to add or replace lines to your `.env` using your NEAR account information. All information is stored locally and is included in the `.gitignore` so that it won't show up in the Git repository. You can also pass the `--network`, `--path`, and `--help` arguments.
