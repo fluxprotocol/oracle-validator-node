@@ -2,16 +2,16 @@ module.exports = {
     "debug": false,
     "dbPath": "./",
     "dbName": "flux_db",
-    "stakePerRequest": "2500000000000000000",
+    "stakePerRequest": process.env.STAKE_PER_REQUEST,
     "contractIds": [],
     "providers": [
         {
             "id": "near",
             "options": {
-                "credentialsStorePath": "/Users/myAccount/.near-credentials/",
+                "credentialsStorePath": "/opt/near-credentials/",
                 "explorerApi": "https://testnet-oracle.flux.xyz/graphql",
                 "accountId": process.env.ACCOUNT_ID,
-                "oracleContractId": "temp-oracle.flux-dev",
+                "oracleContractId": "oracle_0.flux-dev",
                 "tokenContractId": "wnear.flux-dev",
                 "net": "testnet",
                 "maxGas": "200000000000000",

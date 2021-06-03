@@ -2,8 +2,6 @@ node_modules
 dist
 coverage
 .cache
-config.js
 .env
 flux_db
 *_db
-*.config.js
