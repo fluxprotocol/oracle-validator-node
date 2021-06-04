@@ -5,6 +5,5 @@ WORKDIR /opt/flux-light-node
 COPY package*.json ./
 RUN npm install
 COPY . ./
-RUN cp config.example.js config.js
 
 CMD ["npm", "start"]

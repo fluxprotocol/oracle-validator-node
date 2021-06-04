@@ -10,6 +10,7 @@ module.exports = {
             "options": {
                 "explorerApi": "https://testnet-oracle.flux.xyz/graphql",
                 "accountId": process.env.ACCOUNT_ID,
+                "privateKey": process.env.PRIVATE_KEY,
                 "oracleContractId": "oracle_0.flux-dev",
                 "tokenContractId": "wnear.flux-dev",
                 "net": "testnet",

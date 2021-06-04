@@ -88,14 +88,18 @@ function askToReplaceEnvLines(configOption: string, newValue: string) {
     for (let i = 0; i < lines.length; i++) {
         // check if line matches config option
         if (lines[i].startsWith(configOption)) {
+            const lineArr = lines[i].split("=");
+            const lineConfigOption = lineArr[0];
+            const lineValue = lineArr[1];
+
             // return 0 early if configOption is already set to newValue
-            if (lines[i].endsWith(newValue)) {
+            if (lineValue === newValue) {
                 console.log(`${configOption} already set to ${truncate(newValue)}. Skipping.`);
                 return 0;
             // otherwise, the configOption needs to be changed to the newValue
             } else {
                 while (true) {
-                    const res = prompt(`Found ${truncate(lines[i])} in ${DOTENV}. Overwrite value with ${truncate(newValue)}? (Y/n) `);
+                    const res = prompt(`Found ${truncate(lineValue)} for ${configOption} in ${DOTENV}. Overwrite value with ${truncate(newValue)}? (Y/n) `);
                     if (res === "Y") {
                         lines[i] = `${configOption}=${newValue}`;
                         fs.writeFile(DOTENV, lines.join("\n"), function(err) {

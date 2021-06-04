@@ -1,10 +1,13 @@
-version: "3.3"
+version: "3.9"
+
 services:
-  light-node:
-    image: fluxprotocol/light-node
+  validator-node:
+    image: fluxprotocol/oracle-validator-node
+    container_name: flux-validator-node
     build:
       context: .
-      dockerfile: docker/Dockerfile.light-node
-    container_name: flux-light-node
+      dockerfile: docker/Dockerfile.validator-node
+    volumes:
+      - .:/validator-node
     ports:
       - "3000:3000"
