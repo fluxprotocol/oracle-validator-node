@@ -4,6 +4,7 @@ services:
   validator-node:
     image: fluxprotocol/oracle-validator-node
     container_name: flux-validator-node
+    profiles: ["light-node", "full-node"]
     build:
       context: .
       dockerfile: docker/Dockerfile.validator-node
@@ -11,3 +12,13 @@ services:
       - .:/validator-node
     ports:
       - "3000:3000"
+
+  near-node:
+    image: nearprotocol/nearup
+    container_name: nearup
+    profiles: ["full-node"]
+    command: "run ${NETWORK}"
+    volumes:
+      - .near:/root/.near
+    ports:
+      - "3030:3030"

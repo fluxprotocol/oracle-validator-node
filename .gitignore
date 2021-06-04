@@ -3,5 +3,8 @@ dist
 coverage
 .cache
 .env
+.env.development
+.env.production
 flux_db
 *_db
+.near

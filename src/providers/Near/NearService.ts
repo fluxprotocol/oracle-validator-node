@@ -21,7 +21,7 @@ export async function connectToNear(net: NetworkType, nearOptions: NearProviderO
     if (!keyStore) throw new Error('Key store could not be created due lack of private key');
 
     return connect({
-        ...createNearNetworkConfig(net),
+        ...createNearNetworkConfig(net, nearOptions.nodeUrl),
         deps: {
             keyStore,
         }

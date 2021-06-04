@@ -15,7 +15,8 @@ module.exports = {
                 "tokenContractId": "wnear.flux-dev",
                 "net": "testnet",
                 "maxGas": "200000000000000",
-                "storageBase": "30000000000000000000000"
+                "storageBase": "30000000000000000000000",
+                "nodeUrl": process.env.NODE_URL
             }
         }
     ]

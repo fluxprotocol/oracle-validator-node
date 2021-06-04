@@ -15,7 +15,7 @@ export function createNearNetworkConfig(net: NetworkType, rpcUrl?: string): Netw
     if (net === NetworkType.Mainnet) {
         return {
             networkId: NetworkType.Mainnet,
-            nodeUrl: 'https://rpc.mainnet.near.org',
+            nodeUrl: rpcUrl ?? 'https://rpc.mainnet.near.org',
             walletUrl: 'https://wallet.near.org',
         };
     }
