@@ -1,0 +1,6 @@
+[submodule "oracle-explorer-api"]
+	path = oracle-explorer-api
+	url = https://github.com/fluxprotocol/oracle-explorer-api.git
+[submodule "oracle-explorer-fe"]
+	path = oracle-explorer-fe
+	url = https://github.com/fluxprotocol/oracle-explorer-fe.git

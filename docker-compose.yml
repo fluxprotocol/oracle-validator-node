@@ -19,6 +19,46 @@ services:
     profiles: ["full-node"]
     command: "run ${NETWORK}"
     volumes:
-      - .near:/root/.near
+      - nearup_container:/root/.near
     ports:
       - "3030:3030"
+
+  mongodb:
+    image: mongo:latest
+    container_name: flux-oracle-explorer-mongodb
+    profiles: ["explorer", "full-node"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+
+  explorer-api:
+    image: fluxprotocol/oracle-explorer-api
+    container_name: flux-oracle-explorer-api
+    profiles: ["explorer", "full-node"]
+    build:
+      context: ./oracle-explorer-api
+      dockerfile: ../docker/Dockerfile.explorer-api
+    depends_on:
+      - "mongodb"
+    volumes:
+      - .:/explorer-api
+
+  explorer-fe:
+    image: fluxprotocol/oracle-explorer-fe
+    container_name: flux-oracle-explorer-fe
+    profiles: ["explorer", "full-node"]
+    build:
+      context: ./oracle-explorer-fe
+      dockerfile: ../docker/Dockerfile.explorer-fe
+    depends_on:
+      - "explorer-api"
+    volumes:
+      - .:/explorer-fe
+
+volumes:
+  mongodb_data_container:
+  nearup_container:
