@@ -28,8 +28,8 @@ services:
     container_name: flux-oracle-explorer-mongodb
     profiles: ["explorer", "full-node"]
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
       - 27017:27017
     volumes:
@@ -40,8 +40,13 @@ services:
     container_name: flux-oracle-explorer-api
     profiles: ["explorer", "full-node"]
     build:
-      context: ./oracle-explorer-api
-      dockerfile: ../docker/Dockerfile.explorer-api
+      context: ./docker
+      dockerfile: ./Dockerfile.explorer-api
+    environment:
+      APP_PORT: 4000
+      PROTOCOL_ACCOUNT: ${ORACLE_CONTRACT}
+    ports:
+      - 4000:4000
     depends_on:
       - "mongodb"
     volumes:
@@ -52,8 +57,16 @@ services:
     container_name: flux-oracle-explorer-fe
     profiles: ["explorer", "full-node"]
     build:
-      context: ./oracle-explorer-fe
-      dockerfile: ../docker/Dockerfile.explorer-fe
+      context: ./docker
+      dockerfile: ./Dockerfile.explorer-fe
+    environment:
+      REACT_APP_NEAR_NETWORK: ${NETWORK}
+      REACT_APP_NEAR_ORACLE_CONTRACT_ID: ${ORACLE_CONTRACT}
+      REACT_APP_NEAR_FLUX_TOKEN_ID: ${FLUX_TOKEN_CONTRACT}
+      REACT_APP_NEAR_NULL_CONTRACT: ${NULL_CONTRACT}
+      REACT_APP_COINGECKO_API_URL: ${COINGECKO_API_URL}
+    ports:
+      - 3000:3000
     depends_on:
       - "explorer-api"
     volumes:

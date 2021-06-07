@@ -1,6 +1,6 @@
 [submodule "oracle-explorer-api"]
-	path = oracle-explorer-api
+	path = docker/oracle-explorer-api
 	url = https://github.com/fluxprotocol/oracle-explorer-api.git
 [submodule "oracle-explorer-fe"]
-	path = oracle-explorer-fe
+	path = docker/oracle-explorer-fe
 	url = https://github.com/fluxprotocol/oracle-explorer-fe.git
