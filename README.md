@@ -8,17 +8,29 @@
 * Automatic claiming of fees
 * Re-staking on a malicious stake
 
-## Getting started
+## Quick start
 
-The node can either be run natively (Node.js) or Docker with no external dependencies. Both require first logging into the near-cli:
+Prerequisites: Node.js, Docker Compose, near-cli
 
 ```Bash
-npm install -g near-cli
+# save NEAR credentials to ~/.near-credentials
 near login
+
+# install packages
+npm install
+
+# generate environment variables (replacing the bracketed arguments)
+npm run copyNearCredentials -- --account_id <account_id> --network <testnet/mainnet>
+
+# start the node
+./start.sh light-node .env.development
 ```
+
+Use the `light-node` profile in the last command to run _only_ the oracle validator node and `full-node` to additionally run a full NEAR node and oracle explorer API.
+
 ## Configuration
 
-Environment variables are stored in `.env` so that it can be injected into `config.js` from Docker and Node.js.
+Environment variables are stored in `.env.development` or `.env.production`, and if not passed as an argument to the start script, the script will prompt you to choose one.
 
 To create and populate the `.env` file, run the utility script to copy NEAR credientials to `.env` (which auto-detects the location of your `.near-credentials` folder depending on your OS):
 
@@ -26,7 +38,7 @@ To create and populate the `.env` file, run the utility script to copy NEAR cred
 npm run copyNearCredentials -- --account_id <account_id>
 ```
 
-The script will prompt you to add or replace lines to your `.env` using your NEAR account information. All information is stored locally and is included in the `.gitignore` so that it won't show up in the Git repository. You can also pass the `--network`, `--path`, and `--help` arguments.
+The script will prompt you to add or replace lines to your `.env.development` or `.env.production` using your NEAR account information. All information is stored locally and is included in the `.gitignore` so that it won't show up in the Git repository. You can also pass the `--network`, `--path`, and `--help` arguments.
 
 In addition to the account information, other environment variables you can modify are:
 
@@ -36,23 +48,7 @@ More information about the other options coming soon..
 
 ## Running the node
 
-### Docker
-
-Docker and Docker Compose must be installed before running a containerized validator node. To run a light node (using the Explorer GraphQL and standard RPC):
-
-``` Bash
-docker-compose --env-file .env up
-```
-
-### Native
-
-Node.js must be installed before running a validator node natively. After installing you can run:
-
-```Bash
-npm install
-npm start
-```
-
+The node can either be run in Docker (through the commands in the quick start) or natively (with `npm start`). The advantage of running containerized versions is the ability to deploy a full node and to reuse built images.
 
 If everything went correctly you should see something like the following:
 

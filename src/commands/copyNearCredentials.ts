@@ -27,6 +27,12 @@ export const copyNearCredentials: CommandModule = {
             demandOption: true,
             describe: 'Account name (e.g. user.near)'
         })
+        .option('env_path', {
+            type: 'string',
+            default: './.env.development'
+            describe: 'Path of file containing environment variables'
+            demandOption: false,
+        })
     ,
     handler: async (args) => {
         // copy .env.example to .env if it doesn't exist
