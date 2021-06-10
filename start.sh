@@ -66,4 +66,4 @@ else
 fi
 echo "$ENVLOCATION selected."
 
-sudo docker-compose --profile $PROFILESELECTION --env-file $ENVLOCATION up
+docker-compose --profile $PROFILESELECTION --env-file $ENVLOCATION up
