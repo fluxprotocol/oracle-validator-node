@@ -11,7 +11,7 @@ services:
     volumes:
       - .:/validator-node
     ports:
-      - "3000:3000"
+      - "1234:1234"
 
   near-node:
     image: nearprotocol/nearup
@@ -46,7 +46,7 @@ services:
       APP_PORT: 4000
       PROTOCOL_ACCOUNT: ${ORACLE_CONTRACT}
     ports:
-      - 4000:4000
+      - "4000:4000"
     depends_on:
       - "mongodb"
     volumes:
@@ -66,7 +66,7 @@ services:
       REACT_APP_NEAR_NULL_CONTRACT: ${NULL_CONTRACT}
       REACT_APP_COINGECKO_API_URL: ${COINGECKO_API_URL}
     ports:
-      - 3000:3000
+      - "3000:3000"
     depends_on:
       - "explorer-api"
     volumes:

@@ -5,7 +5,7 @@ import { truncate } from '../utils/stringUtils';
 
 const prompt = require('prompt-sync')();
 
-const DOTENV = `./.env`;
+const DOTENV = `./.env.development`;
 
 export const copyNearCredentials: CommandModule = {
     command: 'copy-near-credentials',
@@ -29,8 +29,8 @@ export const copyNearCredentials: CommandModule = {
         })
         .option('env_path', {
             type: 'string',
-            default: './.env.development'
-            describe: 'Path of file containing environment variables'
+            default: './.env.development',
+            describe: 'Path of file containing environment variables',
             demandOption: false,
         })
     ,

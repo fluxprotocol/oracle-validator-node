@@ -1,4 +1,7 @@
 {
+    "exclude": [
+        "docker"
+    ],
     "compilerOptions": {
         "resolveJsonModule": true,
         /* Basic Options */

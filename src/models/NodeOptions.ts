@@ -49,7 +49,7 @@ export function parseNodeOptions(options: RawNodeConfig): NodeOptions {
         stakePerRequest: new Big(toToken('2.5', TOKEN_DENOM)),
         providersConfig: [],
         http: {
-            port: 3000,
+            port: parseInt(process.env.PORT || '3000'),
         },
     };
 
