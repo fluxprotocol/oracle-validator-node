@@ -2,8 +2,9 @@ node_modules
 dist
 coverage
 .cache
-config.json
 .env
+.env.development
+.env.production
 flux_db
 *_db
-*.config.json
+.near

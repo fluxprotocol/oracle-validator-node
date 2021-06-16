@@ -1,0 +1,9 @@
+FROM node:14-alpine as base
+
+WORKDIR /opt/flux-light-node
+
+COPY package*.json ./
+RUN npm install
+COPY . ./
+
+CMD ["npm", "start"]

@@ -8,4 +8,5 @@ export default interface NearProviderOptions {
     explorerApi: string;
     maxGas: string;
     storageBase: string;
+    nodeUrl: string;
 }

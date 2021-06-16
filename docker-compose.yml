@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+  validator-node:
+    image: fluxprotocol/oracle-validator-node
+    container_name: flux-validator-node
+    profiles: ["light-node", "full-node", "near-node"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.validator-node
+    environment:
+      PORT: ${VALIDATOR_NODE_PORT}
+      ACCOUNT_ID: ${ACCOUNT_ID}
+      PRIVATE_KEY: ${PRIVATE_KEY}
+      NODE_URL: ${NODE_URL}
+      STAKE_PER_REQUEST: ${STAKE_PER_REQUEST}
+    volumes:
+      - .:/validator-node
+    ports:
+      - "1234:1234"
+
+  near-node:
+    image: nearprotocol/nearup
+    container_name: nearup
+    profiles: ["full-node", "near-node"]
+    command: "run ${NETWORK}"
+    volumes:
+      - nearup_container:/root/.nearup
+    ports:
+      - "3030:3030"
+
+  mongodb:
+    image: mongo:latest
+    container_name: flux-oracle-explorer-mongodb
+    profiles: ["explorer", "full-node", "explorer-api", "mongo"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+    restart:
+      always
+
+  explorer-api:
+    image: fluxprotocol/oracle-explorer-api
+    container_name: flux-oracle-explorer-api
+    profiles: ["explorer", "full-node", "explorer-api"]
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile.explorer-api
+    environment:
+      APP_PORT: 4000
+      PROTOCOL_ACCOUNT: ${ORACLE_CONTRACT}
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: 27017
+    ports:
+      - "4000:4000"
+    depends_on:
+      - "mongodb"
+    volumes:
+      - .:/explorer-api
+
+  explorer-fe:
+    image: fluxprotocol/oracle-explorer-fe
+    container_name: flux-oracle-explorer-fe
+    profiles: ["explorer", "full-node"]
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile.explorer-fe
+    environment:
+      REACT_APP_NEAR_NETWORK: ${NETWORK}
+      REACT_APP_NEAR_ORACLE_CONTRACT_ID: ${ORACLE_CONTRACT}
+      REACT_APP_NEAR_FLUX_TOKEN_ID: ${FLUX_TOKEN_CONTRACT}
+      REACT_APP_NEAR_NULL_CONTRACT: ${NULL_CONTRACT}
+      REACT_APP_COINGECKO_API_URL: ${COINGECKO_API_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - "explorer-api"
+    volumes:
+      - .:/explorer-fe
+
+volumes:
+  mongodb_data_container:
+  nearup_container:

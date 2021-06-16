@@ -1,0 +1,9 @@
+FROM node:14-alpine as base
+
+WORKDIR /opt/flux-explorer-fe
+
+COPY package*.json ./
+RUN npm install
+COPY . ./
+
+CMD ["npm", "start"]

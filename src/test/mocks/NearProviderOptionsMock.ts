@@ -10,5 +10,6 @@ export function createNearProviderOptionsMock(): NearProviderOptions {
         storageBase: '2',
         tokenContractId: 'test',
         privateKey: 'esdae:3424324423324fhtiuerhtiure',
+        nodeUrl: 'https://rpc.testnet.near.org'
     };
 }
