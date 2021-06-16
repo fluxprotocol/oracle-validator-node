@@ -22,6 +22,7 @@ then
     echo "Which profile would you like to use?"
     echo "1 => light node (oracle validator node)"
     echo "2 => full node (oracle validator node, NEAR node, explorer API)"
+    echo "3 => oracle explorer (explorer API)"
     echo ""
 
     read PROFILEINPUT
@@ -32,6 +33,9 @@ then
     elif [ $PROFILEINPUT == 2 ]
     then
         PROFILESELECTION='full-node'
+    elif [ $PROFILEINPUT == 3 ]
+    then
+        PROFILESELECTION='explorer-api'
     else
         echo "Invalid selection"
         exit 0
@@ -59,7 +63,7 @@ then
     then
         ENVLOCATION='.env.production'
     else
-        ENVLOCATION=ENVINPUT
+        ENVLOCATION=$ENVINPUT
     fi
 else
     ENVLOCATION=$2

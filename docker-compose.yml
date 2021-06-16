@@ -4,10 +4,16 @@ services:
   validator-node:
     image: fluxprotocol/oracle-validator-node
     container_name: flux-validator-node
-    profiles: ["light-node", "full-node"]
+    profiles: ["light-node", "full-node", "near-node"]
     build:
       context: .
       dockerfile: docker/Dockerfile.validator-node
+    environment:
+      PORT: ${VALIDATOR_NODE_PORT}
+      ACCOUNT_ID: ${ACCOUNT_ID}
+      PRIVATE_KEY: ${PRIVATE_KEY}
+      NODE_URL: ${NODE_URL}
+      STAKE_PER_REQUEST: ${STAKE_PER_REQUEST}
     volumes:
       - .:/validator-node
     ports:
@@ -16,17 +22,17 @@ services:
   near-node:
     image: nearprotocol/nearup
     container_name: nearup
-    profiles: ["full-node"]
+    profiles: ["full-node", "near-node"]
     command: "run ${NETWORK}"
     volumes:
-      - nearup_container:/root/.near
+      - nearup_container:/root/.nearup
     ports:
       - "3030:3030"
 
   mongodb:
     image: mongo:latest
     container_name: flux-oracle-explorer-mongodb
-    profiles: ["explorer", "full-node"]
+    profiles: ["explorer", "full-node", "explorer-api", "mongo"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -34,17 +40,24 @@ services:
       - 27017:27017
     volumes:
       - mongodb_data_container:/data/db
+    restart:
+      always
 
   explorer-api:
     image: fluxprotocol/oracle-explorer-api
     container_name: flux-oracle-explorer-api
-    profiles: ["explorer", "full-node"]
+    profiles: ["explorer", "full-node", "explorer-api"]
     build:
       context: ./docker
       dockerfile: ./Dockerfile.explorer-api
     environment:
       APP_PORT: 4000
       PROTOCOL_ACCOUNT: ${ORACLE_CONTRACT}
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: 27017
     ports:
       - "4000:4000"
     depends_on:
