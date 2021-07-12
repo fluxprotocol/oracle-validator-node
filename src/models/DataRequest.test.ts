@@ -2,9 +2,8 @@ import { createMockRequest } from "./DataRequest";
 import { StakeError, StakeResult, StakeResultType } from "./StakingResult";
 import * as JobExecuter from '../core/JobExecuter';
 import * as Oracle from '../core/Oracle';
-import { JobExecuteResult, JobResultType } from "./JobExecuteResult";
+import { ExecuteResultType, ExecuteResult } from "./JobExecuteResult";
 import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
-import { parseNodeOptions } from "./NodeOptions";
 import { createMockNodeBalance } from "../test/mocks/NodeBalance";
 import { ClaimResultType } from "./ClaimResult";
 import { OutcomeType, transformToOutcome } from "./DataRequestOutcome";
@@ -96,7 +95,11 @@ describe('DataRequest', () => {
                     type: OutcomeType.Invalid,
                 },
                 resolutionWindows: [{
-                    bondSize: '1',
+                    bondSize: '2',
+                    endTime: new Date(),
+                    round: 0,
+                }, {
+                    bondSize: '4',
                     endTime: new Date(),
                     round: 1,
                 }],
@@ -164,6 +167,19 @@ describe('DataRequest', () => {
             expect(request.isClaimable()).toBe(false);
         });
 
+        it('should not be calimable when the request only has one window', () => {
+            const request = createMockRequest({
+                resolutionWindows: [{
+                    bondSize: '2',
+                    endTime: new Date(1),
+                    round: 0,
+                    bondedOutcome: transformToOutcome('Invalid'),
+                }],
+            });
+
+            expect(request.isClaimable()).toBe(false);
+        });
+
         it('should be claimable when the current date exceeds the end time', () => {
             const request = createMockRequest({
                 staking: [{
@@ -175,6 +191,11 @@ describe('DataRequest', () => {
                     bondSize: '2',
                     endTime: new Date(1),
                     round: 0,
+                    bondedOutcome: transformToOutcome('Invalid'),
+                },{
+                    bondSize: '4',
+                    endTime: new Date(1),
+                    round: 1,
                     bondedOutcome: transformToOutcome('Invalid'),
                 }],
             });
@@ -202,7 +223,7 @@ describe('DataRequest', () => {
     });
 
     describe('execute', () => {
-        let executeJobSpy: jest.SpyInstance<Promise<JobExecuteResult<string>[]>>;
+        let executeJobSpy: jest.SpyInstance<Promise<ExecuteResult>>;
 
         beforeEach(() => {
             executeJobSpy = jest.spyOn(JobExecuter, 'executeJob');
@@ -215,24 +236,20 @@ describe('DataRequest', () => {
         it('should execute the job and push the results on it self', async () => {
             const request = createMockRequest({});
             executeJobSpy.mockReturnValue(new Promise((resolve) => {
-                resolve([{
-                    type: JobResultType.Success,
+                resolve({
+                    type: ExecuteResultType.Success,
                     data: 'test',
                     status: 200,
-                }]);
+                });
             }));
 
             await request.execute();
 
             expect(executeJobSpy).toBeCalled();
-            expect(request.executeResults.length).toBe(1);
-            expect(request.executeResults[0]).toStrictEqual({
-                roundId: 0,
-                results: [{
-                    type: JobResultType.Success,
-                    data: 'test',
-                    status: 200,
-                }]
+            expect(request.executeResult).toStrictEqual({
+                type: ExecuteResultType.Success,
+                data: 'test',
+                status: 200,
             });
         });
     });
@@ -275,6 +292,37 @@ describe('DataRequest', () => {
 
         afterEach(() => {
             stakeOnDataRequestSpy.mockRestore();
+        });
+
+        it('should not stake again when the previous bonded outcome is the same as our answer', async () => {
+            const request = createMockRequest({
+                executeResult: {
+                    type: ExecuteResultType.Success,
+                    status: 200,
+                    data: 'testA',
+                },
+                resolutionWindows: [{
+                    round: 0,
+                    endTime: new Date(),
+                    bondSize: '2',
+                    bondedOutcome: {
+                        answer: 'testA',
+                        type: OutcomeType.Answer,
+                    },
+                }, {
+                    round: 1,
+                    endTime: new Date(),
+                    bondSize: '4',
+                }],
+            });
+
+            await request.stake(
+                createMockProviderRegistry([]),
+                createMockNodeBalance(),
+            );
+
+            expect(request.staking.length).toBe(0);
+            expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(0);
         });
 
         it('should not stake again when there is already staken on the round', async () => {
@@ -324,8 +372,38 @@ describe('DataRequest', () => {
             expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(0);
         });
 
+        it('should not add the staking when there is no execute results', async () => {
+            const request = createMockRequest({
+                resolutionWindows: [{
+                    round: 0,
+                    endTime: new Date(),
+                    bondSize: '2',
+                }],
+            });
+
+            stakeOnDataRequestSpy.mockReturnValue(new Promise((resolve) => {
+                resolve({
+                    type: StakeResultType.Error,
+                    error: StakeError.Unknown,
+                });
+            }));
+
+            await request.stake(
+                createMockProviderRegistry([]),
+                createMockNodeBalance(),
+            );
+
+            expect(request.staking.length).toBe(0);
+            expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(0);
+        });
+
         it('should not add the staking when the stake result is not succesful', async () => {
             const request = createMockRequest({
+                executeResult: {
+                    data: '',
+                    status: 200,
+                    type: ExecuteResultType.Success,
+                },
                 resolutionWindows: [{
                     round: 0,
                     endTime: new Date(),
@@ -353,6 +431,11 @@ describe('DataRequest', () => {
 
         it('should add to the staking when the stake result is succesful', async () => {
             const request = createMockRequest({
+                executeResult: {
+                    type: ExecuteResultType.Success,
+                    data: '',
+                    status: 200,
+                },
                 resolutionWindows: [{
                     round: 0,
                     endTime: new Date(),
@@ -394,7 +477,6 @@ describe('DataRequest', () => {
 
             expect(JSON.parse(str)).toStrictEqual({
                 contractId: 'test.near',
-                executeResults: [],
                 finalArbitratorTriggered: false,
                 id: '1',
                 internalId: '1_near_test.near',
@@ -409,6 +491,9 @@ describe('DataRequest', () => {
                 sources: [],
                 staking: [],
                 tokenContractId: 'token.near',
+                dataType: {
+                    type: 'string'
+                },
                 type: 'DataRequest',
             });
         });

@@ -1,7 +1,7 @@
 import Big from "big.js";
 import { createMockRequest } from "../models/DataRequest";
 import { OutcomeType } from "../models/DataRequestOutcome";
-import { JobResultType } from "../models/JobExecuteResult";
+import { ExecuteResultType } from "../models/JobExecuteResult";
 import { NodeOptions, parseNodeOptions } from "../models/NodeOptions";
 import { StakeError, StakeResultType, UnsuccessfulStakeResult } from "../models/StakingResult";
 import { StakeResponse } from "../providers/Provider";
@@ -38,10 +38,11 @@ describe('Oracle', () => {
                 nodeBalance,
                 createMockRequest({
                     providerId: 'mock',
-                    executeResults: [{
-                        roundId: 0,
-                        results: [{ type: JobResultType.Success, data: 'd', status: 200 }],
-                    }]
+                    executeResult: {
+                        type: ExecuteResultType.Success,
+                        data: 'd',
+                        status: 200
+                    },
                 })
             ) as UnsuccessfulStakeResult;
 
@@ -70,10 +71,11 @@ describe('Oracle', () => {
                     bondSize: '1',
                     bondedOutcome: undefined,
                 }],
-                executeResults: [{
-                    roundId: 0,
-                    results: [{ type: JobResultType.Success, data: 'good_answer', status: 200 }],
-                }]
+                executeResult: {
+                    type: ExecuteResultType.Success,
+                    data: 'good_answer',
+                    status: 200
+                }
             });
             const result = await stakeOnDataRequest(
                 mockProviderRegistry,
@@ -112,10 +114,11 @@ describe('Oracle', () => {
                         bondSize: '1',
                         bondedOutcome: undefined,
                     }],
-                    executeResults: [{
-                        roundId: 0,
-                        results: [{ type: JobResultType.Success, data: 'good_answer', status: 200 }],
-                    }]
+                    executeResult: {
+                        type: ExecuteResultType.Success,
+                        data: 'good_answer',
+                        status: 200
+                    },
                 })
             );
 
@@ -153,10 +156,11 @@ describe('Oracle', () => {
                     bondSize: '1',
                     bondedOutcome: undefined,
                 }],
-                executeResults: [{
-                    roundId: 0,
-                    results: [{ type: JobResultType.Success, data: 'good_answer', status: 200 }],
-                }]
+                executeResult: {
+                    type: ExecuteResultType.Success,
+                    data: 'good_answer',
+                    status: 200 ,
+                }
             });
             const result = await stakeOnDataRequest(
                 mockProviderRegistry,

@@ -2,8 +2,10 @@ import DataRequest from "../../../models/DataRequest";
 import { NearResolutionWindowGraphData } from "./NearResolutionWindow";
 import NearProviderOptions from '../NearProviderOptions';
 import NearProvider from "../NearProvider";
-import { transformToOutcome } from "../../../models/DataRequestOutcome";
+import { Outcome, transformToOutcome } from "../../../models/DataRequestOutcome";
 import { nsToMs } from "../../../utils/dateUtils";
+import { parseJson } from "../../../utils/jsonUtils";
+import { transformNearOutcomeToOutcome } from "../NearService";
 
 export interface NearDataRequestGraphData {
     id: string;
@@ -25,12 +27,20 @@ export interface NearDataRequestGraphData {
         source_path: string;
     }[];
     resolution_windows: NearResolutionWindowGraphData[];
+    data_type: string;
+}
+
+interface NumberDataType {
+    Number: string;
 }
 
 export function transformNearDataRequestToDataRequest(providerOptions: NearProviderOptions, data: NearDataRequestGraphData): DataRequest {
+    // A string will return null because it's not parsable.
+    const parsedDataType = parseJson<NumberDataType>(data.data_type);
+
     return new DataRequest({
         contractId: providerOptions.oracleContractId,
-        executeResults: [],
+        executeResult: undefined,
         id: data.id,
         providerId: NearProvider.id,
         settlementTime: new Date(nsToMs(Number(data.settlement_time))),
@@ -43,10 +53,11 @@ export function transformNearDataRequestToDataRequest(providerOptions: NearProvi
                 bondSize: rw.bond_size,
                 endTime: new Date(Number(rw.end_time) / 1000000),
                 round: rw.round,
-                bondedOutcome: rw.bonded_outcome ? transformToOutcome(rw.bonded_outcome) : undefined,
+                bondedOutcome: rw.bonded_outcome ? transformNearOutcomeToOutcome(rw.bonded_outcome) : undefined,
             }
         }),
         finalArbitratorTriggered: data.final_arbitrator_triggered,
         finalizedOutcome: data.finalized_outcome ? transformToOutcome(data.finalized_outcome) : undefined,
+        dataType: parsedDataType ? { type: 'number', multiplier: parsedDataType.Number } : { type: 'string' },
     });
 }

@@ -7,7 +7,7 @@ import at from "lodash.at";
  * @param {string} str
  * @return {(object | null)}
  */
-export function parseJson(str: string): object | null {
+export function parseJson<T>(str: string): T | null {
     try {
         return JSON.parse(str);
     } catch (e) {

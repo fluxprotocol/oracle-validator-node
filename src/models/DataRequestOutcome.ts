@@ -1,5 +1,5 @@
 import DataRequest from "./DataRequest";
-import { isJobSuccesful } from "./JobExecuteResult";
+import { isExecuteResultSuccesful } from "./JobExecuteResult";
 
 export enum OutcomeType {
     Answer,
@@ -48,16 +48,16 @@ export function isOutcomesEqual(a: Outcome, b: Outcome): boolean {
 
 /**
  * Converts the latest execute result to an outcome
+ * TODO: We can maybe ditch this and directly create in the provider an answer
  *
  * @export
  * @param {DataRequest} dataRequest
  * @return {JobExecuteResult<Outcome>}
  */
 export function getRequestOutcome(dataRequest: DataRequest): Outcome {
-    const latestExecuteResults = dataRequest.executeResults[dataRequest.executeResults.length - 1];
-    const result = latestExecuteResults.results[0];
+    const result = dataRequest.executeResult;
 
-    if (!result || !isJobSuccesful(result)) {
+    if (!result || !isExecuteResultSuccesful(result)) {
         return {
             type: OutcomeType.Invalid,
         };

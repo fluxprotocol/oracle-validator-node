@@ -1,5 +1,8 @@
+import Big from "big.js";
 import { Account, connect, keyStores, Near, providers, utils, WalletConnection, transactions } from "near-api-js";
 import path from 'path';
+import DataRequest from "../../models/DataRequest";
+import { Outcome, OutcomeType } from "../../models/DataRequestOutcome";
 
 import { createNearNetworkConfig, NetworkType } from "../../models/NearNetworkConfig";
 import cache from "../../utils/cache";
@@ -31,6 +34,20 @@ export async function connectToNear(net: NetworkType, nearOptions: NearProviderO
 export async function getAccount(connection: Near, accountId: string): Promise<Account> {
     return cache(accountId, async () => {
         return connection.account(accountId);
+    });
+}
+
+export function isTransactionFailure(executionOutcome: providers.FinalExecutionOutcome) {
+    return executionOutcome.receipts_outcome.some((receipt) => {
+        if (typeof receipt.outcome.status === 'string') {
+            return false;
+        }
+
+        if (receipt.outcome.status?.Failure) {
+            return true;
+        }
+
+        return false;
     });
 }
 
@@ -87,4 +104,68 @@ export async function batchSendTransactions(walletConnection: WalletConnection, 
     }));
 
     return walletConnection.requestSignTransactions(resultTxs, callbackUrl);
+}
+
+export interface OutcomeNumber {
+    Number: {
+        value: string;
+        multiplier: string;
+        negative: boolean;
+    }
+}
+
+export interface OutcomeString {
+    String: string;
+}
+
+export interface ParsedOutcome {
+    Answer: OutcomeNumber | OutcomeString;
+}
+
+export function transformNearOutcomeToOutcome(outcome: string): Outcome {
+    if (outcome === 'Invalid') {
+        return {
+            type: OutcomeType.Invalid,
+        }
+    }
+
+    const parsedOutcome: ParsedOutcome = JSON.parse(outcome);
+
+    if ('String' in parsedOutcome.Answer) {
+        return {
+            answer: parsedOutcome.Answer.String,
+            type: OutcomeType.Answer,
+        };
+    }
+
+    const number = new Big(parsedOutcome.Answer.Number.value).div(parsedOutcome.Answer.Number.multiplier);
+
+    if (parsedOutcome.Answer.Number.negative) {
+        number.s = -1;
+    }
+
+    return {
+        answer: number.toString(),
+        type: OutcomeType.Answer,
+    };
+}
+
+export function createNearOutcome(dataRequest: DataRequest, outcome: Outcome): any {
+    if (outcome.type === OutcomeType.Invalid) {
+        return 'Invalid';
+    }
+
+    if (dataRequest.dataType.type === 'string') {
+        return {
+            'Answer': {
+                'String': outcome.answer,
+            }
+        }
+    }
+
+    return {
+        'Answer': {
+            'Number': JSON.parse(outcome.answer),
+        }
+    }
 }

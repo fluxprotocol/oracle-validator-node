@@ -3,6 +3,7 @@ import { ClaimError, ClaimResult, ClaimResultType } from "../models/ClaimResult"
 import DataRequest from "../models/DataRequest";
 import { Outcome } from "../models/DataRequestOutcome";
 import { NodeOptions } from "../models/NodeOptions";
+import { OracleConfig } from "../models/OracleConfig";
 import logger from "../services/LoggerService";
 import { StakeResponse, Provider } from "./Provider";
 
@@ -71,7 +72,7 @@ export default class ProviderRegistry {
         return provider.finalize(requestId);
     }
 
-    async claim(providerId: string, requestId: string): Promise<ClaimResult> {
+    async claim(providerId: string, request: DataRequest): Promise<ClaimResult> {
         const provider = this.getProviderById(providerId);
 
         if (!provider) {
@@ -81,6 +82,6 @@ export default class ProviderRegistry {
             };
         }
 
-        return provider.claim(requestId);
+        return provider.claim(request);
     }
 }

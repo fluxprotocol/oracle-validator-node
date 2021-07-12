@@ -11,7 +11,7 @@ describe('JobSearcher', () => {
         tokenContractId: 'token.near',
         settlementTime: new Date(1),
         contractId: '',
-        executeResults: [],
+        executeResult: undefined,
         id: '1',
         outcomes: [],
         providerId: 'near',
@@ -23,6 +23,7 @@ describe('JobSearcher', () => {
             source_path: '',
         }],
         finalArbitratorTriggered: false,
+        dataType: { type: 'string' },
     };
 
     beforeEach(() => {

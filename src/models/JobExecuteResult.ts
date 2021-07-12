@@ -1,31 +1,23 @@
-export enum JobExecuteError {
-    ResponseNotJson = 'response_not_json',
-    ResponseNotOk = 'response_not_ok',
-    Unknown = 'unknown',
-    ValueDoesNotExist = 'value_does_not_exist',
-    ValueNotInOutcomes = 'value_not_in_outcomes',
-}
-
-export enum JobResultType {
+export enum ExecuteResultType {
     Error = 'error',
     Success = 'success',
 }
 
-export interface SuccessfulJobResult<T> {
+export interface SuccessfulExecuteResult {
     status: number;
-    data: T;
-    type: JobResultType.Success;
+    data: string;
+    type: ExecuteResultType.Success;
 }
 
-export interface UnsuccessfulJobResult {
+export interface UnsuccessfulExecuteResult {
     status: number;
-    error: JobExecuteError;
-    type: JobResultType.Error;
+    error: string;
+    type: ExecuteResultType.Error;
 }
 
 
-export type JobExecuteResult<T> = SuccessfulJobResult<T> | UnsuccessfulJobResult;
+export type ExecuteResult = SuccessfulExecuteResult | UnsuccessfulExecuteResult;
 
-export function isJobSuccesful<T>(result: JobExecuteResult<T>): result is SuccessfulJobResult<T> {
-    return result.type === JobResultType.Success;
+export function isExecuteResultSuccesful(result: ExecuteResult): result is SuccessfulExecuteResult {
+    return result.type === ExecuteResultType.Success;
 }

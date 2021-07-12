@@ -8,9 +8,10 @@ import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
 import { Provider, StakeResponse } from "../Provider";
 import { getDataRequestByIdFromNear, getDataRequestsAsCursorFromNear } from "./NearExplorerService";
 import NearProviderOptions from "./NearProviderOptions";
-import { connectToNear, extractLogs, getAccount } from "./NearService";
+import { connectToNear, createNearOutcome, extractLogs, getAccount, isTransactionFailure } from "./NearService";
 import { JOB_SEARCH_INTERVAL } from '../../config';
 import { startStorageDepositChecker } from './NearStorage';
+import { OracleConfig } from "../../models/OracleConfig";
 
 export default class NearProvider implements Provider {
     providerName = 'NEAR';
@@ -41,10 +42,6 @@ export default class NearProvider implements Provider {
             errors.push(`config option "oracleContractId" is required for ${this.id}`);
         }
 
-        if (!providerOptions.tokenContractId) {
-            errors.push(`config option "tokenContractId" is required for ${this.id}`);
-        }
-
         if (!providerOptions.explorerApi) {
             errors.push(`config option "explorerApi" is required for ${this.id}`);
         }
@@ -68,7 +65,27 @@ export default class NearProvider implements Provider {
         this.nearConnection = await connectToNear(nearOptions.net as NetworkType, nearOptions);
         this.nodeAccount = await getAccount(this.nearConnection, nearOptions.accountId);
 
+        // We fetch the latest config to make getTokenBalance() work correctly
+        const config = await this.config();
+        this.nearOptions.tokenContractId = config.stakingToken.contractId;
+
         startStorageDepositChecker(nearOptions, this.nodeAccount);
+    }
+
+    async config(): Promise<OracleConfig> {
+        if (!this.nodeAccount || !this.nearOptions) {
+            throw new Error('init() was not called');
+        }
+
+        const config = await this.nodeAccount.viewFunction(this.nearOptions.oracleContractId, 'get_config', {});
+
+        return {
+            stakingToken: {
+                contractId: config.stake_token,
+                decimals: 18,
+                symbol: 'FLX',
+            }
+        }
     }
 
     async getTokenBalance(): Promise<Big> {
@@ -97,7 +114,7 @@ export default class NearProvider implements Provider {
         }, JOB_SEARCH_INTERVAL);
     }
 
-    async claim(requestId: string): Promise<ClaimResult> {
+    async claim(request: DataRequest): Promise<ClaimResult> {
         const account = this.nodeAccount;
 
         if (!account || !this.nearOptions) {
@@ -108,7 +125,7 @@ export default class NearProvider implements Provider {
         }
 
         const result = await account.functionCall(this.nearOptions.oracleContractId, 'dr_claim', {
-            request_id: requestId,
+            request_id: request.id,
             account_id: account.accountId,
             // @ts-ignore
         }, this.nearOptions.maxGas, this.nearOptions.storageBase);
@@ -149,7 +166,7 @@ export default class NearProvider implements Provider {
         }
 
         // Formatting is weird in rust..
-        const stakeOutcome = outcome.type === OutcomeType.Invalid ? 'Invalid' : { 'Answer': outcome.answer };
+        const stakeOutcome = createNearOutcome(request, outcome);
 
         // TODO: Use the token contract id from the request. This could change in a config update.
         const response = await account.functionCall(this.nearOptions.tokenContractId, 'ft_transfer_call', {
@@ -163,6 +180,15 @@ export default class NearProvider implements Provider {
             }),
             // @ts-ignore
         }, this.nearOptions.maxGas, '1');
+
+        const isFailure = isTransactionFailure(response);
+
+        if (isFailure) {
+            return {
+                success: false,
+                amountBack: new Big(stakeAmount),
+            };
+        }
 
         const logs = extractLogs(response);
         const userStake = logs.find(log => log.type === 'user_stakes');

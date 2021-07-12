@@ -1,6 +1,4 @@
 import DataRequest, { DataRequestProps, DATA_REQUEST_TYPE } from "../models/DataRequest";
-import { Outcome, OutcomeType } from "../models/DataRequestOutcome";
-import { isJobSuccesful } from "../models/JobExecuteResult";
 import Database from "./DatabaseService";
 import logger from "./LoggerService";
 

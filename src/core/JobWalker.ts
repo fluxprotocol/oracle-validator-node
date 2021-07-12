@@ -93,13 +93,13 @@ export default class JobWalker {
         }
 
         // Something can go wrong with the execute results
-        if (!request.executeResults.length) {
+        if (!request.executeResult) {
             await request.execute();
         }
 
         // Continuously try to stake on the outcome.
         // This will prevent any mallicious attacks
-        if (request.executeResults.length) {
+        if (request.executeResult) {
             await request.stake(
                 this.providerRegistry,
                 this.nodeBalance

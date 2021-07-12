@@ -21,6 +21,7 @@ export async function getDataRequestByIdFromNear(apiUrl: string, id: string, pro
                         requestor
                         target_contract
                         finalized_outcome
+                        data_type
                         config {
                             stake_token
                         }
@@ -85,6 +86,7 @@ export async function getDataRequestsAsCursorFromNear(providerOptions: NearProvi
                             outcomes
                             finalized_outcome
                             final_arbitrator_triggered
+                            data_type
                             resolution_windows {
                                 round
                                 end_time

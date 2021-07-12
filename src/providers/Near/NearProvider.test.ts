@@ -3,6 +3,7 @@ import NearProvider from "./NearProvider";
 import * as NearExplorerService from './NearExplorerService';
 import { createMockRequest } from "../../models/DataRequest";
 import { OutcomeType } from "../../models/DataRequestOutcome";
+import { StakeResultType } from "../../models/StakingResult";
 
 describe('NearProvider', () => {
     let getDataRequestsAsCursorFromNearSpy: jest.SpyInstance<Promise<NearExplorerService.GetDataRequestsAsCursorResult>>;
@@ -82,7 +83,9 @@ describe('NearProvider', () => {
                     'StakeDataRequest': {
                         id: '1',
                         outcome: {
-                            Answer: 'test'
+                            Answer: {
+                                String: 'test'
+                            }
                         },
                     }
                 }),
@@ -163,4 +166,50 @@ describe('NearProvider', () => {
             expect(nearProvider.currentRequestId).toBe('1');
         });
     });
+
+    // describe('claim', () => {
+    //     it('should claim any unbonded stake', async () => {
+    //         const nearProvider = new NearProvider();
+    //         const dataRequest = createMockRequest({
+    //             staking: [{
+    //                 type: StakeResultType.Success,
+    //                 amountStaked: '250000000',
+    //                 roundId: 0,
+    //             }],
+    //             resolutionWindows: [{
+    //                 bondSize: '2',
+    //                 endTime: new Date(),
+    //                 round: 0,
+    //                 bondedOutcome: {
+    //                     answer: 'test',
+    //                     type: OutcomeType.Answer,
+    //                 }
+    //             }, {
+    //                 bondSize: '4',
+    //                 endTime: new Date(),
+    //                 round: 1,
+    //                 bondedOutcome: {
+    //                     answer: 'test2',
+    //                     type: OutcomeType.Answer,
+    //                 }
+    //             }],
+    //         });
+    //         const options = createNearProviderOptionsMock();
+    //         nearProvider.nearOptions = options;
+
+    //         // @ts-ignore
+    //         nearProvider.nodeAccount = {
+    //             functionCall: jest.fn(() => new Promise((resolve) => {
+    //                 // resolve({
+
+    //                 // });
+    //             })),
+    //         };
+
+    //         // nearProvider.claim();
+
+    //         expect(nearProvider.nodeAccount?.functionCall).toHaveBeenCalled();
+
+    //     });
+    // });
 });

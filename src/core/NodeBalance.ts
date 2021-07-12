@@ -46,13 +46,15 @@ export default class NodeBalance {
             return;
         }
 
+        // TODO: This might not be correct. We should only get back what we used..
         const amountStaked = request.staking.reduce((prev, curr) => prev.add(curr.amountStaked), new Big(0));
 
         this.deposit(request.providerId, new Big(request.claimedAmount));
+
         this.balanceStatus = transformToBalanceStatusViewModel({
             balance: sumBig(Array.from(this.balances.values())).toString(),
             claimed: this.balanceStatus.claimed.add(request.claimedAmount).toString(),
-            staked: this.balanceStatus.staked.add(amountStaked).toString(),
+            staked: this.balanceStatus.staked.toString(),
         });
     }
 

@@ -4,8 +4,9 @@ import { stakeOnDataRequest } from "../core/Oracle";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import logger from "../services/LoggerService";
 import { isClaimResultSuccesful } from "./ClaimResult";
-import { Outcome } from './DataRequestOutcome';
-import { JobExecuteResult } from "./JobExecuteResult";
+import { DataRequestDataType } from "./DataRequestDataType";
+import { getRequestOutcome, isOutcomesEqual, Outcome } from './DataRequestOutcome';
+import { ExecuteResult } from "./JobExecuteResult";
 import { ResolutionWindow } from "./ResolutionWindow";
 import { isStakeResultSuccesful, StakeError, StakeResult, StakeResultType, SuccessfulStakeResult } from "./StakingResult";
 
@@ -14,11 +15,6 @@ export const DATA_REQUEST_TYPE = 'DataRequest';
 export interface RequestInfo {
     end_point: string;
     source_path: string;
-}
-
-export interface ExecuteResults {
-    roundId: number;
-    results: JobExecuteResult<string>[];
 }
 
 export interface DataRequestProps {
@@ -31,10 +27,11 @@ export interface DataRequestProps {
     outcomes: string[];
     resolutionWindows: ResolutionWindow[];
     providerId: string;
-    executeResults: ExecuteResults[];
+    executeResult?: ExecuteResult;
     staking: SuccessfulStakeResult[];
     claimedAmount?: string;
     settlementTime: Date;
+    dataType: DataRequestDataType;
 }
 
 export default class DataRequest {
@@ -48,10 +45,11 @@ export default class DataRequest {
     settlementTime: Date;
     resolutionWindows: ResolutionWindow[];
     finalArbitratorTriggered: boolean;
-    executeResults: ExecuteResults[] = [];
+    executeResult?: ExecuteResult;
     staking: SuccessfulStakeResult[] = [];
     finalizedOutcome?: Outcome;
     claimedAmount?: string;
+    dataType: DataRequestDataType;
     type: string = DATA_REQUEST_TYPE;
 
     constructor(props: DataRequestProps) {
@@ -62,13 +60,14 @@ export default class DataRequest {
         this.outcomes = props.outcomes ?? [];
         this.sources = props.sources;
         this.resolutionWindows = [];
-        this.executeResults = props.executeResults ?? [];
+        this.executeResult = props.executeResult;
         this.staking = props.staking ?? [];
         this.claimedAmount = props.claimedAmount ?? undefined;
         this.finalArbitratorTriggered = props.finalArbitratorTriggered ?? false;
         this.finalizedOutcome = props.finalizedOutcome ?? undefined;
         this.settlementTime = new Date(props.settlementTime);
         this.tokenContractId = props.tokenContractId;
+        this.dataType = props.dataType;
 
         if (props.resolutionWindows.length) {
             this.resolutionWindows = props.resolutionWindows.map((rw) => ({
@@ -148,6 +147,12 @@ export default class DataRequest {
             return false;
         }
 
+        // Window 0 must be bonded
+        // This makes some things fail...
+        if (this.resolutionWindows.length < 2) {
+            return false;
+        }
+
         const now = new Date();
 
         if (now.getTime() >= new Date(this.currentWindow.endTime).getTime()) {
@@ -167,10 +172,7 @@ export default class DataRequest {
         const results = await executeJob(this);
         logger.debug(`${this.internalId} - Executed, results: ${JSON.stringify(results)}`);
 
-        this.executeResults.push({
-            roundId: this.currentWindow?.round ?? 0,
-            results
-        });
+        this.executeResult = results;
     }
 
     async claim(providerRegistry: ProviderRegistry): Promise<boolean> {
@@ -182,7 +184,7 @@ export default class DataRequest {
             }
 
             logger.debug(`${this.internalId} - Claiming`);
-            const claimResult = await providerRegistry.claim(this.providerId, this.id);
+            const claimResult = await providerRegistry.claim(this.providerId, this);
             logger.debug(`${this.internalId} - Claim, results: ${JSON.stringify(claimResult)}`);
 
             if (!isClaimResultSuccesful(claimResult)) {
@@ -200,7 +202,9 @@ export default class DataRequest {
         providerRegistry: ProviderRegistry,
         nodeBalance: NodeBalance,
     ): Promise<StakeResult> {
-        if (this.hasStakenOnRound(this.currentWindow?.round ?? 0)) {
+        const currentWindowRound = this.currentWindow?.round ?? 0;
+
+        if (this.hasStakenOnRound(currentWindowRound)) {
             logger.debug(`${this.internalId} - Already staken`);
             return {
                 type: StakeResultType.Error,
@@ -214,6 +218,26 @@ export default class DataRequest {
                 type: StakeResultType.Error,
                 error: StakeError.AlreadyBonded,
             };
+        }
+
+        if (!this.executeResult) {
+            return {
+                type: StakeResultType.Error,
+                error: StakeError.RequestNotFound,
+            };
+        }
+
+        // We can't stake on a round where the previous round had the same answer
+        const previousWindow = this.resolutionWindows[currentWindowRound - 1];
+
+        if (previousWindow && previousWindow.bondedOutcome) {
+            if (isOutcomesEqual(previousWindow.bondedOutcome, getRequestOutcome(this))) {
+                logger.debug(`${this.internalId} - Previous bonded outcome is the same as our outcome, can't stake`);
+                return {
+                    type: StakeResultType.Error,
+                    error: StakeError.AlreadyBonded,
+                }
+            }
         }
 
         logger.debug(`${this.internalId} - Staking`);
@@ -230,7 +254,7 @@ export default class DataRequest {
             this.staking.push(stakeResult);
         } else {
             if (stakeResult.error !== StakeError.AlreadyBonded) {
-                logger.debug(`${this.internalId} - Unsuccesful staking for: ${this.toString()}`);
+                logger.debug(`${this.internalId} - Unsuccesful staking on round ${this.currentWindow?.round} for: ${this.toString()}`);
             }
         }
 
@@ -260,12 +284,13 @@ export function createMockRequest(request: Partial<DataRequestProps> = {}): Data
         ],
         sources: [],
         providerId: 'near',
-        executeResults: [],
+        executeResult: undefined,
         staking: [],
         claimedAmount: undefined,
         finalArbitratorTriggered: false,
         finalizedOutcome: undefined,
         settlementTime: new Date(1),
+        dataType: { type: 'string' },
         ...request,
     });
 }

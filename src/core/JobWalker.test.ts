@@ -5,7 +5,7 @@ import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
 import * as DataRequestService from '../services/DataRequestService';
 import JobWalker from "./JobWalker";
 import { StakeResult, StakeResultType } from "../models/StakingResult";
-import { JobResultType } from "../models/JobExecuteResult";
+import { ExecuteResultType } from "../models/JobExecuteResult";
 import { OutcomeType } from "../models/DataRequestOutcome";
 
 describe('JobWalker', () => {
@@ -56,6 +56,15 @@ describe('JobWalker', () => {
                 [
                     createMockRequest({
                         id: '1',
+                        resolutionWindows: [{
+                            round: 0,
+                            bondSize: '1',
+                            endTime: new Date(),
+                        }, {
+                            round: 1,
+                            bondSize: '1',
+                            endTime: new Date(),
+                        }],
                         staking: [{
                             amountStaked: '1',
                             roundId: 0,
@@ -67,6 +76,15 @@ describe('JobWalker', () => {
                     }),
                     createMockRequest({
                         id: '2',
+                        resolutionWindows: [{
+                            round: 0,
+                            bondSize: '1',
+                            endTime: new Date(),
+                        }, {
+                            round: 1,
+                            bondSize: '1',
+                            endTime: new Date(),
+                        }],
                         staking: [{
                             amountStaked: '1',
                             roundId: 0,
@@ -79,6 +97,15 @@ describe('JobWalker', () => {
                     }),
                     createMockRequest({
                         id: '3',
+                        resolutionWindows: [{
+                            round: 0,
+                            bondSize: '1',
+                            endTime: new Date(),
+                        }, {
+                            round: 1,
+                            bondSize: '1',
+                            endTime: new Date(),
+                        }],
                         staking: [],
                         finalizedOutcome: {
                             type: OutcomeType.Invalid,
@@ -190,14 +217,11 @@ describe('JobWalker', () => {
 
         it('should re-stake if there is an execute result but no staking', async () => {
             const request = createMockRequest({
-                executeResults: [{
-                    results: [{
-                        data: 'answer',
-                        status: 200,
-                        type: JobResultType.Success,
-                    }],
-                    roundId: 0,
-                }],
+                executeResult: {
+                    data: 'answer',
+                    status: 200,
+                    type: ExecuteResultType.Success,
+                }
             });
 
             const mockExecute = jest.fn();
@@ -233,10 +257,11 @@ describe('JobWalker', () => {
             const request = createMockRequest({});
 
             const mockExecute = jest.fn(async () => {
-                request.executeResults.push({
-                    roundId: 0,
-                    results: [],
-                });
+                request.executeResult = {
+                    type: ExecuteResultType.Success,
+                    status: 0,
+                    data: 'good',
+                };
             });
             const mockClaim = jest.fn().mockResolvedValue(false);
             const mockStake = jest.fn();

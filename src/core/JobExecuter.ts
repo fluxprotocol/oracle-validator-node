@@ -1,105 +1,52 @@
 import fetch from 'node-fetch';
-import DataRequest, { RequestInfo } from "../models/DataRequest";
-import { isJobSuccesful, JobExecuteError, JobExecuteResult, JobResultType } from '../models/JobExecuteResult';
+import { Code, Context, executeCode } from '@fluxprotocol/oracle-vm';
+
+import DataRequest from "../models/DataRequest";
+import { ExecuteResult, ExecuteResultType } from '../models/JobExecuteResult';
 import logger from "../services/LoggerService";
-import { parseJson, pathToValue } from '../utils/jsonUtils';
+import fetchNumberJob from '../jobs/fetchNumberJob';
+import fetchStringJob from '../jobs/fetchStringJob';
 
-/**
- * Fetches the JSON data from the given API
- *
- * @param {RequestInfo} requestInfo
- * @return {Promise<JobExecuteResult<string>>}
- */
-async function fetchJobData(requestInfo: RequestInfo): Promise<JobExecuteResult<object>> {
+const GAS_LIMIT = 100000;
+
+export async function executeJob(request: DataRequest): Promise<ExecuteResult> {
     try {
-        const response = await fetch(requestInfo.end_point);
+        const sourceData = request.sources[0];
+        const args: string[] = [sourceData.end_point, sourceData.source_path];
+        let vmCode: Code;
 
-        if (!response.ok) {
+        if (request.dataType.type === 'number') {
+            args.push(request.dataType.multiplier);
+            vmCode = fetchNumberJob;
+        } else {
+            vmCode = fetchStringJob;
+        }
+
+        const context = new Context(args);
+        context.gasLimit = GAS_LIMIT;
+
+        const executeResult = await executeCode(vmCode, { context });
+
+        if (executeResult.code > 0) {
             return {
-                status: response.status,
-                error: JobExecuteError.ResponseNotOk,
-                type: JobResultType.Error,
+                status: executeResult.code,
+                error: executeResult.message,
+                type: ExecuteResultType.Error,
             }
         }
 
-        const body = await response.text();
-        const parsedBody = parseJson(body);
-
-        if (parsedBody === null) {
-            return {
-                status: response.status,
-                error: JobExecuteError.ResponseNotJson,
-                type: JobResultType.Error,
-            };
-        }
-
         return {
-            status: response.status,
-            data: parsedBody,
-            type: JobResultType.Success,
+            type: ExecuteResultType.Success,
+            data: executeResult.result ?? '',
+            status: executeResult.code,
         }
-    } catch (error) {
-        logger.error(`[fetchJobData] ${error}`);
-
-        return {
-            status: 500,
-            type: JobResultType.Error,
-            error: JobExecuteError.Unknown,
-        }
-    }
-}
-
-export function resolveJobData(request: DataRequest, requestInfo: RequestInfo, parsedBody: object): JobExecuteResult<string> {
-    const value = pathToValue(requestInfo.source_path, parsedBody);
-
-    if (value === null) {
-        return {
-            status: 500,
-            error: JobExecuteError.ValueDoesNotExist,
-            type: JobResultType.Error,
-        }
-    }
-
-    // Validate if this value is one of the outcomes (if used)
-    if (request.outcomes && request.outcomes.length) {
-        if (!request.outcomes.includes(value)) {
-            return {
-                status: 500,
-                error: JobExecuteError.ValueNotInOutcomes,
-                type: JobResultType.Error,
-            };
-        }
-    }
-
-    return {
-        status: 200,
-        data: value,
-        type: JobResultType.Success,
-    };
-}
-
-export async function executeJob(request: DataRequest): Promise<JobExecuteResult<string>[]> {
-    try {
-        const promises = request.sources.map(async (requestInfo) => {
-            const fetchResult = await fetchJobData(requestInfo);
-
-            // No need to process an fetch result that is not valid
-            if (!isJobSuccesful(fetchResult)) {
-                return fetchResult;
-            }
-
-            return resolveJobData(request, requestInfo, fetchResult.data);
-        });
-
-        const result = await Promise.all(promises);
-        return result;
     } catch (error) {
         logger.error(`[executeJob] ${error}`);
 
-        return [{
-            status: 500,
-            error: JobExecuteError.Unknown,
-            type: JobResultType.Error,
-        }]
+        return {
+            status: 1,
+            error: 'ERR_INTERNAL',
+            type: ExecuteResultType.Error,
+        }
     }
 }
