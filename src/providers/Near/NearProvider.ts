@@ -1,8 +1,8 @@
 import Big from "big.js";
-import { Account, Near } from "near-api-js";
+import { Account, Near, WalletConnection, providers } from "near-api-js";
 import { ClaimError, ClaimResult, ClaimResultType } from "../../models/ClaimResult";
 import DataRequest from "../../models/DataRequest";
-import { Outcome, OutcomeType } from "../../models/DataRequestOutcome";
+import { getRequestOutcome, isOutcomesEqual, Outcome, OutcomeType } from "../../models/DataRequestOutcome";
 import { NetworkType } from "../../models/NearNetworkConfig";
 import { getProviderOptions, NodeOptions } from "../../models/NodeOptions";
 import { Provider, StakeResponse } from "../Provider";
@@ -12,6 +12,7 @@ import { connectToNear, createNearOutcome, extractLogs, getAccount, isTransactio
 import { JOB_SEARCH_INTERVAL } from '../../config';
 import { startStorageDepositChecker } from './NearStorage';
 import { OracleConfig } from "../../models/OracleConfig";
+import { BN } from "bn.js";
 
 export default class NearProvider implements Provider {
     providerName = 'NEAR';
@@ -123,6 +124,27 @@ export default class NearProvider implements Provider {
                 error: ClaimError.Unknown,
             };
         }
+
+        const requestOutcome = getRequestOutcome(request);
+        const transactions: Promise<providers.FinalExecutionOutcome>[] = [];
+
+        // Build up any unbonded stake
+        request.staking.forEach((stake) => {
+            const resolutionWindow = request.resolutionWindows[stake.roundId];
+
+            if (!resolutionWindow.bondedOutcome || !isOutcomesEqual(resolutionWindow.bondedOutcome, requestOutcome)) {
+                transactions.push(
+                    account.functionCall(this.nearOptions!.oracleContractId, 'dr_unstake', {
+                        request_id: request.id,
+                        resolution_round: stake.roundId,
+                        outcome: createNearOutcome(request, requestOutcome),
+                        amount: stake.amountStaked,
+                    }, new BN(this.nearOptions!.maxGas), new BN('1')),
+                );
+            }
+        });
+
+        await Promise.all(transactions);
 
         const result = await account.functionCall(this.nearOptions.oracleContractId, 'dr_claim', {
             request_id: request.id,

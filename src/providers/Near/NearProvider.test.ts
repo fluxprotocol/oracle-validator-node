@@ -4,6 +4,7 @@ import * as NearExplorerService from './NearExplorerService';
 import { createMockRequest } from "../../models/DataRequest";
 import { OutcomeType } from "../../models/DataRequestOutcome";
 import { StakeResultType } from "../../models/StakingResult";
+import { ExecuteResultType } from "../../models/JobExecuteResult";
 
 describe('NearProvider', () => {
     let getDataRequestsAsCursorFromNearSpy: jest.SpyInstance<Promise<NearExplorerService.GetDataRequestsAsCursorResult>>;
@@ -167,49 +168,69 @@ describe('NearProvider', () => {
         });
     });
 
-    // describe('claim', () => {
-    //     it('should claim any unbonded stake', async () => {
-    //         const nearProvider = new NearProvider();
-    //         const dataRequest = createMockRequest({
-    //             staking: [{
-    //                 type: StakeResultType.Success,
-    //                 amountStaked: '250000000',
-    //                 roundId: 0,
-    //             }],
-    //             resolutionWindows: [{
-    //                 bondSize: '2',
-    //                 endTime: new Date(),
-    //                 round: 0,
-    //                 bondedOutcome: {
-    //                     answer: 'test',
-    //                     type: OutcomeType.Answer,
-    //                 }
-    //             }, {
-    //                 bondSize: '4',
-    //                 endTime: new Date(),
-    //                 round: 1,
-    //                 bondedOutcome: {
-    //                     answer: 'test2',
-    //                     type: OutcomeType.Answer,
-    //                 }
-    //             }],
-    //         });
-    //         const options = createNearProviderOptionsMock();
-    //         nearProvider.nearOptions = options;
+    describe('claim', () => {
+        it('should claim any unbonded stake', async () => {
+            const nearProvider = new NearProvider();
+            const dataRequest = createMockRequest({
+                executeResult: {
+                    type: ExecuteResultType.Success,
+                    data: 'pizza',
+                    status: 0,
+                },
+                staking: [{
+                    type: StakeResultType.Success,
+                    amountStaked: '250000000',
+                    roundId: 0,
+                }],
+                resolutionWindows: [{
+                    bondSize: '2',
+                    endTime: new Date(),
+                    round: 0,
+                    bondedOutcome: {
+                        answer: 'test',
+                        type: OutcomeType.Answer,
+                    }
+                }, {
+                    bondSize: '4',
+                    endTime: new Date(),
+                    round: 1,
+                    bondedOutcome: {
+                        answer: 'test2',
+                        type: OutcomeType.Answer,
+                    }
+                }],
+            });
 
-    //         // @ts-ignore
-    //         nearProvider.nodeAccount = {
-    //             functionCall: jest.fn(() => new Promise((resolve) => {
-    //                 // resolve({
+            const options = createNearProviderOptionsMock();
+            nearProvider.nearOptions = options;
 
-    //                 // });
-    //             })),
-    //         };
+            // @ts-ignore
+            nearProvider.nodeAccount = {
+                functionCall: jest.fn(() => new Promise((resolve) => {
+                    // @ts-ignore
+                    resolve({
+                        receipts_outcome: [{
+                            id: '',
+                            outcome: {
+                                gas_burnt: 1,
+                                receipt_ids: [],
+                                // @ts-ignore
+                                status: 1,
+                                logs: ['{"type": "claims", "params": { "payout": "25", "user_correct_stake": "250000000" }}'],
+                            },
+                        }],
+                    });
+                })),
+            };
 
-    //         // nearProvider.claim();
+            const result = await nearProvider.claim(dataRequest);
 
-    //         expect(nearProvider.nodeAccount?.functionCall).toHaveBeenCalled();
+            // 1 for unstaking and 1 for claiming
+            expect(nearProvider.nodeAccount?.functionCall).toHaveBeenCalledTimes(2);
 
-    //     });
-    // });
+            expect(result.type).toBe('success');
+            // @ts-ignore
+            expect(result.received).toBe('250000025');
+        });
+    });
 });
