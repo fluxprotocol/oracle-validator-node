@@ -1,4 +1,4 @@
-import DataRequest from "../models/DataRequest";
+import DataRequest, { isRequestDeletable } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import { LatestRequest, LATEST_REQUEST_TYPE } from "../models/LatestRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import Database from "../services/DatabaseService";
@@ -79,7 +79,7 @@ export default class NodeSyncer {
                         return;
                     }
 
-                    if (request.isDeletable()) {
+                    if (isRequestDeletable(request)) {
                         return;
                     }
 

@@ -3,10 +3,9 @@ export function createProviderMock(name = 'mock') {
         providerName: name,
         id: name,
 
-        validateOptions: jest.fn(),
         init: jest.fn(),
 
-        getTokenBalance: jest.fn(),
+        getBalanceInfo: jest.fn(),
         getDataRequestById: jest.fn(),
         listenForRequests: jest.fn(),
         sync: jest.fn(),

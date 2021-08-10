@@ -1,73 +1,64 @@
-import DataRequest from "../models/DataRequest";
+import DataRequest, { canStakeOnRequest, getCurrentResolutionWindow } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import { getRequestOutcome } from "@fluxprotocol/oracle-provider-core/dist/Outcome";
+import { isClaimResultSuccesful } from "@fluxprotocol/oracle-provider-core/dist/ClaimResult";
+import { StakeResult, isStakeResultSuccesful, StakeResultType, StakeError } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
+
 import logger from "../services/LoggerService";
 import ProviderRegistry from "../providers/ProviderRegistry";
-import NodeBalance from "./NodeBalance";
-import { StakeError, StakeResult, StakeResultType } from "../models/StakingResult";
-import { getRequestOutcome, isOutcomesEqual } from "../models/DataRequestOutcome";
-
-const FIRST_CHALLENGE_ROUND = 0;
 
 export async function stakeOnDataRequest(
     providerRegistry: ProviderRegistry,
-    nodeBalance: NodeBalance,
     dataRequest: DataRequest,
 ): Promise<StakeResult> {
-    const currentResolutionWindow = dataRequest.currentWindow;
-    const stake = nodeBalance.withdrawBalanceToStake(dataRequest.providerId);
+    const canStakeResult = canStakeOnRequest(dataRequest);
 
-    if (stake.lte(0)) {
-        logger.error(`❌💰 Not enough balance to stake.`);
+    if (!canStakeResult.canStake) {
+        logger.debug(`${dataRequest.internalId} - Skipping stake due: ${canStakeResult.reason}`);
+
         return {
-            error: StakeError.NotEnoughBalance,
             type: StakeResultType.Error,
-        };
+            error: canStakeResult.reason ?? StakeError.Unknown,
+        }
     }
 
+    logger.debug(`${dataRequest.internalId} - Staking on request`);
+
+    const currentResolutionWindow = getCurrentResolutionWindow(dataRequest);
     const roundIdStakingOn = currentResolutionWindow?.round ?? 0;
     const dataRequestAnswer = getRequestOutcome(dataRequest);
+    const stakingResponse = await providerRegistry.stake(dataRequest.providerId, dataRequest, dataRequestAnswer);
 
-    if (roundIdStakingOn > FIRST_CHALLENGE_ROUND) {
-        // A window has already been closed.
-        // We need to make sure we are not submitting the same answer
-        // Otherwise this would result in an error
-        const previousWindow = dataRequest.resolutionWindows.find(rw => rw.round === roundIdStakingOn - 1);
-
-        // No bonded outcome on the previous window is impossible
-        if (!previousWindow || !previousWindow.bondedOutcome) {
-            nodeBalance.deposit(dataRequest.providerId, stake);
-            return {
-                type: StakeResultType.Error,
-                error: StakeError.Unknown,
-            };
-        }
-
-        if (isOutcomesEqual(previousWindow.bondedOutcome, dataRequestAnswer)) {
-            nodeBalance.deposit(dataRequest.providerId, stake);
-            return {
-                type: StakeResultType.Error,
-                error: StakeError.AlreadyBonded,
-            }
-        }
+    if (!isStakeResultSuccesful(stakingResponse)) {
+        logger.error(`${dataRequest.internalId} - Staking failed: ${JSON.stringify(stakingResponse)}`);
+        return stakingResponse;
     }
-
-    const stakingResponse = await providerRegistry.stake(dataRequest.providerId, dataRequest, dataRequestAnswer, stake.toString());
-
-    if (!stakingResponse.success) {
-        logger.error(`Staking failed for id ${dataRequest.id} on ${dataRequest.providerId}`);
-        nodeBalance.deposit(dataRequest.providerId, stake);
-
-        return {
-            error: StakeError.Unknown,
-            type: StakeResultType.Error,
-        };
-    }
-
-    const actualStaking = stake.sub(stakingResponse.amountBack);
-    nodeBalance.deposit(dataRequest.providerId, stakingResponse.amountBack);
 
     return {
-        amountStaked: actualStaking.toString(),
         roundId: roundIdStakingOn,
+        amount: stakingResponse.amount,
         type: StakeResultType.Success,
     }
+}
+
+export async function finalizeAndClaim(providerRegistry: ProviderRegistry, request: DataRequest) {
+    if (!request.finalizedOutcome) {
+        logger.debug(`${request.internalId} - Finalizing`);
+        const isFinalized = await providerRegistry.finalize(request.providerId, request);
+
+        if (isFinalized) {
+            logger.debug(`${request.internalId} - Finalized`);
+        } else {
+            logger.debug(`${request.internalId} - Could not finalize`);
+        }
+    }
+
+    logger.debug(`${request.internalId} - Claiming`);
+    const claimResult = await providerRegistry.claim(request.providerId, request);
+    logger.debug(`${request.internalId} - Claim, results: ${JSON.stringify(claimResult)}`);
+
+    if (!isClaimResultSuccesful(claimResult)) {
+        return false;
+    }
+
+    return true;
 }

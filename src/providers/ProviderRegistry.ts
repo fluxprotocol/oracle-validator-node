@@ -1,19 +1,15 @@
-import Big from "big.js";
-import { ClaimError, ClaimResult, ClaimResultType } from "../models/ClaimResult";
-import DataRequest from "../models/DataRequest";
-import { Outcome } from "../models/DataRequestOutcome";
-import { NodeOptions } from "../models/NodeOptions";
-import { OracleConfig } from "../models/OracleConfig";
-import logger from "../services/LoggerService";
-import { StakeResponse, Provider } from "./Provider";
+import Provider from "@fluxprotocol/oracle-provider-core/dist/Provider";
+import DataRequest from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import Balance from "@fluxprotocol/oracle-provider-core/dist/Balance";
+import { Outcome } from "@fluxprotocol/oracle-provider-core/dist/Outcome";
+import { ClaimError, ClaimResult, ClaimResultType } from "@fluxprotocol/oracle-provider-core/dist/ClaimResult";
+import { StakeResult } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
 
 export default class ProviderRegistry {
     providers: Provider[];
-    nodeOptions: NodeOptions;
 
-    constructor(nodeOptions: NodeOptions, providers: Provider[]) {
+    constructor(providers: Provider[]) {
         this.providers = providers;
-        this.nodeOptions = nodeOptions;
     }
 
     get activeProviders() {
@@ -25,14 +21,14 @@ export default class ProviderRegistry {
     }
 
     async init() {
-        await Promise.all(this.providers.map(p => p.init(this.nodeOptions)));
+        await Promise.all(this.providers.map(p => p.init()));
     }
 
-    async getTokenBalance(providerId: string): Promise<Big> {
+    async getBalanceInfo(providerId: string): Promise<Balance> {
         const provider = this.getProviderById(providerId);
-        if (!provider) return new Big(0);
+        if (!provider) throw Error(`provider ${providerId} not found`);
 
-        return provider.getTokenBalance();
+        return provider.getBalanceInfo();
     }
 
     listenForRequests(onRequests: (requests: DataRequest[], providerId: string) => void) {
@@ -43,33 +39,28 @@ export default class ProviderRegistry {
         });
     }
 
-    async getDataRequestById(providerId: string, requestId: string): Promise<DataRequest | null> {
+    async getDataRequestById(providerId: string, requestId: string): Promise<DataRequest | undefined> {
         const provider = this.getProviderById(providerId);
-        if (!provider) return null;
+        if (!provider) return undefined;
 
         return provider.getDataRequestById(requestId);
     }
 
-    async stake(providerId: string, request: DataRequest, answer: Outcome, stakeAmount: string): Promise<StakeResponse> {
+    async stake(providerId: string, request: DataRequest, answer: Outcome): Promise<StakeResult> {
         const provider = this.getProviderById(providerId);
-        if (!provider) {
-            return {
-                success: false,
-                amountBack: new Big(0),
-            }
-        }
+        if (!provider) throw new Error(`provider ${providerId} not found`);
 
-        return provider.stake(request, answer, stakeAmount);
+        return provider.stake(request, answer);
     }
 
-    async finalize(providerId: string, requestId: string): Promise<boolean> {
+    async finalize(providerId: string, request: DataRequest): Promise<boolean> {
         const provider = this.getProviderById(providerId);
 
         if (!provider) {
             return false;
         }
 
-        return provider.finalize(requestId);
+        return provider.finalize(request);
     }
 
     async claim(providerId: string, request: DataRequest): Promise<ClaimResult> {

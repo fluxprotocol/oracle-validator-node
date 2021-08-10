@@ -1,48 +1,47 @@
-import Big from "big.js";
+/** Luke JobWalker */
+import DataRequest, { isRequestClaimable, isRequestDeletable, isRequestExecutable, mergeRequests } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import { isStakeResultSuccesful } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
+
 import { JOB_WALKER_INTERVAL } from "../config";
-import DataRequest from "../models/DataRequest";
-import { NodeOptions } from "../models/NodeOptions";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { deleteDataRequest, storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
-import NodeBalance from "./NodeBalance";
+import { executeJob } from "./JobExecuter";
+import { finalizeAndClaim, stakeOnDataRequest } from "./Oracle";
 
 export default class JobWalker {
-    nodeOptions: NodeOptions;
     providerRegistry: ProviderRegistry;
-    nodeBalance: NodeBalance;
     requests: Map<string, DataRequest>;
     processingIds: Set<string> = new Set();
     walkerIntervalId?: any;
     currentWalkerPromise?: Promise<void[]>;
 
-    constructor(nodeOptions: NodeOptions, providerRegistry: ProviderRegistry, nodeBalance: NodeBalance, initialRequests: DataRequest[] = []) {
+    constructor(providerRegistry: ProviderRegistry, initialRequests: DataRequest[] = []) {
         this.requests = new Map();
         initialRequests.forEach((request) => {
-            if (request.isDeletable()) {
+            if (isRequestDeletable(request)) {
                 return;
             }
 
             this.requests.set(request.internalId, request);
         });
 
-        this.nodeOptions = nodeOptions;
         this.providerRegistry = providerRegistry;
-        this.nodeBalance = nodeBalance;
     }
 
     async addNewDataRequest(request: DataRequest) {
         try {
-            if (request.isExecutable()) {
-                await request.execute();
+            if (isRequestExecutable(request)) {
+                request.executeResult = await executeJob(request);
 
                 // It could be that the staking failed due it being finalized already or
                 // something else
                 // We let the job walker take care of it in the next tick
-                await request.stake(
-                    this.providerRegistry,
-                    this.nodeBalance,
-                );
+                const stakeResult = await stakeOnDataRequest(this.providerRegistry, request);
+
+                if (isStakeResultSuccesful(stakeResult)) {
+                    request.staking.push(stakeResult);
+                }
             } else {
                 logger.debug(`${request.internalId} - Currently not executeable, can be executed on ${request.settlementTime}`);
             }
@@ -54,30 +53,26 @@ export default class JobWalker {
         }
     }
 
-    async walkRequest(request: DataRequest) {
-        const newStatus = await this.providerRegistry.getDataRequestById(request.providerId, request.id);
+    async walkRequest(input: DataRequest) {
+        const newStatus = await this.providerRegistry.getDataRequestById(input.providerId, input.id);
         if (!newStatus) return;
-        request.update(newStatus);
 
-        if (!request.isExecutable()) {
+        let request = mergeRequests(input, newStatus);
+        logger.debug(`${request.internalId} - Updating status fo: ${JSON.stringify(request.finalizedOutcome)}, rw: ${request.resolutionWindows.length}, fat: ${request.finalArbitratorTriggered}`);
+
+        if (!isRequestExecutable(request)) {
             logger.debug(`${request.internalId} - Cannot be executed till ${request.settlementTime}`);
             await storeDataRequest(request);
             return;
         }
 
         // Claim the request earnings and remove it from the walker
-        if (request.isClaimable()) {
-            const isClaimSuccesful = await request.claim(this.providerRegistry);
-
-            const newStatus = await this.providerRegistry.getDataRequestById(request.providerId, request.id);
-            if (newStatus) {
-                request.update(newStatus);
-            }
+        if (isRequestClaimable(request)) {
+            const isClaimSuccesful = await finalizeAndClaim(this.providerRegistry, request);
 
             if (isClaimSuccesful) {
                 logger.debug(`${request.internalId} - Pruning from pool due completed claim`);
                 this.requests.delete(request.internalId);
-                this.nodeBalance.addClaimedRequest(request);
                 await deleteDataRequest(request);
                 return;
             }
@@ -85,25 +80,26 @@ export default class JobWalker {
 
         // Either we did not stake (or already claimed), but the request got finalized or the final arbitrator got triggered
         // Either way it's safe to remove this from our watch pool and let the user manually claim the earnings
-        if (request.isDeletable()) {
+        if (isRequestDeletable(request)) {
             this.requests.delete(request.internalId);
-            logger.debug(`${request.internalId} - Pruning from pool fat: ${request.finalArbitratorTriggered}, fo: ${JSON.stringify(request.finalizedOutcome)}, ic: ${request.isClaimable()}`);
+            logger.debug(`${request.internalId} - Pruning from pool fat: ${request.finalArbitratorTriggered}, fo: ${JSON.stringify(request.finalizedOutcome)}, ic: ${isRequestClaimable(request)}`);
             await deleteDataRequest(request);
             return;
         }
 
         // Something can go wrong with the execute results
         if (!request.executeResult) {
-            await request.execute();
+            request.executeResult = await executeJob(request);
         }
 
         // Continuously try to stake on the outcome.
         // This will prevent any mallicious attacks
         if (request.executeResult) {
-            await request.stake(
-                this.providerRegistry,
-                this.nodeBalance
-            );
+            const stakeResult = await stakeOnDataRequest(this.providerRegistry, request);
+
+            if (isStakeResultSuccesful(stakeResult)) {
+                request.staking.push(stakeResult);
+            }
         }
 
         await storeDataRequest(request);

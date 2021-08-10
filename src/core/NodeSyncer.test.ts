@@ -1,6 +1,6 @@
-import { createMockRequest } from '../models/DataRequest';
 import { LatestRequest } from '../models/LatestRequest';
 import Database from '../services/DatabaseService';
+import { createMockRequest } from '../test/mocks/DataRequest';
 import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
 import NodeSyncer from "./NodeSyncer";
 

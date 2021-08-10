@@ -1,5 +1,5 @@
+import Provider from "@fluxprotocol/oracle-provider-core/dist/Provider";
 import { parseNodeOptions } from "../../models/NodeOptions";
-import { Provider } from "../../providers/Provider";
 
 export function createMockProviderRegistry(providers: Provider[] = []) {
     return {
@@ -8,7 +8,7 @@ export function createMockProviderRegistry(providers: Provider[] = []) {
         activeProviders: providers.map(p => p.id),
         getProviderById: jest.fn(),
         init: jest.fn(),
-        getTokenBalance: jest.fn(),
+        getBalanceInfo: jest.fn(),
         getDataRequests: jest.fn(),
         getDataRequestById: jest.fn(),
         stake: jest.fn(),

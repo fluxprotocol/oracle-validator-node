@@ -1,42 +1,23 @@
 import death from 'death';
-import { NodeOptions } from "../models/NodeOptions";
-import logger, { logNodeOptions, logBalances } from "../services/LoggerService";
+import logger, { logNodeOptions } from "../services/LoggerService";
 import JobSearcher from "./JobSearcher";
-import { BALANCE_REFRESH_INTERVAL } from "../config";
-import NodeBalance from './NodeBalance';
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { getAllDataRequests } from "../services/DataRequestService";
 import JobWalker from "./JobWalker";
 import NodeSyncer from './NodeSyncer';
-import { startHttpServer } from './http/NodeHttp';
 
-
-export async function startNode(providerRegistry: ProviderRegistry, options: NodeOptions) {
-    logNodeOptions(providerRegistry, options);
+export async function startNode(providerRegistry: ProviderRegistry) {
+    logNodeOptions(providerRegistry);
 
     await providerRegistry.init();
     const nodeSyncer = new NodeSyncer(providerRegistry);
     await nodeSyncer.init();
     await nodeSyncer.syncNode();
 
-    // Restore our current validator state
-    const nodeBalance = new NodeBalance(options, providerRegistry);
-    await nodeBalance.init();
+    // Restore the validator state
     const dataRequests = await getAllDataRequests();
-    const jobSearcher = new JobSearcher(providerRegistry, options, dataRequests);
-    const jobWalker = new JobWalker(options, providerRegistry, nodeBalance, dataRequests);
-
-    startHttpServer(options, jobWalker);
-
-    // Used to keep track of how much the node can spend
-    await nodeBalance.refreshBalances(true);
-    logBalances(nodeBalance, jobWalker);
-
-    // For checking the balances and preventing a lockup of 0 balance in case of a fail
-    setInterval(async () => {
-        await nodeBalance.refreshBalances();
-        logBalances(nodeBalance, jobWalker);
-    }, BALANCE_REFRESH_INTERVAL);
+    const jobSearcher = new JobSearcher(providerRegistry, dataRequests);
+    const jobWalker = new JobWalker(providerRegistry, dataRequests);
 
     jobSearcher.startSearch((requests) => {
         requests.forEach((request) => {
@@ -51,7 +32,7 @@ export async function startNode(providerRegistry: ProviderRegistry, options: Nod
 
     death(async () => {
         if (deathCounter === 1) {
-            logger.info('Data could be inaccurate for next run. Please check the explorer to claim manually.');
+            logger.info('Data could be inaccurate for next run. Please check the explorer to claim manually and delete the database if there are any issues with startup.');
             process.exit(1);
         }
 
