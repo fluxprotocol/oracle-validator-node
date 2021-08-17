@@ -14,11 +14,14 @@ export async function startNode(providerRegistry: ProviderRegistry) {
     await nodeSyncer.init();
     await nodeSyncer.syncNode();
 
+    logger.debug('Restoring all stored data requests');
+
     // Restore the validator state
     const dataRequests = await getAllDataRequests();
     const jobSearcher = new JobSearcher(providerRegistry, dataRequests);
     const jobWalker = new JobWalker(providerRegistry, dataRequests);
 
+    logger.debug('Starting searcher');
     jobSearcher.startSearch((requests) => {
         requests.forEach((request) => {
             nodeSyncer.updateLatestDataRequest(request);
@@ -26,6 +29,7 @@ export async function startNode(providerRegistry: ProviderRegistry) {
         });
     });
 
+    logger.debug('Starting walker');
     jobWalker.startWalker();
 
     let deathCounter = 0;

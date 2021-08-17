@@ -37,7 +37,6 @@ export async function getAllDataRequests(query: PouchDB.Find.Selector = {}): Pro
 
         return requests.map((request) => ({
             ...request,
-            settlementTime: new Date(request.settlementTime),
             resolutionWindows: request.resolutionWindows.map((rw) => ({
                 ...rw,
                 endTime: new Date(rw.endTime),

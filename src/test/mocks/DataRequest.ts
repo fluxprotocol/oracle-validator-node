@@ -1,8 +1,11 @@
-import DataRequest from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import DataRequest, { buildInternalId } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 
 export function createMockRequest(request: Partial<DataRequest> = {}): DataRequest {
+    const id = request.id ?? '1';
+    const providerId = request.providerId ?? 'near';
+
     return {
-        id: '1',
+        id,
         outcomes: [],
         resolutionWindows: [
             {
@@ -12,15 +15,14 @@ export function createMockRequest(request: Partial<DataRequest> = {}): DataReque
             }
         ],
         sources: [],
-        providerId: 'near',
+        providerId,
         executeResult: undefined,
         staking: [],
         claimedAmount: undefined,
         finalArbitratorTriggered: false,
         finalizedOutcome: undefined,
-        settlementTime: new Date(1),
         dataType: { type: 'string' },
-        internalId: 'near_1',
         ...request,
+        internalId: buildInternalId(id, providerId, ''),
     };
 }

@@ -28,7 +28,7 @@
         "type": "git",
         "url": "git+https://github.com/fluxprotocol/oracle-bot.git"
     },
-    "author": "",
+    "author": "Franklin Waller <fr.l.waller@gmail.com>",
     "license": "ISC",
     "bugs": {
         "url": "https://github.com/fluxprotocol/oracle-bot/issues"

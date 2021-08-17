@@ -43,7 +43,7 @@ export default class JobWalker {
                     request.staking.push(stakeResult);
                 }
             } else {
-                logger.debug(`${request.internalId} - Currently not executeable, can be executed on ${request.settlementTime}`);
+                logger.debug(`${request.internalId} - Currently not executeable`);
             }
 
             await storeDataRequest(request);
@@ -54,58 +54,63 @@ export default class JobWalker {
     }
 
     async walkRequest(input: DataRequest) {
-        const newStatus = await this.providerRegistry.getDataRequestById(input.providerId, input.id);
-        if (!newStatus) return;
+        try {
+            const newStatus = await this.providerRegistry.getDataRequestById(input.providerId, input.id);
+            if (!newStatus) return;
 
-        let request = mergeRequests(input, newStatus);
-        logger.debug(`${request.internalId} - Updating status fo: ${JSON.stringify(request.finalizedOutcome)}, rw: ${request.resolutionWindows.length}, fat: ${request.finalArbitratorTriggered}`);
+            let request = mergeRequests(input, newStatus);
+            logger.debug(`${request.internalId} - Updating status finalized: ${JSON.stringify(request.finalizedOutcome)}, windows: ${request.resolutionWindows.length}, final arb triggered: ${request.finalArbitratorTriggered}`);
 
-        if (!isRequestExecutable(request)) {
-            logger.debug(`${request.internalId} - Cannot be executed till ${request.settlementTime}`);
-            await storeDataRequest(request);
-            return;
-        }
+            if (!isRequestExecutable(request)) {
+                logger.debug(`${request.internalId} - Cannot be executed`);
+                await storeDataRequest(request);
+                return;
+            }
 
-        // Claim the request earnings and remove it from the walker
-        if (isRequestClaimable(request)) {
-            const isClaimSuccesful = await finalizeAndClaim(this.providerRegistry, request);
+            // Claim the request earnings and remove it from the walker
+            if (isRequestClaimable(request)) {
+                const isClaimSuccesful = await finalizeAndClaim(this.providerRegistry, request);
 
-            if (isClaimSuccesful) {
-                logger.debug(`${request.internalId} - Pruning from pool due completed claim`);
+                if (isClaimSuccesful) {
+                    logger.debug(`${request.internalId} - Pruning from pool due completed claim`);
+                    this.requests.delete(request.internalId);
+                    await deleteDataRequest(request);
+                    return;
+                }
+            }
+
+            // Either we did not stake (or already claimed), but the request got finalized or the final arbitrator got triggered
+            // Either way it's safe to remove this from our watch pool and let the user manually claim the earnings
+            if (isRequestDeletable(request)) {
                 this.requests.delete(request.internalId);
+                logger.debug(`${request.internalId} - Pruning from pool fat: ${request.finalArbitratorTriggered}, fo: ${JSON.stringify(request.finalizedOutcome)}, ic: ${isRequestClaimable(request)}`);
                 await deleteDataRequest(request);
                 return;
             }
-        }
 
-        // Either we did not stake (or already claimed), but the request got finalized or the final arbitrator got triggered
-        // Either way it's safe to remove this from our watch pool and let the user manually claim the earnings
-        if (isRequestDeletable(request)) {
-            this.requests.delete(request.internalId);
-            logger.debug(`${request.internalId} - Pruning from pool fat: ${request.finalArbitratorTriggered}, fo: ${JSON.stringify(request.finalizedOutcome)}, ic: ${isRequestClaimable(request)}`);
-            await deleteDataRequest(request);
-            return;
-        }
-
-        // Something can go wrong with the execute results
-        if (!request.executeResult) {
-            request.executeResult = await executeJob(request);
-        }
-
-        // Continuously try to stake on the outcome.
-        // This will prevent any mallicious attacks
-        if (request.executeResult) {
-            const stakeResult = await stakeOnDataRequest(this.providerRegistry, request);
-
-            if (isStakeResultSuccesful(stakeResult)) {
-                request.staking.push(stakeResult);
+            // Something can go wrong with the execute results
+            if (!request.executeResult) {
+                request.executeResult = await executeJob(request);
             }
-        }
 
-        await storeDataRequest(request);
+            // Continuously try to stake on the outcome.
+            // This will prevent any mallicious attacks
+            if (request.executeResult) {
+                const stakeResult = await stakeOnDataRequest(this.providerRegistry, request);
+
+                if (isStakeResultSuccesful(stakeResult)) {
+                    request.staking.push(stakeResult);
+                }
+            }
+
+            await storeDataRequest(request);
+        } catch (error) {
+            logger.error(`[JobWalker.walkRequest] ${input.internalId} - ${error}`);
+        }
     }
 
     async walkAllRequests() {
+        logger.debug(`Walking ${this.requests.size} requests`);
         const requests = Array.from(this.requests.values());
         const promises = requests.map(async (request) => {
             // Request is already being processed
@@ -122,9 +127,11 @@ export default class JobWalker {
 
         this.currentWalkerPromise = Promise.all(promises);
         await this.currentWalkerPromise;
+        logger.debug('Done walking all requests');
     }
 
     async stopWalker() {
+        logger.debug('Stop walker triggered');
         clearInterval(this.walkerIntervalId);
 
         if (this.processingIds.size) {

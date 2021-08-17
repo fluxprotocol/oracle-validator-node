@@ -1,6 +1,7 @@
 import DataRequest from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { storeDataRequest } from "../services/DataRequestService";
+import logger from "../services/LoggerService";
 
 export default class JobSearcher {
     visitedDataRequestIds: string[];
@@ -39,6 +40,8 @@ export default class JobSearcher {
                 eligibleRequests.push(request);
                 this.visitedDataRequestIds.push(request.internalId);
             });
+
+            logger.debug(`Found '${eligibleRequests.length}/${requests.length}' eligible requests`);
 
             const databasePromises = eligibleRequests.map((r) => storeDataRequest(r));
             await Promise.all(databasePromises);

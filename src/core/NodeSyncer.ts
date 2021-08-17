@@ -1,4 +1,5 @@
 import DataRequest, { isRequestDeletable } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import Big from 'big.js';
 import { LatestRequest, LATEST_REQUEST_TYPE } from "../models/LatestRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import Database from "../services/DatabaseService";
@@ -52,7 +53,7 @@ export default class NodeSyncer {
         }
 
         // The request is only newer when the request id is higher
-        if (Number(latestRequest.id) > Number(dataRequest.id)) {
+        if (new Big(latestRequest.id).gt(dataRequest.id)) {
             return;
         }
 
@@ -64,11 +65,12 @@ export default class NodeSyncer {
     async syncNode(): Promise<void> {
         try {
             const storePromises: Promise<void>[] = [];
+            // TODO: This only stores the latest data request but does not take providers into account
             let lastDataRequest: DataRequest | undefined;
 
             const syncPromises = this.providerRegistry.providers.map(async (provider) => {
                 const latestRequest = this.latestDataRequests.get(provider.id);
-                const latestRequestId = latestRequest?.id ?? '0';
+                const latestRequestId = latestRequest?.id;
 
                 logger.info(`🔄 Syncing for ${provider.id} starting from request id ${latestRequestId}`);
 

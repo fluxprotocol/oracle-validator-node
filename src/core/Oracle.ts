@@ -40,7 +40,7 @@ export async function stakeOnDataRequest(
     }
 }
 
-export async function finalizeAndClaim(providerRegistry: ProviderRegistry, request: DataRequest) {
+export async function finalizeAndClaim(providerRegistry: ProviderRegistry, request: DataRequest): Promise<boolean> {
     if (!request.finalizedOutcome) {
         logger.debug(`${request.internalId} - Finalizing`);
         const isFinalized = await providerRegistry.finalize(request.providerId, request);

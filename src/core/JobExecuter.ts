@@ -4,8 +4,8 @@ import DataRequest, { isRequestExecutable } from '@fluxprotocol/oracle-provider-
 
 import { ExecuteResult, ExecuteResultType } from '../models/JobExecuteResult';
 import logger from "../services/LoggerService";
-import fetchNumberJob from '../jobs/fetchNumberJob';
-import fetchStringJob from '../jobs/fetchStringJob';
+import { executeFetchNumberJob } from '../jobs/fetchNumberJob';
+import { executeFetchStringJob } from '../jobs/fetchStringJob';
 
 const GAS_LIMIT = 1_000_000;
 
@@ -13,37 +13,16 @@ export async function executeJob(request: DataRequest): Promise<ExecuteResult> {
     try {
         logger.debug(`${request.internalId} - Executing`);
 
-        const sourceData = request.sources[0];
-        const args: string[] = [sourceData.end_point, sourceData.source_path];
-        let vmCode: Code;
+        let result: ExecuteResult;
 
         if (request.dataType.type === 'number') {
-            args.push(request.dataType.multiplier);
-            vmCode = fetchNumberJob;
+            result = await executeFetchNumberJob(request);
         } else {
-            vmCode = fetchStringJob;
+            result = await executeFetchStringJob(request);
         }
 
-        const context = new Context(args);
-        context.gasLimit = GAS_LIMIT;
-
-        const executeResult = await executeCode(vmCode, { context });
-
-        logger.debug(`${request.internalId} - Executed, results: ${JSON.stringify(executeResult)}`);
-
-        if (executeResult.code > 0) {
-            return {
-                status: executeResult.code,
-                error: executeResult.message,
-                type: ExecuteResultType.Error,
-            }
-        }
-
-        return {
-            type: ExecuteResultType.Success,
-            data: executeResult.result ?? '',
-            status: executeResult.code,
-        }
+        logger.debug(`${request.internalId} - Executed, results: ${JSON.stringify(result)}`);
+        return result;
     } catch (error) {
         logger.error(`[executeJob] ${error}`);
 
