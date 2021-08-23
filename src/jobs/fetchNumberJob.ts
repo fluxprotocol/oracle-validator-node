@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 import Big from 'big.js';
 import { DataRequestNumberDataType } from '../models/DataRequestDataType';
 import { sumBig } from '../utils/bigUtils';
+import valueAt from '../utils/valueAt';
 
 const fetchNumberJob: Code = [
     // Parsing args
@@ -59,14 +60,14 @@ export async function executeFetchNumberJob(request: DataRequest): Promise<Execu
         const fetches = request.sources.map(async (source) => {
             const response = await fetch(source.end_point);
             const body = await response.json();
-            const foundValues = at(body, [source.source_path]);
+            const foundValues = valueAt(body, source.source_path);
 
             if (!foundValues) {
                 throw new Error(`Could not find value at path ${source.source_path}`);
             }
 
             const dataType = request.dataType as DataRequestNumberDataType;
-            return new Big(foundValues[0]).mul(dataType.multiplier);
+            return new Big(foundValues).mul(dataType.multiplier);
         });
 
         const fetchResults = await Promise.all(fetches);
