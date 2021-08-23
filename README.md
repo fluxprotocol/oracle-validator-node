@@ -5,7 +5,7 @@
 * Runs requests in parallel for maximum fee earning
 * Configurable staking amount
 * Automatic pruning of data to keep the node small
-* Automatic claiming of fees
+* Automatic claiming of fees and unstaking unbonded outcomes
 * Re-staking on a mallicious stake
 
 ## Installation
@@ -25,13 +25,13 @@ near login
 
 ## Configuration
 
-Copy the `config.example.json` and name it `config.json` and change the following options:
+Copy the `.env.example` and name it `.env` and change the following options:
 
-* `stakePerRequest` to the amount you want to stake per request. Default is 2.5 FLX (2500000000000000000)
-* `credentialsStorePath` to the path where your `.near-credentials` are stored. Must be the full path (Usually it's located in your home directory)
-* `accountId` to the account id you previously logged in with (using `near login`)
-
-More information about the other options coming soon..
+* `NEAR_STAKE_AMOUNT` to the amount you want to stake per request. Default is 2.5 FLX
+* `NEAR_CREDENTIALS_STORE_PATH` to the path where your `.near-credentials` are stored. Must be the full path (Usually it's located in your home directory)
+* `NEAR_ACCOUNT_ID` to the account id you previously logged in with (using `near login`)
+* `NEAR_CONTRACT_ID` to the current oracle contract
+* `NEAR_NETWORK_ID` either `testnet` or `mainnet`
 
 ## Running the node
 

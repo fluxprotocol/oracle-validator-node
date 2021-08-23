@@ -1,29 +1,21 @@
 # Config options
 
+All configuration options are configured in the `.env` file. But can also be set through the environment variables locally.
 
 |Key|Type|Description|Default value|
 |---|---|---|---|
-|debug | boolean | Logs extra information about each request. Usefull for checking why something is happening | false|
-|dbPath | string | The folder path where the database will be stored | './'|
-|dbName | string | The name of the database | 'flux_db'|
+|`DEBUG`| boolean | Logs extra information about each request. Usefull for checking why something is happening | false|
+|`DB_PATH` | string | The folder path where the database will be stored | './'|
+|`DB_NAME` | string | The name of the database | 'flux_db'|
 |stakePerRequest | string | The amount of FLX the node is allowed to spent per stake denominated in 18 decimals | '2500000000000000000' (or 2.5 FLX)|
-|contractIds | string[] | Which contract ids you want to resolve, used for nodes who specificly want to resolve only their own requests. | []|
-|providers | ProviderConfig[] | Configuration for each provider. Required to activate a provider.| N/A
+|`ACTIVATED_PROVIDERS` | string | Comma seperated (`,`) provider ids, required to activate a provider. | N/A
 
 
 ## ProviderConfig
 
 Each provider requires their own configuration. This is due the difference between each chain.
-All providers have the `id` and options `param`.
-
-|Key|Type|Description
-|---|---|---|
-|id | string | The id of the provider.
-|options | object | Options of the provider
 
 ### NearProvider
-
-`id: "near"`
 
 The NearProvider allows the validator node to stake on the NEAR blockchain. For this provider if you want to use `credentialsStorePath` you are required to have the `near-cli` installed and be logged in:
 
@@ -36,39 +28,31 @@ NearProvider has the following config:
 
 |Key|Type|Description
 |---|---|---|
-|credentialsStorePath | string | The path where the `.near-credentials` live. Requires you to use `near login`
-|privateKey | string | If you don't want to use the `credentialsStorePath` you can also directly insert the private key (prefixed with `ed25519:`)
-|explorerApi | string | The GraphQL API we will use for fetching requests
-|accountId | string | The NEAR account id. This account id should be logged in (`near login`)
-|oracleContractId | string | The contract account id where the oracle is living on
-|tokenContractId | string | The contract id of the FLX token
-|net | "testnet"/"mainnet" | Whether we are on testnet or mainnet
-|maxGas | string | The maximum amount of gas that can be used for this transaction. Best to leave it at the max
-|storageBase | string | The amount of NEAR to send along each contract interaction for storage. Any unused NEAR gets refuned
+|`NEAR_CREDENTIALS_STORE_PATH` | string | The path where the `.near-credentials` live. Requires you to use `near login`
+|`NEAR_PRIVATE_KEY` | string | If you don't want to use the `credentialsStorePath` you can also directly insert the private key (prefixed with `ed25519:`)
+|`NEAR_ACCOUNT_ID` | string | The NEAR account id. This account id should match the account for the credentials store path or the private key  (`near login`)
+|`NEAR_CONTRACT_ID` | string | The contract account id where the oracle is living on
+|`NEAR_NETWORK_ID` | "testnet"/"mainnet" | Whether we are on testnet or mainnet
+|`NEAR_STAKE_AMOUNT` | string | The amount of FLX is staked for each resolution window (defaults to `2.5`) |
+|`NEAR_ATTACHED_STORAGE`| string | The amount of NEAR that is deposited to the oracle for storing your stakes. Any unused NEAR can be claimed back. (defaults to `30000000000000000000000`)
 
 ## Example
 
-```JavaScript
-{
-    "debug": false,
-    "dbPath": "./",
-    "dbName": "flux_db",
-    "stakePerRequest": "2500000000000000000",
-    "contractIds": [],
-    "providers": [
-        {
-            "id": "near",
-            "options": {
-                "credentialsStorePath": "/Users/myAccount/.near-credentials/",
-                "explorerApi": "https://testnet-oracle.flux.xyz/graphql",
-                "accountId": "myAccount.testnet",
-                "oracleContractId": "temp-oracle.flux-dev",
-                "tokenContractId": "wnear.flux-dev",
-                "net": "testnet",
-                "maxGas": "200000000000000",
-                "storageBase": "30000000000000000000000"
-            }
-        }
-    ]
-}
+```text
+DEBUG = true
+
+# Database
+DB_PATH = ./
+DB_NAME = flux_db
+
+# Providers
+ACTIVATED_PROVIDERS = near
+
+# NEAR options
+NEAR_CREDENTIALS_STORE_PATH = /Users/myAccount/.near-credentials/
+NEAR_ACCOUNT_ID = myAccount.testnet
+NEAR_RPC = https://rpc.testnet.near.org
+NEAR_CONTRACT_ID = 05.oracle.flux-dev
+NEAR_NETWORK_ID = testnet
+NEAR_STAKE_AMOUNT = 2.5 # 2.5 FLX
 ```
