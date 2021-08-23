@@ -4,12 +4,13 @@ import Balance from "@fluxprotocol/oracle-provider-core/dist/Balance";
 import { Outcome } from "@fluxprotocol/oracle-provider-core/dist/Outcome";
 import { ClaimError, ClaimResult, ClaimResultType } from "@fluxprotocol/oracle-provider-core/dist/ClaimResult";
 import { StakeResult } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
+import { IJobWalker, IProviderRegistry } from "@fluxprotocol/oracle-provider-core/dist/Core";
 import logger from "../services/LoggerService";
 
-export default class ProviderRegistry {
+export default class ProviderRegistry implements IProviderRegistry {
     providers: Provider[];
 
-    constructor(providers: Provider[]) {
+    constructor(providers: Provider[] = []) {
         this.providers = providers;
     }
 

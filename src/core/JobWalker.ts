@@ -1,6 +1,7 @@
 /** Luke JobWalker */
 import DataRequest, { isRequestClaimable, isRequestDeletable, isRequestExecutable, mergeRequests } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import { isStakeResultSuccesful } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
+import { IJobWalker } from "@fluxprotocol/oracle-provider-core/dist/Core";
 
 import { JOB_WALKER_INTERVAL } from "../config";
 import ProviderRegistry from "../providers/ProviderRegistry";
@@ -9,7 +10,7 @@ import logger from "../services/LoggerService";
 import { executeJob } from "./JobExecuter";
 import { finalizeAndClaim, stakeOnDataRequest } from "./Oracle";
 
-export default class JobWalker {
+export default class JobWalker implements IJobWalker {
     providerRegistry: ProviderRegistry;
     requests: Map<string, DataRequest>;
 

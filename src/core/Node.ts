@@ -1,15 +1,21 @@
 import death from 'death';
-import logger, { logNodeOptions } from "../services/LoggerService";
+import logger, { createModuleLogger, logNodeOptions } from "../services/LoggerService";
 import JobSearcher from "./JobSearcher";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { getAllDataRequests } from "../services/DataRequestService";
 import JobWalker from "./JobWalker";
 import NodeSyncer from './NodeSyncer';
+import ModuleRunner from './ModuleRunner';
+import { ENV_VARS, MODULES } from '../config';
+import database from '../services/DatabaseService';
 
 export async function startNode(providerRegistry: ProviderRegistry) {
     logNodeOptions(providerRegistry);
 
     await providerRegistry.init();
+
+    // Activating all modules
+    const moduleRunner = new ModuleRunner();
     const nodeSyncer = new NodeSyncer(providerRegistry);
     await nodeSyncer.init();
     await nodeSyncer.syncNode();
@@ -21,7 +27,17 @@ export async function startNode(providerRegistry: ProviderRegistry) {
     const jobSearcher = new JobSearcher(providerRegistry, dataRequests);
     const jobWalker = new JobWalker(providerRegistry, dataRequests);
 
+    logger.debug('Activating modules');
+
+    await Promise.all(MODULES.map(module => moduleRunner.add(new module(ENV_VARS, {
+        database,
+        providerRegistry,
+        jobWalker,
+        logger: createModuleLogger(module.moduleName),
+    }))));
+
     logger.debug('Starting searcher');
+
     jobSearcher.startSearch((requests) => {
         requests.forEach((request) => {
             nodeSyncer.updateLatestDataRequest(request);
@@ -30,6 +46,7 @@ export async function startNode(providerRegistry: ProviderRegistry) {
     });
 
     logger.debug('Starting walker');
+    moduleRunner.startTicking();
     jobWalker.startWalker();
 
     let deathCounter = 0;
@@ -43,6 +60,7 @@ export async function startNode(providerRegistry: ProviderRegistry) {
         deathCounter += 1;
         logger.info('Finishing walk in order to keep data integrity');
         jobSearcher.stopSearch();
+        moduleRunner.stopTicking();
         await jobWalker.stopWalker();
         process.exit(0);
     });

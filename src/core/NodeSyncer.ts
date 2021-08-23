@@ -1,18 +1,19 @@
+import { DB_TABLE_SYNC } from "@fluxprotocol/oracle-provider-core/dist/Core";
 import DataRequest, { isRequestDeletable } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import Big from 'big.js';
 import { LatestRequest } from "../models/LatestRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
-import Database, { TABLE_SYNC } from "../services/DatabaseService";
+import Database from "../services/DatabaseService";
 import { storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
 
 export async function getLatestDataRequests(): Promise<LatestRequest[]> {
-    const latestRequests = await Database.getAllFromTable<LatestRequest>(TABLE_SYNC);
+    const latestRequests = await Database.getAllFromTable<LatestRequest>(DB_TABLE_SYNC);
     return latestRequests;
 }
 
 export async function storeLatestDataRequest(latestRequest: LatestRequest) {
-    await Database.createOrUpdateDocument(TABLE_SYNC, `${latestRequest.provider}_latest_request`, latestRequest);
+    await Database.createOrUpdateDocument(DB_TABLE_SYNC, `${latestRequest.provider}_latest_request`, latestRequest);
 }
 
 export default class NodeSyncer {

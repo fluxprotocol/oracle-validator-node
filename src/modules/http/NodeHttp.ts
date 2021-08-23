@@ -1,25 +1,25 @@
-// import express from 'express';
-// import { HTTP_PORT } from '../../config';
-// import logger from '../../services/LoggerService';
-// import JobWalker from '../../core/JobWalker';
-// import StatusController from './controllers/StatusController';
-// import { NodeHttpContext } from './NodeHttpContext';
+import express from 'express';
+import jsonRouter from 'express-json-rpc-router';
+import createNodeController from './controllers/NodeController';
+import Module from "@fluxprotocol/oracle-provider-core/dist/Module";
 
-// export function startHttpServer(jobWalker: JobWalker) {
-//     const app = express();
+export default class HttpModule extends Module {
+    static moduleName = 'Http';
 
-//     app.use((req, res, next) => {
-//         // @ts-ignore
-//         req.context = {
-//             jobWalker,
-//         } as NodeHttpContext;
+    async init() {
+        const app = express();
 
-//         next();
-//     });
+        app.use(express.json());
+        app.use(jsonRouter({
+            methods: {
+                ...createNodeController(this.dependencies),
+            }
+        }));
 
-//     app.use('/status', StatusController);
+        const httpPort = Number(this.config['HTTP_PORT'] ?? '28484');
 
-//     app.listen(HTTP_PORT, () => {
-//         logger.info(`🌍 HTTP listening on port ${HTTP_PORT}`);
-//     });
-// }
+        app.listen(httpPort, () => {
+            this.dependencies.logger.info(`🌍 RPC listening on port ${httpPort}`);
+        });
+    }
+}

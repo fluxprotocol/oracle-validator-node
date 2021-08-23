@@ -3,9 +3,7 @@ import { LevelUp } from 'levelup';
 import level from 'level';
 import subleveldown from 'subleveldown';
 import logger from './LoggerService';
-
-export const TABLE_DATA_REQUESTS = 'data_requests';
-export const TABLE_SYNC = 'sync';
+import { DB_TABLE_DATA_REQUESTS, DB_TABLE_BALANCES, DB_TABLE_SYNC } from '@fluxprotocol/oracle-provider-core/dist/Core';
 
 class Database {
     database?: level.LevelDB<any, any>;
@@ -24,8 +22,9 @@ class Database {
             await db.open();
 
             // Creating all tables
-            this.tables.set(TABLE_DATA_REQUESTS, subleveldown(db, TABLE_DATA_REQUESTS));
-            this.tables.set(TABLE_SYNC, subleveldown(db, TABLE_SYNC));
+            this.tables.set(DB_TABLE_DATA_REQUESTS, subleveldown(db, DB_TABLE_DATA_REQUESTS));
+            this.tables.set(DB_TABLE_SYNC, subleveldown(db, DB_TABLE_SYNC));
+            this.tables.set(DB_TABLE_BALANCES, subleveldown(db, DB_TABLE_BALANCES));
 
             resolve(db);
         });

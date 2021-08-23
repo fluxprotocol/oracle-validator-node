@@ -11,7 +11,6 @@ export const start: CommandModule = {
     command: 'start',
     describe: 'Starts the oracle node',
     handler: async () => {
-
         const providers: Provider[] = [];
         await Database.startDatabase(DB_PATH, DB_NAME);
 
@@ -23,7 +22,9 @@ export const start: CommandModule = {
             const foundProvider = AVAILABLE_PROVIDERS.find(provider => provider.id === providerId);
 
             if (foundProvider) {
-                providers.push(new foundProvider(ENV_VARS));
+                providers.push(new foundProvider(ENV_VARS, {
+                    database: Database,
+                }));
             }
         });
 
