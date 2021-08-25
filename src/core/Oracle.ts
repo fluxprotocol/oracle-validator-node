@@ -41,24 +41,29 @@ export async function stakeOnDataRequest(
 }
 
 export async function finalizeAndClaim(providerRegistry: ProviderRegistry, request: DataRequest): Promise<boolean> {
-    if (!request.finalizedOutcome) {
-        logger.debug(`${request.internalId} - Finalizing`);
-        const isFinalized = await providerRegistry.finalize(request.providerId, request);
+    try {
+        if (!request.finalizedOutcome) {
+            logger.debug(`${request.internalId} - Finalizing`);
+            const isFinalized = await providerRegistry.finalize(request.providerId, request);
 
-        if (isFinalized) {
-            logger.debug(`${request.internalId} - Finalized`);
-        } else {
-            logger.debug(`${request.internalId} - Could not finalize`);
+            if (isFinalized) {
+                logger.debug(`${request.internalId} - Finalized`);
+            } else {
+                logger.debug(`${request.internalId} - Could not finalize`);
+            }
         }
-    }
 
-    logger.debug(`${request.internalId} - Claiming`);
-    const claimResult = await providerRegistry.claim(request.providerId, request);
-    logger.debug(`${request.internalId} - Claim, results: ${JSON.stringify(claimResult)}`);
+        logger.debug(`${request.internalId} - Claiming`);
+        const claimResult = await providerRegistry.claim(request.providerId, request);
+        logger.debug(`${request.internalId} - Claim, results: ${JSON.stringify(claimResult)}`);
 
-    if (!isClaimResultSuccesful(claimResult)) {
+        if (!isClaimResultSuccesful(claimResult)) {
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        logger.error(`${request.internalId} - ${error}`);
         return false;
     }
-
-    return true;
 }

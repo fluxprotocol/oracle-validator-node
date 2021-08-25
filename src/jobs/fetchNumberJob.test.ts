@@ -27,11 +27,9 @@ describe('fetchNumberJob', () => {
         });
 
         const executeResult = await executeFetchNumberJob(request);
-        const result = JSON.parse(executeResult.type === ExecuteResultType.Success ? executeResult.data.toString() : '{}');
+        const result = executeResult.type === ExecuteResultType.Success ? executeResult.data.toString() : 'Error';
 
-        expect(result.negative).toBe(false);
-        expect(result.value).toBe('40000');
-        expect(result.multiplier).toBe('1000');
+        expect(result).toBe('40000');
     });
 
     it('should be able to get the last item of an array', async () => {
@@ -53,10 +51,8 @@ describe('fetchNumberJob', () => {
         });
 
         const executeResult = await executeFetchNumberJob(request);
-        const result = JSON.parse(executeResult.type === ExecuteResultType.Success ? executeResult.data.toString() : '{}');
+        const result = executeResult.type === ExecuteResultType.Success ? executeResult.data.toString() : 'Error';
 
-        expect(result.negative).toBe(false);
-        expect(result.value).toBe('2000');
-        expect(result.multiplier).toBe('1000');
+        expect(result).toBe('2000');
     });
 });

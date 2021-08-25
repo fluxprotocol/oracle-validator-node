@@ -22,12 +22,12 @@ class Database {
 
         this.database = new PouchDB(dbName, {
             revs_limit: 1,
+            auto_compaction: true,
             prefix: fullDbPath,
         });
 
         // TODO: Create indexes
         return this.database;
-
     }
 
     /**
@@ -58,6 +58,7 @@ class Database {
         try {
             const doc = await this.findDocumentById(id);
             await this.database?.remove(doc as PouchDB.Core.RemoveDocument);
+            await this.database?.viewCleanup();
         } catch (error) {
             return;
         }

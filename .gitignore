@@ -4,6 +4,7 @@ coverage
 .cache
 config.json
 .env
+*.env
 flux_db
-*_db
+*_db*
 *.config.json

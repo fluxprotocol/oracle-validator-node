@@ -25,7 +25,7 @@ export async function startNode(providerRegistry: ProviderRegistry) {
     jobSearcher.startSearch((requests) => {
         requests.forEach((request) => {
             nodeSyncer.updateLatestDataRequest(request);
-            jobWalker.addNewDataRequest(request);
+            jobWalker.processingIds.set(request.internalId, jobWalker.addNewDataRequest(request));
         });
     });
 

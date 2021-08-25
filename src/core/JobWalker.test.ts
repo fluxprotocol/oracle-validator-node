@@ -188,13 +188,13 @@ describe('JobWalker', () => {
             );
 
             const walkRequestMock = jest.fn();
-            jobWalker.processingIds.add(request2.internalId);
+            jobWalker.processingIds.set(request2.internalId, new Promise(() => {}));
             jobWalker.walkRequest = walkRequestMock;
             await jobWalker.walkAllRequests();
 
             expect(walkRequestMock).toHaveBeenCalledTimes(1);
             expect(walkRequestMock).toHaveBeenCalledWith(request);
-            expect(jobWalker.processingIds).toStrictEqual(new Set([request2.internalId]));
+            expect(jobWalker.processingIds.size).toBe(1);
         });
     });
 
@@ -302,7 +302,7 @@ describe('JobWalker', () => {
             expect(finalizeAndClaimSpy).toHaveBeenCalledTimes(0);
             expect(stakeOnDataRequestSpy).toHaveBeenCalledTimes(1);
             expect(jobWalker.requests.size).toBe(1);
-            expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+            expect(storeDataRequestSpy).toHaveBeenCalledTimes(2);
         });
 
         it('should delete the request when it\'s deletable', async () => {

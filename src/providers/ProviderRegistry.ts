@@ -4,6 +4,7 @@ import Balance from "@fluxprotocol/oracle-provider-core/dist/Balance";
 import { Outcome } from "@fluxprotocol/oracle-provider-core/dist/Outcome";
 import { ClaimError, ClaimResult, ClaimResultType } from "@fluxprotocol/oracle-provider-core/dist/ClaimResult";
 import { StakeResult } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
+import logger from "../services/LoggerService";
 
 export default class ProviderRegistry {
     providers: Provider[];
@@ -54,13 +55,18 @@ export default class ProviderRegistry {
     }
 
     async finalize(providerId: string, request: DataRequest): Promise<boolean> {
-        const provider = this.getProviderById(providerId);
+        try {
+            const provider = this.getProviderById(providerId);
 
-        if (!provider) {
+            if (!provider) {
+                return false;
+            }
+
+            return provider.finalize(request);
+        } catch (error) {
+            logger.error(`${request.internalId} - ${error}`);
             return false;
         }
-
-        return provider.finalize(request);
     }
 
     async claim(providerId: string, request: DataRequest): Promise<ClaimResult> {

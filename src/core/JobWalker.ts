@@ -12,9 +12,10 @@ import { finalizeAndClaim, stakeOnDataRequest } from "./Oracle";
 export default class JobWalker {
     providerRegistry: ProviderRegistry;
     requests: Map<string, DataRequest>;
-    processingIds: Set<string> = new Set();
+
+    /** Used for keeping track which requests are on going */
+    processingIds: Map<string, Promise<void>> = new Map();
     walkerIntervalId?: any;
-    currentWalkerPromise?: Promise<void[]>;
 
     constructor(providerRegistry: ProviderRegistry, initialRequests: DataRequest[] = []) {
         this.requests = new Map();
@@ -29,7 +30,9 @@ export default class JobWalker {
         this.providerRegistry = providerRegistry;
     }
 
-    async addNewDataRequest(request: DataRequest) {
+    async addNewDataRequest(input: DataRequest) {
+        let request = input;
+
         try {
             if (isRequestExecutable(request)) {
                 request.executeResult = await executeJob(request);
@@ -48,21 +51,28 @@ export default class JobWalker {
 
             await storeDataRequest(request);
             this.requests.set(request.internalId, request);
+            this.processingIds.delete(request.internalId);
         } catch (error) {
             logger.error(`[JobWalker.addNewDataRequest] ${error}`);
+            await storeDataRequest(request);
+            this.requests.set(request.internalId, request);
+            this.processingIds.delete(request.internalId);
         }
     }
 
     async walkRequest(input: DataRequest) {
+        let request = input;
+
         try {
             const newStatus = await this.providerRegistry.getDataRequestById(input.providerId, input.id);
             if (!newStatus) return;
 
-            let request = mergeRequests(input, newStatus);
+            request = mergeRequests(request, newStatus);
             logger.debug(`${request.internalId} - Updating status finalized: ${JSON.stringify(request.finalizedOutcome)}, windows: ${request.resolutionWindows.length}, final arb triggered: ${request.finalArbitratorTriggered}`);
 
             if (!isRequestExecutable(request)) {
                 logger.debug(`${request.internalId} - Cannot be executed`);
+                this.requests.set(request.internalId, request);
                 await storeDataRequest(request);
                 return;
             }
@@ -71,12 +81,14 @@ export default class JobWalker {
             if (isRequestClaimable(request)) {
                 const isClaimSuccesful = await finalizeAndClaim(this.providerRegistry, request);
 
-                if (isClaimSuccesful) {
-                    logger.debug(`${request.internalId} - Pruning from pool due completed claim`);
-                    this.requests.delete(request.internalId);
-                    await deleteDataRequest(request);
-                    return;
+                if (!isClaimSuccesful) {
+                    logger.warn(`${request.internalId} - Claim/Finalization could not complete. Please do this manually at the explorer.`);
                 }
+
+                logger.debug(`${request.internalId} - Pruning from pool due claim`);
+                this.requests.delete(request.internalId);
+                await deleteDataRequest(request);
+                return;
             }
 
             // Either we did not stake (or already claimed), but the request got finalized or the final arbitrator got triggered
@@ -91,6 +103,7 @@ export default class JobWalker {
             // Something can go wrong with the execute results
             if (!request.executeResult) {
                 request.executeResult = await executeJob(request);
+                await storeDataRequest(request);
             }
 
             // Continuously try to stake on the outcome.
@@ -103,8 +116,11 @@ export default class JobWalker {
                 }
             }
 
+            this.requests.set(request.internalId, request);
             await storeDataRequest(request);
         } catch (error) {
+            this.requests.set(request.internalId, request);
+            await storeDataRequest(request);
             logger.error(`[JobWalker.walkRequest] ${input.internalId} - ${error}`);
         }
     }
@@ -112,22 +128,22 @@ export default class JobWalker {
     async walkAllRequests() {
         logger.debug(`Walking ${this.requests.size} requests`);
         const requests = Array.from(this.requests.values());
-        const promises = requests.map(async (request) => {
+
+        requests.forEach(async (request) => {
             // Request is already being processed
             if (this.processingIds.has(request.internalId)) {
                 return;
             }
 
-            this.processingIds.add(request.internalId);
             logger.debug(`${request.internalId} - Start walk`);
-            await this.walkRequest(request);
 
+            let processingRequest = this.walkRequest(request);
+            this.processingIds.set(request.internalId, processingRequest);
+            await processingRequest;
             this.processingIds.delete(request.internalId);
-        });
 
-        this.currentWalkerPromise = Promise.all(promises);
-        await this.currentWalkerPromise;
-        logger.debug('Done walking all requests');
+            logger.debug(`${request.internalId} - Done walking`);
+        });
     }
 
     async stopWalker() {
@@ -135,7 +151,8 @@ export default class JobWalker {
         clearInterval(this.walkerIntervalId);
 
         if (this.processingIds.size) {
-            await this.currentWalkerPromise;
+            const processes = Array.from(this.processingIds.values());
+            await Promise.all(processes);
         }
     }
 

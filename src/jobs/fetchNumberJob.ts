@@ -60,14 +60,14 @@ export async function executeFetchNumberJob(request: DataRequest): Promise<Execu
         const fetches = request.sources.map(async (source) => {
             const response = await fetch(source.end_point);
             const body = await response.json();
-            const foundValues = valueAt(body, source.source_path);
+            const foundValue = valueAt(body, source.source_path);
 
-            if (!foundValues) {
+            if (!foundValue) {
                 throw new Error(`Could not find value at path ${source.source_path}`);
             }
 
             const dataType = request.dataType as DataRequestNumberDataType;
-            return new Big(foundValues).mul(dataType.multiplier);
+            return new Big(foundValue).mul(dataType.multiplier);
         });
 
         const fetchResults = await Promise.all(fetches);
@@ -75,11 +75,7 @@ export async function executeFetchNumberJob(request: DataRequest): Promise<Execu
 
         return {
             type: ExecuteResultType.Success,
-            data: JSON.stringify({
-                negative: result.lt(0),
-                value: result.toFixed(0),
-                multiplier: request.dataType.multiplier,
-            }),
+            data: result.toFixed(0),
             status: 0,
         }
     } catch (error) {
