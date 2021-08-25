@@ -1,6 +1,6 @@
 # 🔮 Flux Oracle Validator Node
 
-⚠️ This software is still in BETA and should be used in production yet, beware of dragons 🐉
+⚠️ This software is still in BETA and should not be used in production yet, beware of dragons 🐉
 
 ## Features
 
@@ -9,6 +9,10 @@
 * Automatic pruning of data to keep the node small
 * Automatic claiming of fees and unstaking unbonded outcomes
 * Re-staking on a mallicious stake
+
+## Known Issues
+
+* Sometimes a request gets stuck even after deleting. This may result in the node trying to refinalize a request.
 
 ## Installation
 
