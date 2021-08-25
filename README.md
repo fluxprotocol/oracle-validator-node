@@ -1,5 +1,7 @@
 # 🔮 Flux Oracle Validator Node
 
+⚠️ This software is still in BETA and should be used in production yet, beware of dragons 🐉
+
 ## Features
 
 * Runs requests in parallel for maximum fee earning
