@@ -10,10 +10,6 @@
 * Automatic claiming of fees and unstaking unbonded outcomes
 * Re-staking on a mallicious stake
 
-## Known Issues
-
-* Sometimes a request gets stuck even after deleting. This may result in the node trying to refinalize a request.
-
 ## Installation
 
 The validator node requires you to have node.js installed. After installing you can run:
