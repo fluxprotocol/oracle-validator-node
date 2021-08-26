@@ -21,11 +21,7 @@ class Database {
                 reject(error.message);
             });
 
-            console.log('[] fullDbPath -> ', fullDbPath);
-
             await db.open();
-
-            console.log('crash');
 
             // Creating all tables
             this.tables.set(TABLE_DATA_REQUESTS, subleveldown(db, TABLE_DATA_REQUESTS));
