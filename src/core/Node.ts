@@ -42,6 +42,7 @@ export async function startNode(providerRegistry: ProviderRegistry) {
 
         deathCounter += 1;
         logger.info('Finishing walk in order to keep data integrity');
+        jobSearcher.stopSearch();
         await jobWalker.stopWalker();
         process.exit(0);
     });

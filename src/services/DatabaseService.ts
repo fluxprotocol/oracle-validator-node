@@ -21,7 +21,7 @@ class Database {
         PouchDB.plugin(PouchDbFind);
 
         this.database = new PouchDB(dbName, {
-            revs_limit: 1,
+            revs_limit: 0,
             auto_compaction: true,
             prefix: fullDbPath,
         });
@@ -54,11 +54,18 @@ class Database {
         await this.database?.put(doc);
     }
 
+    private async cleanDatabase() {
+        await this.database?.viewCleanup();
+        await this.database?.compact();
+    }
+
     async deleteDocument(id: string) {
         try {
             const doc = await this.findDocumentById(id);
+            //https://pouchdb.com/api.html#delete_document
+            console.log('[toRemove] doc -> ', doc);
             await this.database?.remove(doc as PouchDB.Core.RemoveDocument);
-            await this.database?.viewCleanup();
+            await this.cleanDatabase();
         } catch (error) {
             return;
         }
@@ -100,6 +107,8 @@ class Database {
             await this.database?.put(updatedDoc, {
                 force: true,
             });
+
+            await this.cleanDatabase();
         } catch (error) {
             logger.error(`[createOrUpdateDocument] ${error} -> ${id} - ${JSON.stringify(obj)}`);
         }

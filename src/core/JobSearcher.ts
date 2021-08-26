@@ -6,6 +6,7 @@ import logger from "../services/LoggerService";
 export default class JobSearcher {
     visitedDataRequestIds: string[];
     providerRegistry: ProviderRegistry;
+    stopped: boolean = true;
 
     constructor(providerRegistry: ProviderRegistry, dataRequests: DataRequest[]) {
         this.providerRegistry = providerRegistry;
@@ -13,7 +14,10 @@ export default class JobSearcher {
     }
 
     startSearch(onRequests: (dataRequests: DataRequest[]) => void) {
+        this.stopped = false;
         this.providerRegistry.listenForRequests(async (requests) => {
+            if (this.stopped) return;
+
             const eligibleRequests: DataRequest[] = [];
 
             requests.forEach((request) => {
@@ -48,5 +52,9 @@ export default class JobSearcher {
 
             onRequests(eligibleRequests);
         });
+    }
+
+    stopSearch() {
+        this.stopped = true;
     }
 }
