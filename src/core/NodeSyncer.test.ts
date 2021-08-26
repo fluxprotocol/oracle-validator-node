@@ -25,10 +25,9 @@ describe('NodeSyncer', () => {
             expect(syncer.latestDataRequests.has(request.providerId));
             expect(syncer.latestDataRequests.size).toBe(1);
             expect(createOrUpdateDocumentSpy).toHaveBeenCalledTimes(1);
-            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith(request.providerId + '_latest_request', {
+            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith('sync', request.providerId + '_latest_request', {
                 id: request.id,
                 provider: request.providerId,
-                type: 'LATEST_REQUEST',
             } as LatestRequest);
         });
 
@@ -38,13 +37,11 @@ describe('NodeSyncer', () => {
             syncer.latestDataRequests.set('near', {
                 id: '4',
                 provider: 'near',
-                type: 'LATEST_REQUEST',
             });
 
             syncer.latestDataRequests.set('test', {
                 id: '2',
                 provider: 'test',
-                type: 'LATEST_REQUEST',
             });
 
 
@@ -60,13 +57,11 @@ describe('NodeSyncer', () => {
             expect(syncer.latestDataRequests.get('near')).toStrictEqual({
                 id: '4',
                 provider: 'near',
-                type: 'LATEST_REQUEST',
             });
 
             expect(syncer.latestDataRequests.get('test')).toStrictEqual({
                 id: '2',
                 provider: 'test',
-                type: 'LATEST_REQUEST',
             });
         });
 
@@ -76,13 +71,11 @@ describe('NodeSyncer', () => {
             syncer.latestDataRequests.set('near', {
                 id: '4',
                 provider: 'near',
-                type: 'LATEST_REQUEST',
             });
 
             syncer.latestDataRequests.set('test', {
                 id: '2',
                 provider: 'test',
-                type: 'LATEST_REQUEST',
             });
 
 
@@ -95,22 +88,19 @@ describe('NodeSyncer', () => {
 
             expect(syncer.latestDataRequests.size).toBe(2);
             expect(createOrUpdateDocumentSpy).toHaveBeenCalledTimes(1);
-            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith(request.providerId + '_latest_request', {
+            expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith('sync', request.providerId + '_latest_request', {
                 id: request.id,
                 provider: request.providerId,
-                type: 'LATEST_REQUEST',
             } as LatestRequest);
 
             expect(syncer.latestDataRequests.get('near')).toStrictEqual({
                 id: '5',
                 provider: 'near',
-                type: 'LATEST_REQUEST',
             });
 
             expect(syncer.latestDataRequests.get('test')).toStrictEqual({
                 id: '2',
                 provider: 'test',
-                type: 'LATEST_REQUEST',
             });
         });
     });

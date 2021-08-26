@@ -1,101 +1,86 @@
-import PouchDB from 'pouchdb';
 import path from 'path';
-import PouchDbFind from 'pouchdb-find';
-// @ts-ignore
-import PouchDbDebug from 'pouchdb-debug';
+import { LevelUp } from 'levelup';
+import level from 'level';
+import subleveldown from 'subleveldown';
 import logger from './LoggerService';
 
+export const TABLE_DATA_REQUESTS = 'data_requests';
+export const TABLE_SYNC = 'sync';
+
 class Database {
-    database?: PouchDB.Database;
+    database?: level.LevelDB<any, any>;
 
-    async startDatabase(dbPath: string, dbName: string) {
-        if (this.database) return this.database;
+    // Tables
+    tables: Map<string, LevelUp> = new Map();
 
-        const fullDbPath = path.resolve(dbPath) + path.sep;
+    async startDatabase(dbPath: string, dbName: string): Promise<level.LevelDB<any, any>> {
+        return new Promise(async (resolve, reject) => {
+            const fullDbPath = path.resolve(dbPath) + path.sep + dbName;
+            const db = level(fullDbPath, {}, (error) => {
+                if (!error) return;
+                reject(error.message);
+            });
 
-        PouchDB.defaults({
-            prefix: fullDbPath,
+            console.log('[] fullDbPath -> ', fullDbPath);
+
+            await db.open();
+
+            console.log('crash');
+
+            // Creating all tables
+            this.tables.set(TABLE_DATA_REQUESTS, subleveldown(db, TABLE_DATA_REQUESTS));
+            this.tables.set(TABLE_SYNC, subleveldown(db, TABLE_SYNC));
+
+            resolve(db);
         });
-
-        PouchDB.plugin(PouchDbDebug);
-        PouchDB.plugin(PouchDbFind);
-
-        this.database = new PouchDB(dbName, {
-            revs_limit: 0,
-            auto_compaction: true,
-            prefix: fullDbPath,
-        });
-
-        // TODO: Create indexes
-        return this.database;
     }
 
-    /**
-     * Checks if the database was correctly created
-     * If it was not created we exit the node
-     *
-     * @memberof Database
-     */
-    async checkDatabase() {
+    private getTable(key: string) {
+        const table = this.tables.get(key);
+        if (!table) throw new Error('ERR_TABLE_NOT_FOUND');
+
+        return table;
+    }
+
+    async createDocument(tableKey: string, id: string, obj: object) {
+        const table = this.getTable(tableKey);
+        await table.put(id, JSON.stringify(obj));
+    }
+
+    async deleteDocument(tableKey: string, id: string) {
+        const table = this.getTable(tableKey);
+        await table.del(id);
+    }
+
+    async findDocumentById<T>(tableKey: string, id: string): Promise<T | null> {
         try {
-            await this.database?.info();
-        } catch (error) {
-            logger.error(`Database could not be created: ${error}`);
-            process.exit(1);
-        }
-    }
+            const table = this.getTable(tableKey);
+            const doc = await table.get(id);
 
-    async createDocument(id: string, obj: object) {
-        let doc = {
-            _id: id,
-            ...obj,
-        };
-
-        await this.database?.put(doc);
-    }
-
-    private async cleanDatabase() {
-        await this.database?.viewCleanup();
-        await this.database?.compact();
-    }
-
-    async deleteDocument(id: string) {
-        try {
-            const doc = await this.findDocumentById(id);
-            //https://pouchdb.com/api.html#delete_document
-            console.log('[toRemove] doc -> ', doc);
-            await this.database?.remove(doc as PouchDB.Core.RemoveDocument);
-            await this.cleanDatabase();
-        } catch (error) {
-            return;
-        }
-    }
-
-    async findDocumentById<T>(id: string): Promise<T | null> {
-        try {
-            const doc = await this.database?.get<T>(id);
-            return doc ?? null;
+            return doc ? JSON.parse(doc) : null;
         } catch (error) {
             return null;
         }
     }
 
-    async findDocuments<T>(query: PouchDB.Find.FindRequest<T>): Promise<T[]> {
-        try {
-            const data = await this.database?.find(query);
-            return data?.docs as unknown as T[] ?? [];
-        } catch (error) {
-            logger.error(`[findDocuments] ${error}`);
-            return [];
-        }
+    getAllFromTable<T>(tableKey: string): Promise<T[]> {
+        return new Promise((resolve, reject) => {
+            const table = this.getTable(tableKey);
+            const docs: T[] = [];
+
+            table.createValueStream()
+                .on('data', (data) => docs.push(JSON.parse(data)))
+                .on('error', (error) => reject(error))
+                .on('close', () => resolve(docs))
+        });
     }
 
-    async createOrUpdateDocument(id: string, obj: object): Promise<void> {
+    async createOrUpdateDocument(tableKey: string, id: string, obj: object): Promise<void> {
         try {
-            const existingDoc = await this.findDocumentById<object>(id);
+            const existingDoc = await this.findDocumentById<object>(tableKey, id);
 
             if (!existingDoc) {
-                await this.createDocument(id, obj);
+                await this.createDocument(tableKey, id, obj);
                 return;
             }
 
@@ -104,11 +89,7 @@ class Database {
                 ...obj,
             };
 
-            await this.database?.put(updatedDoc, {
-                force: true,
-            });
-
-            await this.cleanDatabase();
+            await this.createDocument(tableKey, id, updatedDoc);
         } catch (error) {
             logger.error(`[createOrUpdateDocument] ${error} -> ${id} - ${JSON.stringify(obj)}`);
         }

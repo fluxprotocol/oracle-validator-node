@@ -1,23 +1,18 @@
 import DataRequest, { isRequestDeletable } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import Big from 'big.js';
-import { LatestRequest, LATEST_REQUEST_TYPE } from "../models/LatestRequest";
+import { LatestRequest } from "../models/LatestRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
-import Database from "../services/DatabaseService";
+import Database, { TABLE_SYNC } from "../services/DatabaseService";
 import { storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
 
 export async function getLatestDataRequests(): Promise<LatestRequest[]> {
-    const latestRequests = await Database.findDocuments<LatestRequest>({
-        selector: {
-            type: LATEST_REQUEST_TYPE,
-        }
-    });
-
+    const latestRequests = await Database.getAllFromTable<LatestRequest>(TABLE_SYNC);
     return latestRequests;
 }
 
 export async function storeLatestDataRequest(latestRequest: LatestRequest) {
-    await Database.createOrUpdateDocument(`${latestRequest.provider}_latest_request`, latestRequest);
+    await Database.createOrUpdateDocument(TABLE_SYNC, `${latestRequest.provider}_latest_request`, latestRequest);
 }
 
 export default class NodeSyncer {
@@ -41,7 +36,6 @@ export default class NodeSyncer {
         const doc: LatestRequest = {
             id: dataRequest.id,
             provider: dataRequest.providerId,
-            type: LATEST_REQUEST_TYPE,
         };
 
         // We should always have atleast 1 latest request
@@ -72,7 +66,7 @@ export default class NodeSyncer {
                 const latestRequest = this.latestDataRequests.get(provider.id);
                 const latestRequestId = latestRequest?.id;
 
-                logger.info(`🔄 Syncing for ${provider.id} starting from request id ${latestRequestId}`);
+                logger.info(`🔄 Syncing for ${provider.id} starting from request id ${latestRequestId ?? '0'}`);
 
                 await provider.sync(latestRequestId, (request) => {
                     lastDataRequest = request;

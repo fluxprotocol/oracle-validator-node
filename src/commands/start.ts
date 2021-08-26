@@ -14,7 +14,6 @@ export const start: CommandModule = {
 
         const providers: Provider[] = [];
         await Database.startDatabase(DB_PATH, DB_NAME);
-        await Database.checkDatabase();
 
         logger.transports.forEach((transport) => {
             transport.level = DEBUG ? 'debug' : 'info';
