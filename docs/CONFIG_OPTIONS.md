@@ -7,7 +7,7 @@ All configuration options are configured in the `.env` file. But can also be set
 |`DEBUG`| boolean | Logs extra information about each request. Usefull for checking why something is happening | false|
 |`DB_PATH` | string | The folder path where the database will be stored | './'|
 |`DB_NAME` | string | The name of the database | 'flux_db'|
-|stakePerRequest | string | The amount of FLX the node is allowed to spent per stake denominated in 18 decimals | '2500000000000000000' (or 2.5 FLX)|
+|`NEAR_MAX_STAKE_AMOUNT` | string | The maximum amount of FLX the node is allowed to spent per stake | '2.5' (or '2500000000000000000' FLX)|
 |`ACTIVATED_PROVIDERS` | string | Comma seperated (`,`) provider ids, required to activate a provider. | N/A
 
 
@@ -33,7 +33,7 @@ NearProvider has the following config:
 |`NEAR_ACCOUNT_ID` | string | The NEAR account id. This account id should match the account for the credentials store path or the private key  (`near login`)
 |`NEAR_CONTRACT_ID` | string | The contract account id where the oracle is living on
 |`NEAR_NETWORK_ID` | "testnet"/"mainnet" | Whether we are on testnet or mainnet
-|`NEAR_STAKE_AMOUNT` | string | The amount of FLX is staked for each resolution window (defaults to `2.5`) |
+|`NEAR_MAX_STAKE_AMOUNT` | string | The maximum amount of FLX is staked for each resolution window (defaults to `2.5`) |
 |`NEAR_ATTACHED_STORAGE`| string | The amount of NEAR that is deposited to the oracle for storing your stakes. Any unused NEAR can be claimed back. (defaults to `30000000000000000000000`)
 
 ## Example
@@ -52,7 +52,7 @@ ACTIVATED_PROVIDERS = near
 NEAR_CREDENTIALS_STORE_PATH = /Users/myAccount/.near-credentials/
 NEAR_ACCOUNT_ID = myAccount.testnet
 NEAR_RPC = https://rpc.testnet.near.org
-NEAR_CONTRACT_ID = 05.oracle.flux-dev
+NEAR_CONTRACT_ID = 06.oracle.flux-dev
 NEAR_NETWORK_ID = testnet
-NEAR_STAKE_AMOUNT = 2.5 # 2.5 FLX
+NEAR_MAX_STAKE_AMOUNT = 2.5
 ```

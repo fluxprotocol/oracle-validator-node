@@ -29,7 +29,7 @@ near login
 
 Copy the `.env.example` and name it `.env` and change the following options:
 
-* `NEAR_STAKE_AMOUNT` to the amount you want to stake per request. Default is 2.5 FLX
+* `NEAR_MAX_STAKE_AMOUNT` to the maximum amount you want to stake per resolution window. Default is 2.5 FLX
 * `NEAR_CREDENTIALS_STORE_PATH` to the path where your `.near-credentials` are stored. Must be the full path (Usually it's located in your home directory)
 * `NEAR_ACCOUNT_ID` to the account id you previously logged in with (using `near login`)
 * `NEAR_CONTRACT_ID` to the current oracle contract
