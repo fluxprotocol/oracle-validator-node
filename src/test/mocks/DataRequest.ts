@@ -22,6 +22,10 @@ export function createMockRequest(request: Partial<DataRequest> = {}): DataReque
         finalArbitratorTriggered: false,
         finalizedOutcome: undefined,
         dataType: { type: 'string' },
+        config: {
+            paidFee: '0',
+            validityBond: '1000000',
+        },
         ...request,
         internalId: buildInternalId(id, providerId, ''),
     };

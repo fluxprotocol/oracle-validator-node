@@ -23,6 +23,10 @@ describe('JobSearcher', () => {
             end_point: '',
             source_path: '',
         }],
+        config: {
+            paidFee: '0',
+            validityBond: '1000000',
+        },
         finalArbitratorTriggered: false,
         dataType: { type: 'string' },
     };
