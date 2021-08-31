@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.1](https://github.com/fluxprotocol/oracle-bot/compare/v2.0.0...v2.0.1) (2021-08-31)
+
+
+### Bug Fixes
+
+* **near:** Fix issue where syncing would halt due not enough gas ([6f21ccf](https://github.com/fluxprotocol/oracle-bot/commit/6f21ccf257e7c3305af9a45bdd8de4e50a3ea5be))
+
 ## 2.0.0 (2021-08-30)
 
 
