@@ -13,6 +13,11 @@ export const STORAGE_DEPOSIT_CHECK_INTERVAL = 100_000;
 export const JOB_WALKER_INTERVAL = JOB_SEARCH_INTERVAL;
 export const TOKEN_DENOM = 18;
 
+// Amount of times the same data request gets executed to check if the API is valid
+export const EXECUTE_AMOUNT = 3;
+// The time between each execution on the same request
+export const EXECUTE_INTERVAL = 300;
+
 export const DB_PATH = process.env.DB_PATH ?? './';
 export const DB_NAME = process.env.DB_NAME ?? 'flux_db';
 export const DEBUG = process.env.DEBUG === 'true';

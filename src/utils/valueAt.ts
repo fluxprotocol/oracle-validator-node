@@ -9,6 +9,15 @@ function resolveMagicVariable(object: any, name: string): string {
     return name;
 }
 
+/**
+ * Gets the value of an object with the given path
+ * Also apply's magic variables
+ *
+ * @export
+ * @param {*} object
+ * @param {string} path
+ * @return {*}  {*}
+ */
 export default function valueAt(object: any, path: string): any {
     const fullPath = toPath(path);
 

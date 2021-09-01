@@ -1,7 +1,6 @@
-import { Context, executeCode } from "@fluxprotocol/oracle-vm";
 import { ExecuteResultType } from "../models/JobExecuteResult";
 import { createMockRequest } from "../test/mocks/DataRequest";
-import fetchNumberJob, { executeFetchNumberJob } from "./fetchNumberJob";
+import { executeFetchNumberJob } from "./fetchNumberJob";
 
 describe('fetchNumberJob', () => {
     it('should be able to generate a positive answer used in staking', async () => {
