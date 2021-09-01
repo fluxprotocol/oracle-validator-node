@@ -62,7 +62,8 @@ export default class ProviderRegistry {
                 return false;
             }
 
-            return provider.finalize(request);
+            const isFinalized = await provider.finalize(request);
+            return isFinalized;
         } catch (error) {
             logger.error(`${request.internalId} - ${error}`);
             return false;
