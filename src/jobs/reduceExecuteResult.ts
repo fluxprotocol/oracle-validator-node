@@ -15,7 +15,7 @@ export default function reduceExecuteResult(executeResults: ExecuteResult[]): Ex
         } else {
             const amountOfAnswer = results.get(`${ANSWER_PREFIX}${result.data}`);
 
-            // Prefix so answers cannot be tampered with
+            // Prefix so answers cannot have a fake "Invalid" answer
             results.set(`${ANSWER_PREFIX}${result.data}`, typeof amountOfAnswer !== 'undefined' ? amountOfAnswer + 1 : 1);
         }
     });
