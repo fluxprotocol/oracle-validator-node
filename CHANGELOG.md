@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.0.1...v2.1.0) (2021-09-01)
+
+
+### Features
+
+* **outcome:** Fetches requests multiple times in order to check if an API is invalid or not ([64fa7b6](https://github.com/fluxprotocol/oracle-bot/commit/64fa7b64e1ffe8d9e16df57452dacd88ef0287bf))
+
+
+### Bug Fixes
+
+* **finalize:** Fix issue where an error in finalising could cause the node to stall for claiming ([a124872](https://github.com/fluxprotocol/oracle-bot/commit/a124872d8927643ed1581d869fe8f61157356429))
+* **near:** Fix issue where a node would stall due not enough balance while it could resolve the request ([30a2056](https://github.com/fluxprotocol/oracle-bot/commit/30a2056525d07ef197aa1bcf97ac76085b8d6af6))
+* **outcome:** Fix issue where answers where not counted correctly ([2928cd9](https://github.com/fluxprotocol/oracle-bot/commit/2928cd9c57e4f0fd6f76aac7c1101df9d49b7fb6))
+
 ### [2.0.1](https://github.com/fluxprotocol/oracle-bot/compare/v2.0.0...v2.0.1) (2021-08-31)
 
 
