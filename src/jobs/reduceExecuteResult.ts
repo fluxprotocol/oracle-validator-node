@@ -13,7 +13,7 @@ export default function reduceExecuteResult(executeResults: ExecuteResult[]): Ex
 
             results.set(INVALID_KEY, typeof amountOfInvalid !== 'undefined' ? amountOfInvalid + 1 : 1);
         } else {
-            const amountOfAnswer = results.get(result.data);
+            const amountOfAnswer = results.get(`${ANSWER_PREFIX}${result.data}`);
 
             // Prefix so answers cannot be tampered with
             results.set(`${ANSWER_PREFIX}${result.data}`, typeof amountOfAnswer !== 'undefined' ? amountOfAnswer + 1 : 1);
