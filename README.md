@@ -12,7 +12,7 @@
 
 ## Installation
 
-The validator node requires you to have node.js installed. After installing you can run:
+The validator node requires you to have node.js installed (This project has been developed and tested on `v14.15.4`). After installing you can run:
 
 ```Bash
 npm install
