@@ -32,7 +32,7 @@ async function executeNumberJobOnce(request: DataRequest): Promise<ExecuteResult
             data: result.toFixed(0),
             status: 0,
         }
-    } catch (error) {
+    } catch (error: any) {
         return {
             status: 1,
             error: error?.message ?? JSON.stringify(error),
@@ -56,7 +56,7 @@ export async function executeFetchNumberJob(request: DataRequest): Promise<Execu
         }
 
         return reduceExecuteResult(results);
-    } catch (error) {
+    } catch (error: any) {
         return {
             status: 1,
             error: error?.message ?? JSON.stringify(error),

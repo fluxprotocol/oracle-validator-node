@@ -1,6 +1,4 @@
-import fetch from 'node-fetch';
-import { Code, Context, executeCode } from '@fluxprotocol/oracle-vm';
-import DataRequest, { isRequestExecutable } from '@fluxprotocol/oracle-provider-core/dist/DataRequest';
+import DataRequest from '@fluxprotocol/oracle-provider-core/dist/DataRequest';
 
 import { ExecuteResult, ExecuteResultType } from '../models/JobExecuteResult';
 import logger from "../services/LoggerService";
