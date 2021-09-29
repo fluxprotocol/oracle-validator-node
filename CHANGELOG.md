@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.1](https://github.com/fluxprotocol/oracle-bot/compare/v2.2.0...v2.2.1) (2021-09-29)
+
+
+### Bug Fixes
+
+* **near:** Fix deprecation warnings ([9403063](https://github.com/fluxprotocol/oracle-bot/commit/94030637242611c0b5f92c43699f8cbef7ef11cd))
+
 ## [2.2.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.1.0...v2.2.0) (2021-09-29)
 
 
