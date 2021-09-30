@@ -17,8 +17,11 @@ export const TOKEN_DENOM = 18;
 
 // Amount of times the same data request gets executed to check if the API is valid
 export const EXECUTE_AMOUNT = 3;
-// The time between each execution on the same request
+// The time between each execution on the same request (in ms)
 export const EXECUTE_INTERVAL = 300;
+
+// The delay between a retry before declaring it fully invalid
+export const INVALID_EXECUTION_RETRY_DELAY = 60_000;
 
 export const DB_PATH = process.env.DB_PATH ?? './';
 export const DB_NAME = process.env.DB_NAME ?? 'flux_db';

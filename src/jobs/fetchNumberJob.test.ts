@@ -54,4 +54,24 @@ describe('fetchNumberJob', () => {
 
         expect(result).toBe('2000');
     });
+
+    it('should work with a binance API', async () => {
+        const request = createMockRequest({
+            dataType: {
+                type: 'number',
+                multiplier: '10000000000'
+            },
+            sources: [
+                {
+                    end_point: 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&startTime=1632994975000&endTime=1632995035000',
+                    source_path: '[0][4]',
+                },
+            ],
+        });
+
+        const executeResult = await executeFetchNumberJob(request);
+        const result = executeResult.type === ExecuteResultType.Success ? executeResult.data.toString() : 'Error';
+
+        expect(result).toBe('430769100000000');
+    });
 });
