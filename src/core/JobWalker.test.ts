@@ -28,7 +28,7 @@ describe('JobWalker', () => {
         isRequestDeletableSpy = jest.spyOn(DataRequest, 'isRequestDeletable');
         isRequestDeletableSpy.mockReturnValue(false);
 
-        finalizeAndClaimSpy = jest.spyOn(Oracle, 'finalizeAndClaim');
+        finalizeAndClaimSpy = jest.spyOn(Oracle, 'claimRequestEarnings');
         finalizeAndClaimSpy.mockResolvedValue(false);
 
         stakeOnDataRequestSpy = jest.spyOn(Oracle, 'stakeOnDataRequest');

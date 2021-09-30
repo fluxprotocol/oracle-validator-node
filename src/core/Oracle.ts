@@ -40,17 +40,27 @@ export async function stakeOnDataRequest(
     }
 }
 
-export async function finalizeAndClaim(providerRegistry: ProviderRegistry, request: DataRequest): Promise<boolean> {
+
+export async function finalizeRequest(providerRegistry: ProviderRegistry, request: DataRequest) {
+    try {
+        logger.debug(`${request.internalId} - Finalizing`);
+        const isFinalized = await providerRegistry.finalize(request.providerId, request);
+
+        if (isFinalized) {
+            logger.debug(`${request.internalId} - Finalized`);
+        } else {
+            logger.debug(`${request.internalId} - Could not finalize`);
+        }
+    } catch (error) {
+        logger.error(`${request.internalId} - ${error}`);
+        return false;
+    }
+}
+
+export async function claimRequestEarnings(providerRegistry: ProviderRegistry, request: DataRequest): Promise<boolean> {
     try {
         if (!request.finalizedOutcome) {
-            logger.debug(`${request.internalId} - Finalizing`);
-            const isFinalized = await providerRegistry.finalize(request.providerId, request);
-
-            if (isFinalized) {
-                logger.debug(`${request.internalId} - Finalized`);
-            } else {
-                logger.debug(`${request.internalId} - Could not finalize`);
-            }
+            await finalizeRequest(providerRegistry, request);
         }
 
         logger.debug(`${request.internalId} - Claiming`);

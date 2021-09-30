@@ -1,5 +1,5 @@
 /** Luke JobWalker */
-import DataRequest, { isRequestClaimable, isRequestDeletable, isRequestExecutable, mergeRequests } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import DataRequest, { isRequestClaimable, isRequestDeletable, isRequestExecutable, isRequestFinalizable, mergeRequests } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import { isStakeResultSuccesful } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
 import { IJobWalker } from "@fluxprotocol/oracle-provider-core/dist/Core";
 
@@ -8,7 +8,7 @@ import ProviderRegistry from "../providers/ProviderRegistry";
 import { deleteDataRequest, storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
 import { executeJob } from "./JobExecuter";
-import { finalizeAndClaim, stakeOnDataRequest } from "./Oracle";
+import { claimRequestEarnings, finalizeRequest, stakeOnDataRequest } from "./Oracle";
 
 export default class JobWalker implements IJobWalker {
     providerRegistry: ProviderRegistry;
@@ -78,14 +78,22 @@ export default class JobWalker implements IJobWalker {
                 return;
             }
 
-            // Claim the request earnings and remove it from the walker
-            if (isRequestClaimable(request)) {
-                const isClaimSuccesful = await finalizeAndClaim(this.providerRegistry, request);
+            if (isRequestFinalizable(request)) {
+                await finalizeRequest(this.providerRegistry, request);
 
-                if (!isClaimSuccesful) {
-                    logger.warn(`${request.internalId} - Claim/Finalization could not complete. Please do this manually at the explorer.`);
+                // Update our status for the next checks
+                const finalizedRequest = await this.providerRegistry.getDataRequestById(input.providerId, input.id);
+
+                if (!finalizedRequest) {
+                    return;
                 }
 
+                request = mergeRequests(request, finalizedRequest);
+            }
+
+            // Claim the request earnings and remove it from the walker
+            if (isRequestClaimable(request)) {
+                await claimRequestEarnings(this.providerRegistry, request);
                 logger.debug(`${request.internalId} - Pruning from pool due claim`);
                 this.requests.delete(request.internalId);
                 await deleteDataRequest(request);
