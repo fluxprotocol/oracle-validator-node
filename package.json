@@ -38,8 +38,8 @@
     },
     "homepage": "https://github.com/fluxprotocol/oracle-bot#readme",
     "dependencies": {
-        "@fluxprotocol/oracle-provider-core": "file:../oracle-provider-core",
-        "@fluxprotocol/oracle-provider-near": "2.2.0",
+        "@fluxprotocol/oracle-provider-core": "1.6.0",
+        "@fluxprotocol/oracle-provider-near": "2.3.0",
         "@fluxprotocol/oracle-vm": "1.1.0",
         "big.js": "^6.1.1",
         "bn.js": "^5.2.0",
