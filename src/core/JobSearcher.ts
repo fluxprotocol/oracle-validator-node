@@ -8,9 +8,9 @@ export default class JobSearcher {
     providerRegistry: ProviderRegistry;
     stopped: boolean = true;
 
-    constructor(providerRegistry: ProviderRegistry, dataRequests: DataRequest[]) {
+    constructor(providerRegistry: ProviderRegistry, visitedDataRequestIds: string[]) {
         this.providerRegistry = providerRegistry;
-        this.visitedDataRequestIds = dataRequests.map(r => r.internalId);
+        this.visitedDataRequestIds = visitedDataRequestIds;
     }
 
     startSearch(onRequests: (dataRequests: DataRequest[]) => void) {

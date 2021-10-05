@@ -1,6 +1,7 @@
 import { DB_TABLE_SYNC } from "@fluxprotocol/oracle-provider-core/dist/Core";
 import DataRequest, { isRequestDeletable } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import Big from 'big.js';
+import { STAKE_ON_OLD_REQUESTS } from "../config";
 import { LatestRequest } from "../models/LatestRequest";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import Database from "../services/DatabaseService";
@@ -37,6 +38,7 @@ export default class NodeSyncer {
         const doc: LatestRequest = {
             id: dataRequest.id,
             provider: dataRequest.providerId,
+            internalId: dataRequest.internalId,
         };
 
         // We should always have atleast 1 latest request
@@ -78,6 +80,15 @@ export default class NodeSyncer {
 
                     if (isRequestDeletable(request)) {
                         return;
+                    }
+
+                    if (!STAKE_ON_OLD_REQUESTS) {
+                        // We should only add requests that have no resolution windows
+                        // This is due the risk of getting slashed on ongoing requests that have a large resolution window
+                        if (request.resolutionWindows.length > 1) {
+                            logger.debug(`${request.internalId} - Skipping request due risk of getting slashed`);
+                            return;
+                        }
                     }
 
                     // We push rather than wait due the async nature of getting data requests

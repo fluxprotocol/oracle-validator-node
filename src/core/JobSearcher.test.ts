@@ -50,7 +50,7 @@ describe('JobSearcher', () => {
 
             const jobSearcher = new JobSearcher(
                 createMockProviderRegistry([]),
-                dataRequests
+                dataRequests.map(d => d.internalId),
             );
 
             expect(jobSearcher.visitedDataRequestIds).toStrictEqual([
@@ -105,7 +105,7 @@ describe('JobSearcher', () => {
 
             const jobSearcher = new JobSearcher(
                 providerRegistry,
-                [requests[0]],
+                [requests[0].internalId],
             );
 
             const onDataRequests = jest.fn(() => {

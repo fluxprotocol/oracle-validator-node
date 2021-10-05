@@ -23,6 +23,10 @@ export const EXECUTE_INTERVAL = 300;
 // The delay between a retry before declaring it fully invalid
 export const INVALID_EXECUTION_RETRY_DELAY = 60_000;
 
+// Whether or not we stake on requests that are already on going when we join the network
+// Increases the risk of getting slashed
+export const STAKE_ON_OLD_REQUESTS = false;
+
 export const DB_PATH = process.env.DB_PATH ?? './';
 export const DB_NAME = process.env.DB_NAME ?? 'flux_db';
 export const DEBUG = process.env.DEBUG === 'true';

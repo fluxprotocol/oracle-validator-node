@@ -4,10 +4,11 @@ import JobSearcher from "./JobSearcher";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { getAllDataRequests } from "../services/DataRequestService";
 import JobWalker from "./JobWalker";
-import NodeSyncer from './NodeSyncer';
+import NodeSyncer, { getLatestDataRequests } from './NodeSyncer';
 import ModuleRunner from './ModuleRunner';
 import { ENV_VARS, MODULES } from '../config';
 import database from '../services/DatabaseService';
+import { buildInternalId } from '@fluxprotocol/oracle-provider-core/dist/DataRequest';
 
 export async function startNode(providerRegistry: ProviderRegistry) {
     logNodeOptions(providerRegistry);
@@ -24,7 +25,14 @@ export async function startNode(providerRegistry: ProviderRegistry) {
 
     // Restore the validator state
     const dataRequests = await getAllDataRequests();
-    const jobSearcher = new JobSearcher(providerRegistry, dataRequests);
+    const latestRequest = await getLatestDataRequests();
+    const visitedInternalIds = [
+        ...dataRequests.map(request => request.internalId),
+        ...latestRequest.map(request => request.internalId ?? buildInternalId(request.id, request.provider, '')),
+    ];
+
+    // Add the latest data request id to the visited ids
+    const jobSearcher = new JobSearcher(providerRegistry, visitedInternalIds);
     const jobWalker = new JobWalker(providerRegistry, dataRequests);
 
     logger.debug('Activating modules');
