@@ -33,6 +33,8 @@ export async function stakeOnDataRequest(
         return stakingResponse;
     }
 
+    logger.debug(`${dataRequest.internalId} - Staking completed`);
+
     return {
         roundId: roundIdStakingOn,
         amount: stakingResponse.amount,
