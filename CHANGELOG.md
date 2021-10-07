@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.2.1...v2.3.0) (2021-10-07)
+
+
+### Features
+
+* **executor:** Retry a request when it was determined invalid (after a delay) ([c5079fa](https://github.com/fluxprotocol/oracle-bot/commit/c5079fa0f378c7b5a5abc946bc535fa2bac47c76))
+* **near:** Update near provider to latest version (v2.3.0) ([f15bed0](https://github.com/fluxprotocol/oracle-bot/commit/f15bed0f195b3154cef0a04aac5b7fd9fd27e533))
+* **near:** Update near provider to latest version (v2.3.1) ([b7bcf66](https://github.com/fluxprotocol/oracle-bot/commit/b7bcf669621c2a3792fa6cd17fb5996ebd616d46))
+* **sync:** Skip requests that are ongoing at the time of sync ([cb7702a](https://github.com/fluxprotocol/oracle-bot/commit/cb7702a35f6d139dd31df850f8715830bc19e131))
+* **walker:** Always try to finalize a request when possible ([fddfbb2](https://github.com/fluxprotocol/oracle-bot/commit/fddfbb28e588dabbd9731676d647dc8fa45e617a))
+
 ### [2.2.1](https://github.com/fluxprotocol/oracle-bot/compare/v2.2.0...v2.2.1) (2021-09-29)
 
 
