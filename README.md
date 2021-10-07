@@ -35,6 +35,21 @@ Copy the `.env.example` and name it `.env` and change the following options:
 * `NEAR_CONTRACT_ID` to the current oracle contract
 * `NEAR_NETWORK_ID` either `testnet` or `mainnet`
 
+### Environment configs
+
+For `testnet` the latest config params are:
+
+```
+NEAR_NETWORK_ID = testnet
+NEAR_CONTRACT_ID = 07.oracle.flux-dev
+```
+
+For `mainnet` the latest config params are:
+
+```
+tbd
+```
+
 ## Running the node
 
 ```Bash
