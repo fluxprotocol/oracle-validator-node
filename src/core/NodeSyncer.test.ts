@@ -28,6 +28,7 @@ describe('NodeSyncer', () => {
             expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith('sync', request.providerId + '_latest_request', {
                 id: request.id,
                 provider: request.providerId,
+                internalId: '1_near_',
             } as LatestRequest);
         });
 
@@ -91,10 +92,12 @@ describe('NodeSyncer', () => {
             expect(createOrUpdateDocumentSpy).toHaveBeenCalledWith('sync', request.providerId + '_latest_request', {
                 id: request.id,
                 provider: request.providerId,
+                internalId: '5_near_',
             } as LatestRequest);
 
             expect(syncer.latestDataRequests.get('near')).toStrictEqual({
                 id: '5',
+                internalId: '5_near_',
                 provider: 'near',
             });
 
