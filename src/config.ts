@@ -17,7 +17,7 @@ export const TOKEN_DENOM = 18;
 
 // Amount of times the same data request gets executed to check if the API is valid
 // Higher means it's more certain that an outcome will stay the same
-export const EXECUTE_AMOUNT = 5;
+export const EXECUTE_AMOUNT = 3;
 // The time between each execution on the same request (in ms)
 export const EXECUTE_INTERVAL = 300;
 
