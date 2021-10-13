@@ -2,7 +2,7 @@ import { ILogger } from '@fluxprotocol/oracle-provider-core/dist/Core';
 import winston, { format } from 'winston';
 import packageJson from '../../package.json';
 
-import { AVAILABLE_PROVIDERS, MAX_LOG_LIFETIME } from '../config';
+import { AVAILABLE_PROVIDERS, DB_NAME, MAX_LOG_LIFETIME } from '../config';
 import ProviderRegistry from '../providers/ProviderRegistry';
 import 'winston-daily-rotate-file';
 
@@ -16,10 +16,10 @@ const logger = winston.createLogger({
     transports: [
         new winston.transports.DailyRotateFile({
             level: 'debug',
-            filename: 'flux-%DATE%.log',
+            filename: `flux-%DATE%.log`,
             datePattern: 'YYYY-MMM-DD',
             zippedArchive: true,
-            dirname: 'logs',
+            dirname: `logs/${DB_NAME}`,
             format: logFormat,
             maxFiles: MAX_LOG_LIFETIME,
         }),
