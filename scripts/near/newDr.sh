@@ -1,6 +1,6 @@
 TIME=`date +%s`
 MULTIPLIER=1000
-ACCOUNT_ID=franklinwaller2.testnet
+ACCOUNT_ID=$1
 
 END_TIME=`expr $TIME - 1000`
 END_TIME=`expr $END_TIME \* $MULTIPLIER`
