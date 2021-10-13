@@ -4,6 +4,7 @@ import packageJson from '../../package.json';
 
 import { AVAILABLE_PROVIDERS } from '../config';
 import ProviderRegistry from '../providers/ProviderRegistry';
+import 'winston-daily-rotate-file';
 
 const logFormat = format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`);
 
@@ -13,6 +14,14 @@ const logger = winston.createLogger({
         format.metadata({ fillExcept: ['message', 'level', 'timestamp', 'label'] })
     ),
     transports: [
+        new winston.transports.DailyRotateFile({
+            level: 'debug',
+            filename: 'flux-%DATE%.log',
+            datePattern: 'YYYY-MMM-DD',
+            zippedArchive: true,
+            dirname: 'logs',
+            format: logFormat,
+        }),
         new winston.transports.Console({
             level: 'info',
             format: format.combine(

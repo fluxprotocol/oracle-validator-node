@@ -53,6 +53,7 @@
         "node-fetch": "^2.6.5",
         "subleveldown": "^5.0.1",
         "winston": "^3.3.3",
+        "winston-daily-rotate-file": "^4.5.5",
         "yargs": "^17.2.1"
     }
 }

@@ -15,7 +15,11 @@ export const start: CommandModule = {
         await Database.startDatabase(DB_PATH, DB_NAME);
 
         logger.transports.forEach((transport) => {
-            transport.level = DEBUG ? 'debug' : 'info';
+            // @ts-ignore
+            if (transport.name === 'console') {
+                console.log('yes');
+                transport.level = DEBUG ? 'debug' : 'info';
+            }
         });
 
         ACTIVATED_PROVIDERS.forEach((providerId) => {

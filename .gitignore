@@ -8,3 +8,4 @@ config.json
 flux_db
 *_db*
 *.config.json
+logs
