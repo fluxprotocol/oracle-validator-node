@@ -28,6 +28,8 @@ export const INVALID_EXECUTION_RETRY_DELAY = 60_000;
 // Increases the risk of getting slashed
 export const STAKE_ON_OLD_REQUESTS = false;
 
+export const MAX_LOG_LIFETIME: string | undefined = '14d';
+
 export const DB_PATH = process.env.DB_PATH ?? './';
 export const DB_NAME = process.env.DB_NAME ?? 'flux_db';
 export const DEBUG = process.env.DEBUG === 'true';
