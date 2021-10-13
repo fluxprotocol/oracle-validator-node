@@ -1,4 +1,4 @@
-import { Argv, CommandModule } from 'yargs';
+import { CommandModule } from 'yargs';
 
 import { ACTIVATED_PROVIDERS, AVAILABLE_PROVIDERS, DB_NAME, DB_PATH, DEBUG, ENV_VARS } from '../config';
 import { startNode } from '../core/Node';
@@ -17,7 +17,6 @@ export const start: CommandModule = {
         logger.transports.forEach((transport) => {
             // @ts-ignore
             if (transport.name === 'console') {
-                console.log('yes');
                 transport.level = DEBUG ? 'debug' : 'info';
             }
         });
