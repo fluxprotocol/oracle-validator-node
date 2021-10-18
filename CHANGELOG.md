@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.3.0...v2.4.0) (2021-10-18)
+
+
+### Features
+
+* **debug:** Add more debug logs to make it clear what stage of execution the node is in ([b21dd18](https://github.com/fluxprotocol/oracle-bot/commit/b21dd18c15354bcef0dc5dd0a48d57c66a6236a6))
+* **logger:** Add always on file logger ([4e8a9ce](https://github.com/fluxprotocol/oracle-bot/commit/4e8a9ce2e2e95ddbed9c6313b3944f779ee2dd3e))
+* **logger:** Clean up logs folder after 14 days ([ed8eec2](https://github.com/fluxprotocol/oracle-bot/commit/ed8eec21426076a8d47a4f4f089ca4482ebaca2b))
+
+
+### Bug Fixes
+
+* **logger:** Fix issue where logger was not displaying the staked amount correctly ([8b06747](https://github.com/fluxprotocol/oracle-bot/commit/8b067476cf3ab80669b1e805bdf3c061be912be3))
+* **logger:** Fix issue where multiple nodes could overwrite each other logs ([c17e2e9](https://github.com/fluxprotocol/oracle-bot/commit/c17e2e97ad7bbbd2ae2b7e810f8bf030eff19280))
+* **scripts:** Fix issue where a lot of invalid requests where coming in ([78b4b4b](https://github.com/fluxprotocol/oracle-bot/commit/78b4b4b1e3fe33e7ab0c96675a91b6662d7918a6))
+
 ## [2.3.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.2.1...v2.3.0) (2021-10-07)
 
 
