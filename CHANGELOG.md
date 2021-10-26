@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.1](https://github.com/fluxprotocol/oracle-bot/compare/v2.4.0...v2.4.1) (2021-10-26)
+
+
+### Bug Fixes
+
+* **near:** Fix issue where RPC timeouts could crash the node ([4990339](https://github.com/fluxprotocol/oracle-bot/commit/49903399464833754ee9ce472cfbc9a91ac40200))
+
 ## [2.4.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.3.0...v2.4.0) (2021-10-18)
 
 
