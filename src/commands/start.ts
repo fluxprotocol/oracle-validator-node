@@ -5,7 +5,7 @@ import { startNode } from '../core/Node';
 import Provider from '@fluxprotocol/oracle-provider-core/dist/Provider';
 import ProviderRegistry from '../providers/ProviderRegistry';
 import Database from '../services/DatabaseService';
-import logger from '../services/LoggerService';
+import logger, { createModuleLogger } from '../services/LoggerService';
 
 export const start: CommandModule = {
     command: 'start',
@@ -27,6 +27,7 @@ export const start: CommandModule = {
             if (foundProvider) {
                 providers.push(new foundProvider(ENV_VARS, {
                     database: Database,
+                    logger: createModuleLogger(foundProvider.id),
                 }));
             }
         });
