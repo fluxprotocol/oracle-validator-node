@@ -5,7 +5,7 @@ import * as JobExecutor from './JobExecuter';
 import * as Oracle from './Oracle';
 import JobWalker from "./JobWalker";
 import { StakeError, StakeResult, StakeResultType } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
-import { ExecuteResultType } from "../models/JobExecuteResult";
+import { ExecuteResultType } from "@fluxprotocol/oracle-provider-core/dist/ExecuteResult";
 import { OutcomeType } from "@fluxprotocol/oracle-provider-core/dist/Outcome";
 import { ExecuteResult } from "@fluxprotocol/oracle-provider-core/dist/ExecuteResult";
 import * as DataRequest from '@fluxprotocol/oracle-provider-core/dist/DataRequest';

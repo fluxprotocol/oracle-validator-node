@@ -10,7 +10,7 @@ const logFormat = format.printf(info => `${info.timestamp} ${info.level}: ${info
 
 const logger = winston.createLogger({
     format: format.combine(
-        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
         format.metadata({ fillExcept: ['message', 'level', 'timestamp', 'label'] })
     ),
     transports: [

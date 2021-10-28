@@ -1,23 +1,15 @@
 import DataRequest from '@fluxprotocol/oracle-provider-core/dist/DataRequest';
-
-import { ExecuteResult, ExecuteResultType } from '../models/JobExecuteResult';
+import { ExecuteResult, ExecuteResultType } from '@fluxprotocol/oracle-provider-core/dist/ExecuteResult';
 import logger from "../services/LoggerService";
-import { executeFetchNumberJob } from '../jobs/fetchNumberJob';
-import { executeFetchStringJob } from '../jobs/fetchStringJob';
 import sleep from '../utils/sleep';
 import { INVALID_EXECUTION_RETRY_DELAY } from '../config';
+import executeWasmJob from '../jobs/executeWasmJob';
 
 export async function executeJob(request: DataRequest): Promise<ExecuteResult> {
     try {
         logger.debug(`${request.internalId} - Executing`);
 
-        let result: ExecuteResult;
-
-        if (request.dataType.type === 'number') {
-            result = await executeFetchNumberJob(request);
-        } else {
-            result = await executeFetchStringJob(request);
-        }
+        let result: ExecuteResult = await executeWasmJob(request);
 
         if (result.type === ExecuteResultType.Error) {
             logger.debug(`${request.internalId} - Request executed with error: ${result.error}`);
@@ -30,11 +22,7 @@ export async function executeJob(request: DataRequest): Promise<ExecuteResult> {
             await sleep(INVALID_EXECUTION_RETRY_DELAY);
             logger.debug(`${request.internalId} - Retrying execution now`);
 
-            if (request.dataType.type === 'number') {
-                result = await executeFetchNumberJob(request);
-            } else {
-                result = await executeFetchStringJob(request);
-            }
+            result = await executeWasmJob(request);
 
             if (result.type === ExecuteResultType.Error) {
                 logger.debug(`${request.internalId} - Retry was still unsuccessful: ${result.error}`);

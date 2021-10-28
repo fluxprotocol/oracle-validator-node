@@ -1,4 +1,4 @@
-import { ExecuteResultType } from "../models/JobExecuteResult";
+import { ExecuteResultType } from "@fluxprotocol/oracle-provider-core/dist/ExecuteResult";
 import reduceExecuteResult from "./reduceExecuteResult";
 
 describe('reduceExecuteResult', () => {

@@ -38,7 +38,7 @@
     "dependencies": {
         "@fluxprotocol/oracle-provider-core": "1.7.0",
         "@fluxprotocol/oracle-provider-near": "2.3.3",
-        "@fluxprotocol/oracle-vm": "1.1.0",
+        "@fluxprotocol/oracle-vm": "2.0.0",
         "big.js": "^6.1.1",
         "bn.js": "^5.2.0",
         "death": "^1.1.0",

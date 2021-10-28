@@ -1,4 +1,4 @@
-import { ExecuteResult, ExecuteResultType } from "../models/JobExecuteResult";
+import { ExecuteResult, ExecuteResultType } from "@fluxprotocol/oracle-provider-core/dist/ExecuteResult";
 
 const INVALID_KEY = 'Invalid';
 const ANSWER_PREFIX = 'ans_';

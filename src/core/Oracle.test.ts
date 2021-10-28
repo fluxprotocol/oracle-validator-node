@@ -1,6 +1,5 @@
-import Big from "big.js";
 import { OutcomeType } from "@fluxprotocol/oracle-provider-core/dist/Outcome";
-import { ExecuteResultType } from "../models/JobExecuteResult";
+import { ExecuteResultType } from "@fluxprotocol/oracle-provider-core/dist/ExecuteResult";
 import { NodeOptions, parseNodeOptions } from "../models/NodeOptions";
 import { StakeError, StakeResult, StakeResultType, UnsuccessfulStakeResult } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
 import { createMockRequest } from "../test/mocks/DataRequest";
