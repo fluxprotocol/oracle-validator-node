@@ -32,6 +32,7 @@ export const DEBUG = process.env.DEBUG === 'true';
 export const ACTIVATED_PROVIDERS = process.env.ACTIVATED_PROVIDERS?.split(',') ?? [];
 
 export const HTTP_PORT = Number(process.env.HTTP_PORT ?? 28484);
+export const VM_ENV_KEY = 'VM_ENV_';
 
 export const AVAILABLE_PROVIDERS = [NearProvider];
 export const MODULES = [HttpModule, AnalyticsLoggerModule];

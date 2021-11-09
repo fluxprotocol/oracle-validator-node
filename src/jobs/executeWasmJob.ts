@@ -4,7 +4,7 @@ import { ExecuteResult, ExecuteResultType } from "@fluxprotocol/oracle-provider-
 import toPath from 'lodash.topath';
 
 import { promises } from 'fs';
-import { EXECUTE_AMOUNT, EXECUTE_INTERVAL } from "../config";
+import { EXECUTE_AMOUNT, EXECUTE_INTERVAL, VM_ENV_KEY } from "../config";
 import sleep from "../utils/sleep";
 import reduceExecuteResult from "./reduceExecuteResult";
 import logger from "../services/LoggerService";
@@ -56,7 +56,7 @@ async function executeWasmJobOnce(request: DataRequest): Promise<ExecuteResult> 
     try {
         const binary = await loadBinary();
         const args: string[] = [
-            '0x0000000000000000000000000000000000000001',
+            '0x0000000000000000000000000000000000000001', // id of the wasm file
             JSON.stringify(request.sources.map((source) => ({
                 source_path: convertOldSourcePath(source.source_path),
                 end_point: source.end_point,
@@ -68,9 +68,23 @@ async function executeWasmJobOnce(request: DataRequest): Promise<ExecuteResult> 
             args.push(request.dataType.multiplier);
         }
 
+        const requiredEnvVariables: NodeJS.ProcessEnv = {};
+
+        request.requiredEnvVariables.forEach((envVar) => {
+            requiredEnvVariables[envVar] = process.env[envVar];
+        });
+
         const executeResult = await execute({
             args,
-            env: {},
+            env: {
+                ...requiredEnvVariables,
+                REQUEST_ID: request.id,
+                REQUESTER: request.requester,
+                TAGS: JSON.stringify(request.tags),
+                NUMBER_MULTIPLIER: request.dataType.type === "number" ? request.dataType.multiplier : undefined,
+                OUTCOMES: JSON.stringify(request.outcomes),
+                DATA_TYPE: request.dataType.type,
+            },
             gasLimit: (300_000_000_000_000).toString(),
             randomSeed: '0x0001',
             timestamp: 1,

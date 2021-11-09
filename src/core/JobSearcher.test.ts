@@ -29,6 +29,9 @@ describe('JobSearcher', () => {
         },
         finalArbitratorTriggered: false,
         dataType: { type: 'string' },
+        requester: 'bob',
+        requiredEnvVariables: [],
+        tags: [],
     };
 
     beforeEach(() => {
@@ -202,6 +205,34 @@ describe('JobSearcher', () => {
                 expect(onDataRequests).toHaveBeenCalledWith([]);
                 expect(storeDataRequestSpy).toHaveBeenCalledTimes(0);
                 expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
+
+                done();
+            });
+
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
+
+            jobSearcher.startSearch(onDataRequests);
+        });
+
+        it('should skip requests that have env variables that are not configured', (done) => {
+            const providerRegistry = createMockProviderRegistry();
+            const requests = [
+                createMockRequest({ ...validDataRequest, id: '1', requiredEnvVariables: ['THIS_SHOULD_NOT_EXIST'] }),
+                createMockRequest({ ...validDataRequest, id: '2' }),
+            ];
+
+            providerRegistry.listenForRequests = jest.fn((drCallback) => {
+                drCallback(requests);
+            });
+
+            const jobSearcher = new JobSearcher(
+                providerRegistry,
+                [],
+            );
+
+            const onDataRequests = jest.fn((result) => {
+                expect(result.length).toBe(1);
+                expect(onDataRequests).toHaveBeenCalledTimes(1);
 
                 done();
             });

@@ -26,6 +26,9 @@ export function createMockRequest(request: Partial<DataRequest> = {}): DataReque
             paidFee: '0',
             validityBond: '1000000',
         },
+        requester: 'bob',
+        requiredEnvVariables: [],
+        tags: [],
         ...request,
         internalId: buildInternalId(id, providerId, ''),
     };

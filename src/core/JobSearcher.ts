@@ -1,4 +1,5 @@
 import DataRequest from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import { VM_ENV_KEY } from "../config";
 import ProviderRegistry from "../providers/ProviderRegistry";
 import { storeDataRequest } from "../services/DataRequestService";
 import logger from "../services/LoggerService";
@@ -24,6 +25,18 @@ export default class JobSearcher {
                 // We should not overwrite data requests that we already have
                 if (this.visitedDataRequestIds.includes(request.internalId)) {
                     return;
+                }
+
+                // Requests that required certain api keys or env variables should only be
+                // executed when we have those configured
+                if (request.requiredEnvVariables.length) {
+                    for (let index = 0; index < request.requiredEnvVariables.length; index++) {
+                        const required = request.requiredEnvVariables[index];
+
+                        if (!process.env[`${VM_ENV_KEY}${required}`]) {
+                            return;
+                        }
+                    }
                 }
 
                 // Already finished data requests should not be processed
