@@ -22,7 +22,7 @@ export const INVALID_EXECUTION_RETRY_DELAY = 60_000;
 
 // Whether or not we stake on requests that are already on going when we join the network
 // Increases the risk of getting slashed
-export const STAKE_ON_OLD_REQUESTS = false;
+export const STAKE_ON_OLD_REQUESTS = process.env.STAKE_ON_OLD_REQUESTS === 'true' ?? false;
 
 export const MAX_LOG_LIFETIME: string | undefined = process.env.MAX_LOG_LIFETIME ?? '14d';
 

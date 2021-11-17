@@ -1,10 +1,10 @@
-import DataRequest from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
+import DataRequest, { VM_ENV_KEY } from "@fluxprotocol/oracle-provider-core/dist/DataRequest";
 import { execute, InMemoryCache, LoggedOutcome } from "@fluxprotocol/oracle-vm";
 import { ExecuteResult, ExecuteResultType } from "@fluxprotocol/oracle-provider-core/dist/ExecuteResult";
 import toPath from 'lodash.topath';
 
 import { promises } from 'fs';
-import { EXECUTE_AMOUNT, EXECUTE_INTERVAL, VM_ENV_KEY } from "../config";
+import { EXECUTE_AMOUNT, EXECUTE_INTERVAL } from "../config";
 import sleep from "../utils/sleep";
 import reduceExecuteResult from "./reduceExecuteResult";
 import logger from "../services/LoggerService";
@@ -70,8 +70,9 @@ async function executeWasmJobOnce(request: DataRequest): Promise<ExecuteResult> 
 
         const requiredEnvVariables: NodeJS.ProcessEnv = {};
 
+        // Checking if these exists was already done in the isRequestExecutable()
         request.requiredEnvVariables.forEach((envVar) => {
-            requiredEnvVariables[envVar] = process.env[envVar];
+            requiredEnvVariables[envVar] = process.env[`${VM_ENV_KEY}${envVar}`];
         });
 
         const executeResult = await execute({
