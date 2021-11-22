@@ -4,7 +4,7 @@ import Balance from "@fluxprotocol/oracle-provider-core/dist/Balance";
 import { Outcome } from "@fluxprotocol/oracle-provider-core/dist/Outcome";
 import { ClaimError, ClaimResult, ClaimResultType } from "@fluxprotocol/oracle-provider-core/dist/ClaimResult";
 import { StakeResult } from "@fluxprotocol/oracle-provider-core/dist/StakeResult";
-import { IJobWalker, IProviderRegistry } from "@fluxprotocol/oracle-provider-core/dist/Core";
+import { IProviderRegistry } from "@fluxprotocol/oracle-provider-core/dist/Core";
 import logger from "../services/LoggerService";
 
 export default class ProviderRegistry implements IProviderRegistry {
@@ -20,6 +20,13 @@ export default class ProviderRegistry implements IProviderRegistry {
 
     getProviderById(id: string): Provider | undefined {
         return this.providers.find(p => p.id === id);
+    }
+
+    getAccountIdByProvider(providerId: string): string {
+        const provider = this.getProviderById(providerId);
+        if (!provider) throw Error(`provider ${providerId} not found`);
+
+        return provider.getAccountId();
     }
 
     async init() {

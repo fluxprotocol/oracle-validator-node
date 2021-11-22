@@ -38,13 +38,17 @@ export default class JobWalker implements IJobWalker {
             if (isRequestExecutable(request)) {
                 request.executeResult = await executeJob(request);
 
-                // It could be that the staking failed due it being finalized already or
-                // something else
-                // We let the job walker take care of it in the next tick
-                const stakeResult = await stakeOnDataRequest(this.providerRegistry, request);
+                if (request.allowedValidators.length) {
+                    await finalizeRequest(this.providerRegistry, request);
+                } else {
+                    // It could be that the staking failed due it being finalized already or
+                    // something else
+                    // We let the job walker take care of it in the next tick
+                    const stakeResult = await stakeOnDataRequest(this.providerRegistry, request);
 
-                if (isStakeResultSuccesful(stakeResult)) {
-                    request.staking.push(stakeResult);
+                    if (isStakeResultSuccesful(stakeResult)) {
+                        request.staking.push(stakeResult);
+                    }
                 }
             } else {
                 logger.debug(`${request.internalId} - Currently not executeable`);
@@ -65,6 +69,7 @@ export default class JobWalker implements IJobWalker {
         let request = input;
 
         try {
+            const validatorId = this.providerRegistry.getAccountIdByProvider(input.providerId);
             const newStatus = await this.providerRegistry.getDataRequestById(input.providerId, input.id);
             if (!newStatus) return;
 
@@ -78,7 +83,7 @@ export default class JobWalker implements IJobWalker {
                 return;
             }
 
-            if (isRequestFinalizable(request)) {
+            if (isRequestFinalizable(request, validatorId)) {
                 await finalizeRequest(this.providerRegistry, request);
 
                 // Update our status for the next checks

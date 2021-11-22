@@ -16,5 +16,6 @@ export function createMockProviderRegistry(providers: Provider[] = []) {
         finalize: jest.fn(),
         listenForRequests: jest.fn(),
         syncAll: jest.fn(),
+        getAccountIdByProvider: jest.fn(),
     }
 }

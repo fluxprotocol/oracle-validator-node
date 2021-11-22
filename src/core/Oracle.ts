@@ -10,7 +10,8 @@ export async function stakeOnDataRequest(
     providerRegistry: ProviderRegistry,
     dataRequest: DataRequest,
 ): Promise<StakeResult> {
-    const canStakeResult = canStakeOnRequest(dataRequest);
+    const validatorId = providerRegistry.getAccountIdByProvider(dataRequest.providerId);
+    const canStakeResult = canStakeOnRequest(dataRequest, validatorId);
 
     if (!canStakeResult.canStake) {
         logger.debug(`${dataRequest.internalId} - Skipping stake due: ${canStakeResult.reason}`);

@@ -2,6 +2,7 @@ import { createMockRequest } from "../test/mocks/DataRequest";
 import executeWasmJob, { convertOldSourcePath } from "./executeWasmJob";
 import { ExecuteResultType, SuccessfulExecuteResult } from "@fluxprotocol/oracle-provider-core/dist/ExecuteResult";
 
+jest.setTimeout(10_000);
 
 describe('JobExecuter', () => {
     describe('convertOldSourcePath', () => {

@@ -27,6 +27,12 @@ export default class JobSearcher {
                     return;
                 }
 
+                // Don't include requests that this validator is not allowed to resolve
+                const validatorId = this.providerRegistry.getAccountIdByProvider(request.providerId);
+                if (request.allowedValidators.length && !request.allowedValidators.includes(validatorId)) {
+                    return;
+                }
+
                 // Requests that required certain api keys or env variables should only be
                 // executed when we have those configured
                 if (request.requiredEnvVariables.length) {

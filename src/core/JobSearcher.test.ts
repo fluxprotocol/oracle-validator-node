@@ -6,6 +6,7 @@ import { parseNodeOptions } from "../models/NodeOptions";
 import { createMockProviderRegistry } from "../test/mocks/ProviderRegistry";
 import JobSearcher from "./JobSearcher";
 import { createMockRequest } from '../test/mocks/DataRequest';
+import { request } from 'express';
 // import { OutcomeType } from "../models/DataRequestOutcome";
 
 describe('JobSearcher', () => {
@@ -31,6 +32,7 @@ describe('JobSearcher', () => {
         dataType: { type: 'string' },
         requester: 'bob',
         requiredEnvVariables: [],
+        allowedValidators: [],
         tags: [],
     };
 
@@ -69,7 +71,7 @@ describe('JobSearcher', () => {
             const providerRegistry = createMockProviderRegistry();
             const requests = [
                 createMockRequest({ ...validDataRequest, id: '1' }),
-                createMockRequest({ ...validDataRequest, id: '2' })
+                createMockRequest({ ...validDataRequest, id: '2' }),
             ];
 
             providerRegistry.listenForRequests = jest.fn((drCallback) => {
@@ -86,6 +88,75 @@ describe('JobSearcher', () => {
                 expect(onDataRequests).toHaveBeenCalledWith(requests);
                 expect(storeDataRequestSpy).toHaveBeenCalledTimes(2);
                 expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[1].internalId]);
+
+                done();
+            });
+
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
+
+            jobSearcher.startSearch(onDataRequests);
+        });
+
+        it('should skip requests that do not match the validator account id', (done) => {
+            const providerRegistry = createMockProviderRegistry();
+            providerRegistry.getAccountIdByProvider = jest.fn(() => {
+                return 'test.near';
+            });
+
+            const requests = [
+                createMockRequest({ ...validDataRequest, id: '1' }),
+                createMockRequest({ ...validDataRequest, id: '2', allowedValidators: ['notme.near'] }),
+            ];
+
+            providerRegistry.listenForRequests = jest.fn((drCallback) => {
+                drCallback(requests);
+            });
+
+            const jobSearcher = new JobSearcher(
+                providerRegistry,
+                [],
+            );
+
+            const onDataRequests = jest.fn(() => {
+                expect(onDataRequests).toHaveBeenCalledTimes(1);
+                expect(onDataRequests).toHaveBeenCalledWith([requests[0]]);
+                expect(storeDataRequestSpy).toHaveBeenCalledTimes(1);
+                expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId]);
+
+                done();
+            });
+
+            expect(jobSearcher.visitedDataRequestIds).toStrictEqual([]);
+
+            jobSearcher.startSearch(onDataRequests);
+        });
+
+        it('should include requests that do match the validator account id', (done) => {
+            const providerRegistry = createMockProviderRegistry();
+            providerRegistry.getAccountIdByProvider = jest.fn(() => {
+                return 'test.near';
+            });
+
+            const requests = [
+                createMockRequest({ ...validDataRequest, id: '1' }),
+                createMockRequest({ ...validDataRequest, id: '2', allowedValidators: ['notme.near'] }),
+                createMockRequest({ ...validDataRequest, id: '3', allowedValidators: ['test.near'] }),
+            ];
+
+            providerRegistry.listenForRequests = jest.fn((drCallback) => {
+                drCallback(requests);
+            });
+
+            const jobSearcher = new JobSearcher(
+                providerRegistry,
+                [],
+            );
+
+            const onDataRequests = jest.fn(() => {
+                expect(onDataRequests).toHaveBeenCalledTimes(1);
+                expect(onDataRequests).toHaveBeenCalledWith([requests[0], requests[2]]);
+                expect(storeDataRequestSpy).toHaveBeenCalledTimes(2);
+                expect(jobSearcher.visitedDataRequestIds).toStrictEqual([requests[0].internalId, requests[2].internalId]);
 
                 done();
             });

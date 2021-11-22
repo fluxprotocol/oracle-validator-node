@@ -7,6 +7,7 @@ export function createMockRequest(request: Partial<DataRequest> = {}): DataReque
     return {
         id,
         outcomes: [],
+        allowedValidators: [],
         resolutionWindows: [
             {
                 endTime: new Date(),
