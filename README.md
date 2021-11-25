@@ -1,7 +1,5 @@
 # 🔮 Flux Oracle Validator Node
 
-⚠️ This software is still in BETA and should not be used in production yet, beware of dragons 🐉
-
 ## Features
 
 * Runs requests in parallel for maximum fee earning
@@ -41,7 +39,7 @@ For `testnet` the latest config params are:
 
 ```
 NEAR_NETWORK_ID = testnet
-NEAR_CONTRACT_ID = 07.oracle.flux-dev
+NEAR_CONTRACT_ID = 09.oracle.flux-dev
 ```
 
 For `mainnet` the latest config params are:
