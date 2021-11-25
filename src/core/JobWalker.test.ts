@@ -216,6 +216,10 @@ describe('JobWalker', () => {
                     endTime: new Date(13),
                     round: 1,
                 }],
+                finalizedOutcome: {
+                    answer: 'test',
+                    type: OutcomeType.Answer,
+                },
                 executeResult: {
                     type: ExecuteResultType.Success,
                     data: 'test',
