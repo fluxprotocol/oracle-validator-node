@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.4.1...v3.0.0) (2021-11-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **provider:** New structure is incompatible with old oracle versions. Please upgrade the oracle account id.
+
+### Features
+
+* **env:** Add support for staking on old requests ([8c43b77](https://github.com/fluxprotocol/oracle-bot/commit/8c43b7784b22cc4fbae64ae136852fb963d6d8b4))
+* **jobs:** Use VM for jobs instead of hard-coded jobs ([c13404c](https://github.com/fluxprotocol/oracle-bot/commit/c13404c5ea24bf16b6def2dad48deb186883ff22))
+* **provider:** Add support for first party oracle ([a5dce28](https://github.com/fluxprotocol/oracle-bot/commit/a5dce280b10fc9c5e200e53526e1e2dc09cb3550))
+* **vm:** Add required env variables ([db462d5](https://github.com/fluxprotocol/oracle-bot/commit/db462d57f9bdd43474db30ce3ba47ac5a09afc59))
+
+
+### Bug Fixes
+
+* **core:** Fix issue where claiming was not possible ([8339006](https://github.com/fluxprotocol/oracle-bot/commit/83390068f991dff0179ef56e7e173ac13e566a12))
+
 ### [2.4.1](https://github.com/fluxprotocol/oracle-bot/compare/v2.4.0...v2.4.1) (2021-10-26)
 
 
