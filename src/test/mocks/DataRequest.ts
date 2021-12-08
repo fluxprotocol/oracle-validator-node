@@ -26,6 +26,7 @@ export function createMockRequest(request: Partial<DataRequest> = {}): DataReque
         config: {
             paidFee: '0',
             validityBond: '1000000',
+            minResolutionBond: '100000000000000000000',
         },
         requester: 'bob',
         requiredEnvVariables: [],
