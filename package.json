@@ -1,6 +1,6 @@
 {
     "name": "oracle-validator-node",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "description": "Resolving data requests on the Flux Oracle",
     "main": "index.js",
     "scripts": {

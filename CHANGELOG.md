@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.1](https://github.com/fluxprotocol/oracle-bot/compare/v3.0.0...v3.0.1) (2021-12-08)
+
+
+### Bug Fixes
+
+* **near:** Fix issue where requests could not be fetched due a gas error ([b9041c6](https://github.com/fluxprotocol/oracle-bot/commit/b9041c68319200dd01608e5158a89fee7b5079ea))
+
 ## [3.0.0](https://github.com/fluxprotocol/oracle-bot/compare/v2.4.1...v3.0.0) (2021-11-25)
 
 
