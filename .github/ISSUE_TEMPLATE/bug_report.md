@@ -16,4 +16,4 @@ A clear and concise description of what the bug is.
 vX.X.X
 
 **Logs**
-If applicable, add logs to help find the issue. Logs can be found in` logs/DB_NAME`
+If applicable, add logs to help find the issue. Logs can be found in `logs/DB_NAME`. Please submit the full log file and timestamp where the error occurred. Do not send snippets. Snippets can not give the full context of what's going on.
