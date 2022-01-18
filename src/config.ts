@@ -36,6 +36,8 @@ export const VM_ENV_KEY = 'VM_ENV_';
 
 export const AVAILABLE_PROVIDERS = [NearProvider];
 export const MODULES = [HttpModule, AnalyticsLoggerModule];
+export const ENABLE_ANALYTICS = process.env.ENABLE_ANALYTICS ? process.env.ENABLE_ANALYTICS === 'true' : true;
+export const SENTRY_DSN = 'https://11d1b41001d74754a68943018d26eba3@o1104820.ingest.sentry.io/6154477';
 
 export const ENV_VARS = {
     ...process.env,

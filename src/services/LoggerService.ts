@@ -1,8 +1,10 @@
 import { ILogger } from '@fluxprotocol/oracle-provider-core/dist/Core';
 import winston, { format } from 'winston';
+import Sentry from 'winston-transport-sentry-node';
+import { Integrations } from '@sentry/tracing';
 import packageJson from '../../package.json';
 
-import { AVAILABLE_PROVIDERS, DB_NAME, MAX_LOG_LIFETIME } from '../config';
+import { AVAILABLE_PROVIDERS, DB_NAME, ENABLE_ANALYTICS, MAX_LOG_LIFETIME, SENTRY_DSN } from '../config';
 import ProviderRegistry from '../providers/ProviderRegistry';
 import 'winston-daily-rotate-file';
 
@@ -32,6 +34,19 @@ const logger = winston.createLogger({
         }),
     ],
 });
+
+if (ENABLE_ANALYTICS) {
+    const sentry = new Sentry({
+        sentry: {
+            dsn: SENTRY_DSN,
+            tracesSampleRate: 0.2,
+            serverName: process.env.NEAR_NETWORK_ID,
+        },
+        level: 'warn',
+    });
+
+    logger.add(sentry);
+}
 
 export default logger;
 
