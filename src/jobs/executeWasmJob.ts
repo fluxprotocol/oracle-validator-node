@@ -60,6 +60,13 @@ async function executeWasmJobOnce(request: DataRequest): Promise<ExecuteResult> 
             JSON.stringify(request.sources.map((source) => ({
                 source_path: convertOldSourcePath(source.source_path),
                 end_point: source.end_point,
+                multiplier: source.multiplier,
+                http_headers: {
+                    'Content-Type': 'application/json',
+                    ...source.http_headers,
+                },
+                http_method: source.http_method,
+                http_body: source.http_body,
             }))),
             request.dataType.type,
         ];

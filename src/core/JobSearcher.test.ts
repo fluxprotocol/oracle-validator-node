@@ -23,6 +23,7 @@ describe('JobSearcher', () => {
         sources: [{
             end_point: '',
             source_path: '',
+            http_method: 'GET',
         }],
         config: {
             paidFee: '0',

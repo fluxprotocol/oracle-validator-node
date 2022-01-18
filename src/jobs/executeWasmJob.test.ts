@@ -54,14 +54,17 @@ describe('JobExecuter', () => {
                     {
                         end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                         source_path: 'weight',
+                        http_method: 'GET',
                     },
                     {
                         end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                         source_path: 'weight',
+                        http_method: 'GET',
                     },
                     {
                         end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                         source_path: 'weight',
+                        http_method: 'GET',
                     }
                 ],
             });
@@ -82,10 +85,12 @@ describe('JobExecuter', () => {
                     {
                         end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                         source_path: 'abilities[0].slot',
+                        http_method: 'GET',
                     },
                     {
                         end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                         source_path: 'abilities[$$last].slot',
+                        http_method: 'GET',
                         // source_path: '$.abilities[-1].slot'
                     },
                 ],
@@ -107,6 +112,7 @@ describe('JobExecuter', () => {
                     {
                         end_point: 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&startTime=1632994975000&endTime=1632995035000',
                         source_path: '0.4',
+                        http_method: 'GET',
                     },
                 ],
             });
@@ -125,6 +131,7 @@ describe('JobExecuter', () => {
                 sources: [{
                     end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                     source_path: 'abilities[1].ability.name',
+                    http_method: 'GET',
                 }],
             });
 
@@ -141,9 +148,11 @@ describe('JobExecuter', () => {
                 sources: [{
                     end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                     source_path: 'base_experience',
+                    http_method: 'GET',
                 }, {
                     end_point: 'https://example.com/non_existing',
                     source_path: 'some.random.path',
+                    http_method: 'GET',
                 }],
             });
 
@@ -159,6 +168,7 @@ describe('JobExecuter', () => {
                 sources: [{
                     end_point: 'https://pokeapi.co/api/v2/pokemon/ditto',
                     source_path: 'forms',
+                    http_method: 'GET',
                 }],
             });
 
